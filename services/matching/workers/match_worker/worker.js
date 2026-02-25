@@ -37,6 +37,7 @@ async function startWorker() {
 
         const event = JSON.parse(msg.content.toString());
 
+        console.log("Received event:", event);
         try {
             await handleMatchEnter(event);
             channel.ack(msg);
@@ -44,7 +45,6 @@ async function startWorker() {
             console.error("Worker Error:", err);
             channel.nack(msg, false, true); // Reject message without requeue
         }
-        console.log("Received event:", event);
     });
 }
 
@@ -55,7 +55,7 @@ async function handleMatchEnter(event) {
     const lockKey = `match_lock:${topic}:${difficulty}`;
 
     //Acquire Distributed Lock
-    const lock = await acquireLock(redis, lockKey, 5);
+    const lock = await acquireLock(redis, lockKey, 10);
 
     if (!lock) {
         console.log("Another worker is processing this queue. Skipping...");
@@ -85,13 +85,16 @@ async function handleMatchEnter(event) {
 
             await postgres.query(
                 `UPDATE matches
-                 SET user_id_b = $1, status = $2, proposal_expiry = $3
-                 WHERE match_id = $4`,
+                 SET user_id_b = $1, 
+                    status = $2, 
+                    proposal_expiry = $3,
+                    updated_at = NOW()
+                 WHERE match_id = $4 AND status = 'WAITING'`, 
                 [user_id, "PROPOSED", proposalExpiry, existingMatchId]
             );
 
             //Logging Event
-                        await postgres.query(
+            await postgres.query(
                 `INSERT INTO match_events (event_id, match_id, event_type, payload)
                  VALUES ($1,$2,$3,$4)`,
                 [
