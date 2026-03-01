@@ -75,4 +75,22 @@ User Class in User.js, changes to authService.js and userService.js to make use 
 - [X] Modified
 - [ ] Rejected
 # Author Notes:
-Read up the logic on having an isActive field and agreed on its usefulness. Rmeoved some unnecessary additions to the code beyond basic user modelling and authentication.
+Read up the logic on having an isActive field and agreed on its usefulness. Removed some unnecessary additions to the code beyond basic user modelling and authentication.
+
+----------
+
+# Date/Time:
+2026-03-01 16:02
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+With reference to the attributes of the User class from User.js, check through and add anything missing from this set of sql statements for the initial command to be run when i run "npm urn migrate". Once done, look through userRepository.js and see if I have all the necessary functions. Importantly, I need to have functions that can: create and delete new users, update user profiles, and find users by their respective attributes.
+
+# Output Summary:
+Implemented some find functions that I missed and suggested that I do not include the delete function and instead use the useActive for soft-deleting instead.
+# Action Taken:
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+# Author Notes:
+Read up common practices by other copanies and verified that using the "soft delete" method is widely adopted to avoid conflicts. Still kept the hard delete as an option in case needed.
