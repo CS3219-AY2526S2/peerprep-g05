@@ -94,3 +94,22 @@ Implemented some find functions that I missed and suggested that I do not includ
 - [ ] Rejected
 # Author Notes:
 Read up common practices by other copanies and verified that using the "soft delete" method is widely adopted to avoid conflicts. Still kept the hard delete as an option in case needed.
+
+# Date/Time:
+2026-03-01 16:30
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+Now I am implementing the controllers for admin, user, and authentication.
+
+See if my implementation is correct and add brief comments to make the functions more understandable as in this part there may be some collaboration with teammates.
+
+# Output Summary:
+Fixed some minor mistakes in the functions and added the comments to show the HTTP endpoints for each function.
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+Verified the changes to the mistakes, which worked after manual testing and accepted the comments.
+
