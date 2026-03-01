@@ -29,3 +29,19 @@ No output, just an acknowledgement.
 - [ ] Rejected
 # Author Notes:
 Nil
+
+# Date/Time:
+2026-03-01 15:08
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+Attached are the files jwt.js and password.js under /infrastructure/security. Check if they have been written correctlyt and add some console logs to help me see the output as I verify if they work correctly. I have also decided to pick 4 for the bcrypt SALT_ROUNDS. Is this safe or should I increase it?
+
+# Output Summary:
+Corrected import paths, refactored my functions to be cleaner, generated the console.logs and suggested to increase the SALT_ROUNDS for bcrypt to 10-12. 
+# Action Taken:
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+# Author Notes:
+Changed some naming conventions to make them more understandable to me and decided to go with 10 SALT_ROUNDS after verifying with online readings.
