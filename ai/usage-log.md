@@ -30,6 +30,8 @@ No output, just an acknowledgement.
 # Author Notes:
 Nil
 
+----------
+
 # Date/Time:
 2026-03-01 15:08
 # Tool:
@@ -45,3 +47,32 @@ Corrected import paths, refactored my functions to be cleaner, generated the con
 - [ ] Rejected
 # Author Notes:
 Changed some naming conventions to make them more understandable to me and decided to go with 10 SALT_ROUNDS after verifying with online readings.
+
+----------
+
+# Date/Time:
+2026-03-01 15:17
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+I am now implementing the User model, where it needs to have the following attributes:
+- ID (should be the primary key)
+- email (used for signing up/in)
+- username
+- role (user or admin, which has RLS implications)
+- display name (can be null)
+- date of creation
+- date the user profile was last updated
+
+Also include a function to convert the user information to JSON.
+
+Once done, in the existing authService.js and userService.js, replace the existing template attributes or parameters with the actual user attributes as you have implemented as per the model.
+
+# Output Summary:
+User Class in User.js, changes to authService.js and userService.js to make use of the new User class. Also suggested an "is active user" field to avoid conflicts upon deleting a user due to foreign keys. Additionally, comments to the functions in authService.js and userService.js were added.
+# Action Taken:
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+# Author Notes:
+Read up the logic on having an isActive field and agreed on its usefulness. Rmeoved some unnecessary additions to the code beyond basic user modelling and authentication.
