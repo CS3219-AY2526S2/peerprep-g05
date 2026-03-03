@@ -51,6 +51,18 @@ async function startWorker() {
 async function handleMatchEnter(event) {
     const { match_id, user_id, topic, difficulty } = event;
 
+    //Create Indempotent key by using event_id
+    const processedKey = `processed_event:${event.event_id}`;
+
+    const alreadyProcessed = await redis.get(processedKey);
+
+    if (alreadyProcessed) {
+        console.log("Event already processed. Skipping.");
+        return;
+    }
+
+    await redis.set(processedKey, "1", "EX", 3600);
+
     const queueKey = `match_queue:${topic}:${difficulty}`;
     const lockKey = `match_lock:${topic}:${difficulty}`;
 
@@ -81,7 +93,7 @@ async function handleMatchEnter(event) {
 
         await postgres.query("BEGIN");
         try {
-            const proposalExpiry = new Date(Date.now() + 15000); // 15s timeout
+            const proposalExpiry = new Date(Date.now() + 20000); //Timeout Duration
 
             await postgres.query(
                 `UPDATE matches
