@@ -1,0 +1,18 @@
+name: collaboration-service
+services:
+  server:
+    build:
+      context: .
+      args:
+        EXPRESS_PORT: ${EXPRESS_PORT}
+    ports:
+      - ${EXPRESS_PORT}:${EXPRESS_PORT}
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:8.2.6-rc0
+    ports:
+      - 27117:27017
+    volumes:
+      - ./data/mongodb:/data/db
