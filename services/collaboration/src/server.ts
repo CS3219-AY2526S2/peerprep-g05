@@ -1,8 +1,9 @@
 import express from "express";
 import mongoose from "mongoose";
+import { config } from "./config.js";
 
 // connect to mongodb
-mongoose.connect("mongodb://localhost:27017/peerprep-collaboration");
+mongoose.connect(config.MONGO_URI);
 
 const app = express();
 
@@ -12,7 +13,7 @@ router.get("/", (req, res) => res.send("Hi"));
 
 app.use("/api/v1", router);
 
-app.listen(3000, (e) => {
+app.listen(config.EXPRESS_PORT, (e) => {
   if (e) {
     console.error(e);
   }
