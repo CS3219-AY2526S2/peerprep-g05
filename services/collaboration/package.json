@@ -13,7 +13,8 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mongoose": "^9.2.4"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
