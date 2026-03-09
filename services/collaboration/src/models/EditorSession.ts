@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const editorSessionSchema = new Schema({
+const EditorSessionSchema = new Schema({
   status: {
     type: String,
     enum: [
@@ -22,4 +22,4 @@ const editorSessionSchema = new Schema({
   endedOn: Date,
 });
 
-export const EditorSessionModel = model("EditorSession", editorSessionSchema);
+export const EditorSessionModel = model("EditorSession", EditorSessionSchema);
