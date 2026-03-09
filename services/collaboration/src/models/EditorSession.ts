@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 
 const editorSessionSchema = new Schema({
-  roomStatus: {
+  status: {
     type: String,
     enum: [
       "ACTIVE", // As long as one of the 2 users is still in the session.
@@ -10,7 +10,7 @@ const editorSessionSchema = new Schema({
   },
   descriptionContent: String,
   editorContent: String,
-  userId: {
+  users: {
     type: [String],
     length: 2,
     reason: "Needs exactly 2 users in a session",
