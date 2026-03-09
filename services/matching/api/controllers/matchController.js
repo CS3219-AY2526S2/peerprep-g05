@@ -53,73 +53,98 @@ export async function acceptMatch(req, res) {
     const { match_id } = req.params;
     const { user_id } = req.body;
 
-    const lockKey = `match_lock:${match_id}`;
-    const lock = await acquireLock(redis, lockKey, 5);
-
-    if (!lock) return res.status(409).json({ error: "Locked" });
-
     try {
-        await postgres.query("BEGIN");
-
+        // Resolve REDIRECTED match to its PROPOSED match
         const { rows } = await postgres.query(
             `SELECT * FROM matches WHERE match_id = $1`, [match_id]
         );
 
-        if (rows.length == 0) {
-            await postgres.query("ROLLBACK");
+        if (rows.length === 0) {
             return res.status(404).json({ error: "Not Found" });
         }
 
-        const match = rows[0];
+        // Follow redirect if needed
+        let proposedMatchId = match_id;
+        if (rows[0].status === "REDIRECTED") {
+            proposedMatchId = rows[0].redirected_to;
+        }
 
-        if (match.status !== "PROPOSED" || new Date(match.proposal_expiry) < new Date()) {
+        const lockKey = `match_lock:${proposedMatchId}`;
+        const lock = await acquireLock(redis, lockKey, 5);
+        if (!lock) return res.status(409).json({ error: "Locked" });
+
+        try {
+            await postgres.query("BEGIN");
+
+            const { rows: proposed } = await postgres.query(
+                `SELECT * FROM matches WHERE match_id = $1`, [proposedMatchId]
+            );
+
+            if (proposed.length === 0) {
+                await postgres.query("ROLLBACK");
+                return res.status(404).json({ error: "Proposed match not found" });
+            }
+
+            const match = proposed[0];
+
+            if (match.status !== "PROPOSED") {
+                await postgres.query("ROLLBACK");
+                return res.status(400).json({ error: "Match is no longer open for acceptance" });
+            }
+
+            if (new Date(match.proposal_expiry) < new Date()) {
+                await postgres.query("ROLLBACK");
+                return res.status(400).json({ error: "Proposal has expired" });
+            }
+
+            // Determine which side this user is on
+            if (user_id === match.user_id_a) {
+                await postgres.query(
+                    `UPDATE matches SET accepted_by_a = TRUE, updated_at = NOW()
+                     WHERE match_id = $1 AND status = 'PROPOSED'`,
+                    [proposedMatchId]
+                );
+                console.log(`${user_id} (user_a) accepted match ${proposedMatchId}`);
+            } else if (user_id === match.user_id_b) {
+                await postgres.query(
+                    `UPDATE matches SET accepted_by_b = TRUE, updated_at = NOW()
+                     WHERE match_id = $1 AND status = 'PROPOSED'`,
+                    [proposedMatchId]
+                );
+                console.log(`${user_id} (user_b) accepted match ${proposedMatchId}`);
+            } else {
+                await postgres.query("ROLLBACK");
+                return res.status(403).json({ error: "Not a participant" });
+            }
+
+            // Check if both have now accepted
+            const { rows: updated } = await postgres.query(
+                `SELECT accepted_by_a, accepted_by_b FROM matches WHERE match_id = $1`,
+                [proposedMatchId]
+            );
+
+            if (updated[0].accepted_by_a && updated[0].accepted_by_b) {
+                await postgres.query(
+                    `UPDATE matches SET status = 'CONFIRMED', updated_at = NOW()
+                     WHERE match_id = $1 AND status = 'PROPOSED'`,
+                    [proposedMatchId]
+                );
+                console.log(`Match ${proposedMatchId} CONFIRMED`);
+            }
+
+            await postgres.query("COMMIT");
+            res.json({ success: true, match_id: proposedMatchId });
+
+        } catch (err) {
             await postgres.query("ROLLBACK");
-            return res.status(400).json({ error: "Proposal Expired" });
+            throw err;
+        } finally {
+            await releaseLock(redis, lockKey);
         }
-
-        if (user_id === match.user_id_a) {
-            await postgres.query(
-                `UPDATE matches SET accepted_by_a = TRUE
-                WHERE match_id = $1 AND status = 'PROPOSED'`, [match_id]
-            );
-            console.log(`${user_id} accepted match ${match_id}`);
-        } else if (user_id === match.user_id_b) {
-            await postgres.query(
-                `UPDATE matches SET accepted_by_b = TRUE WHERE match_id = $1
-                AND status = 'PROPOSED'`, [match_id]
-            );
-            console.log(`${user_id} accepted match ${match_id}`);
-        } else {
-            await postgres.query("ROLLBACK");
-            return res.status(403).json({ error: "Not Participant" });
-        }
-
-        const { rows: updated } = await postgres.query(
-            `SELECT accepted_by_a, accepted_by_b
-             FROM matches
-             WHERE match_id = $1`,
-            [match_id]
-        );
-
-        if (updated[0].accepted_by_a && updated[0].accepted_by_b) {
-            await postgres.query(
-                `UPDATE matches
-                 SET status = 'CONFIRMED'
-                 WHERE match_id = $1
-                 AND status = 'PROPOSED'`,
-                [match_id]
-            );
-        }
-
-        await postgres.query("COMMIT");
-
-        res.json({ success: true });  
 
     } catch (err) {
-        await postgres.query("ROLLBACK");
-        throw err;
-    } finally {
-        await releaseLock(redis, lockKey)
+        console.error(err);
+        res.status(500).send("Internal Error");
     }
 }
 
@@ -127,18 +152,53 @@ export async function acceptMatch(req, res) {
 export async function declineMatch(req, res) {
 
     const { match_id } = req.params;
+    const { user_id } = req.body;
 
-    await postgres.query(
-        `
-        UPDATE matches
-        SET status='CANCELLED',
-            updated_at=NOW()
-        WHERE match_id=$1
-        `,
-        [match_id]
-    );
+    try {
+        const { rows } = await postgres.query(
+            `SELECT * FROM matches WHERE match_id = $1`, [match_id]
+        );
 
-    res.sendStatus(200);
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Not Found" });
+        }
+
+        let proposedMatchId = match_id;
+        if (rows[0].status === "REDIRECTED") {
+            proposedMatchId = rows[0].redirected_to;
+        }
+
+        const { rows: proposed } = await postgres.query(
+            `SELECT * FROM matches WHERE match_id = $1`, [proposedMatchId]
+        );
+
+        if (proposed.length === 0) {
+            return res.status(404).json({ error: "Proposed match not found" });
+        }
+
+        const match = proposed[0];
+
+        if (user_id != match.user_id_a && user_id !== match.user_id_b) {
+            return res.status(403).json({ error: "Not a participant" });
+        }
+
+        if (match.status !== "PROPOSED") {
+            return res.status(400).json({ error: "Match is not in declinable state" });
+        }
+
+        await postgres.query(
+            `UPDATE matches SET status = 'CANCELLED', updated_at = NOW()
+            WHERE match_id = $1 AND status = 'PROPOSED'`, [proposedMatchId]
+        );
+
+        console.log(`Match ${proposedMatchId} canceeled by ${user_id}`);
+        res.sendStatus(200);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).send("Internal Error: ");
+    }
+
 }
 
 //Get the status of the match (WAITING, CONFIRMED, CANCELLED)
