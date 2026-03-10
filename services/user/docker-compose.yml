@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: peerprep-user-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: peerprep_users
+    ports:
+      - "5433:5432"
+    volumes:
+      - peerprep_user_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d peerprep_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  peerprep_user_pgdata:
