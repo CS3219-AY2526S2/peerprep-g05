@@ -74,6 +74,22 @@ export const updateStatusRules = [
     handleValidationErrors,
 ];
 
+export const verifyOtpRules = [
+    body("userId")
+        .isUUID().withMessage("Invalid user ID"),
+    body("code")
+        .trim()
+        .isLength({ min: 6, max: 6 }).withMessage("Code must be exactly 6 digits")
+        .isNumeric().withMessage("Code must be numeric"),
+    handleValidationErrors,
+];
+
+export const resendOtpRules = [
+    body("userId")
+        .isUUID().withMessage("Invalid user ID"),
+    handleValidationErrors,
+];
+
 export const introspectRules = [
     body("token")
         .notEmpty().withMessage("Token is required"),

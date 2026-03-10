@@ -4,23 +4,53 @@ import config from "../../config/index.js";
 
 /**
  * POST /auth/register
+ * Creates a pending unverified account and sends an OTP email. "soft-registration"
  */
 export async function register(req, res, next) {
     try {
         const { email, username, password, displayName } = req.body;
-        const { user, accessToken } = await authService.register({
+        const result = await authService.register({
             email,
             username,
             password,
             displayName,
         });
 
-        return res.status(201).json({
+        return res.status(202).json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * POST /auth/verify-otp
+ * Confirms the OTP, activates the account, returns a JWT.
+ */
+export async function verifyOtp(req, res, next) {
+    try {
+        const { userId, code } = req.body;
+        const { user, accessToken } = await authService.verifyOtp({ userId, code });
+
+        return res.status(200).json({
             accessToken,
             tokenType: "Bearer",
             expiresIn: config.jwt.expiry,
             user: user.toJSON(),
         });
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * POST /auth/resend-otp
+ * Invalidates older codes and sends a fresh OTP to the user's email.
+ */
+export async function resendOtp(req, res, next) {
+    try {
+        const { userId } = req.body;
+        const result = await authService.resendOtp({ userId });
+        return res.status(200).json(result);
     } catch (err) {
         next(err);
     }
