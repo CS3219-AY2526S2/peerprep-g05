@@ -31,7 +31,7 @@ const authService = {
             username,
             passwordHash,
             role: "USER",
-            displayName: displayName || null,
+            displayName: displayName || username,
         });
 
         const user = new User(row);
