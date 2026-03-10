@@ -39,12 +39,12 @@ const userRepository = {
         return rows[0] || null;
     },
 
-    async create({ email, username, passwordHash, role = "USER", displayName = null }) {
+    async create({ email, username, passwordHash, role = "USER", displayName = null, isActive = false }) {
         const { rows } = await postgres.query(
-            `INSERT INTO users (email, username, password_hash, role, display_name)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO users (email, username, password_hash, role, display_name, is_active)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *`,
-            [email.toLowerCase(), username.toLowerCase(), passwordHash, role, displayName],
+            [email.toLowerCase(), username.toLowerCase(), passwordHash, role, displayName, isActive],
         );
         return rows[0];
     },
