@@ -15,3 +15,6 @@ logs/
 tmp/
 temp/
 *.tmp
+
+# RSA key pairs (auto-generated at runtime, must never be committed)
+**/infrastructure/security/keys/
