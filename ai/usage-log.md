@@ -124,6 +124,8 @@ Implemented some find functions that I missed and suggested that I do not includ
 # Author Notes:
 Read up common practices by other copanies and verified that using the "soft delete" method is widely adopted to avoid conflicts. Still kept the hard delete as an option in case needed.
 
+----------
+
 # Date/Time:
 2026-03-01 16:35
 # Tool:
@@ -145,3 +147,81 @@ Corrected some mistakes but added another variation of authentication function t
 - [ ] Rejected
 # Author Notes:
 Agreed with the fixes and the comments but removed the additional authentication function because it was unnecessary.
+
+# Date/Time:
+2026-03-10 15:47
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+The following content in the attached file is meant for the database migration for OTPs under user service. Verify if the parameters are valid according to the implementation in the repo and format it to make it more readable.
+
+# Output Summary:
+Formatted the file to be more readable and added the created_at field which I forgot
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+Agreed with the re-formatting and suggestion to add the created_at field
+
+----------
+
+# Date/Time:
+2026-03-01 16:35
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+For the middleware, I need there to be authentication, authorization, and validation. 
+
+For authentication, I need it to check if there exists a valid JWT token tied to the user and to also consider for inactive users, i.e. if the user's isActive field is false.
+
+For Authorization, it should check whether the user has been authenticated and in for some opeartions such as modifying questions, it should check if the user has a valid role, e.g. admin to edit questions.
+
+For Validation, I have one set of rules for registration in validate.js, comment if I should have more, otherwise implement the similar set of rules for login, profile updating, and whatever needs validation.
+
+# Output Summary:
+Corrected some mistakes but added another variation of authentication function that is "less strict" and added comments.
+# Action Taken:
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+# Author Notes:
+Agreed with the fixes and the comments but removed the additional authentication function because it was unnecessary.
+
+# Date/Time:
+2026-03-10 16:24
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+I have made the changes and additions to the attached files. Add comments and do some basic formatting if anything is out of format with the rest of the file. Do NOT change anything else, especially in terms of functionality.
+
+# Output Summary:
+Reformatted the file and added comments.
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+Agreed with the re-formatting and comments.
+
+# Date/Time:
+2026-03-10 16:59
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+Running the following curl command to register results in the following error after around a minute:
+
+{
+"error": "read ETIMEDOUT"
+}
+
+With reference to /email/client.js (attached), help me find what the problem is.
+
+# Output Summary:
+Previously used port 587 for nodemailer and suggested to use port 456 instead as some networks/ISPs block outbound 587.
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+Tested and the problem was resolved so the suggested solution worked.
