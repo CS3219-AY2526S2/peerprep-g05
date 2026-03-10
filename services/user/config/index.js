@@ -12,6 +12,16 @@ const config = {
     jwt: {
         expiry: parseInt(process.env.JWT_EXPIRY, 10) || 3600, // tentative
     },
+
+    email: {
+        user: process.env.SMTP_USER || "",
+        appPassword: process.env.SMTP_APP_PASSWORD || "",
+        from: process.env.SMTP_FROM || "PeerPrep <peerprep.g05@gmail.com>",
+    },
+
+    otp: {
+        expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10,
+    },
 };
 
 export default config;
