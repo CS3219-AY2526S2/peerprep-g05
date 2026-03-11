@@ -270,3 +270,23 @@ Propose that it may be a better solution to convert the original "code" column t
 - [ ] Rejected
 # Author Notes:
 Read through and agreed the solution before implementing and used the comments for 003_alter_otp_codes_code_length migration.
+
+----------
+
+# Date/Time:
+2026-03-11 17:43
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+I made the mistake of initializing react and vite along with creating the rest of the components , functions, and pages in .js and .jsx. Convert ALL of the frontend files from .js to .ts and .ts to .tsx
+
+Do NOT change the logic and flow, only the file types.
+
+# Output Summary:
+Converted the frontend folder to .ts and .tsx as specified.
+# Action Taken:
+- [ ] Accepted as-is
+- [X] Modified
+- [ ] Rejected
+# Author Notes:
+Edited some minor errors due to the new types and then tested all the user service endpoints to ensure everything worked before commiting.
