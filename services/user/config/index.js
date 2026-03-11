@@ -22,6 +22,12 @@ const config = {
     otp: {
         expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES, 10) || 10,
     },
+
+    frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+
+    passwordReset: {
+        expiryMinutes: parseInt(process.env.PASSWORD_RESET_EXPIRY_MINUTES, 10) || 30,
+    },
 };
 
 export default config;
