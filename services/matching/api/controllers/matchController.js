@@ -60,7 +60,7 @@ export async function acceptMatch(req, res) {
         );
 
         if (rows.length === 0) {
-            return res.status(404).json({ error: "Not Found" });
+            return res.status(404).json({ error: "Match Not Found" });
         }
 
         // Follow redirect if needed
@@ -148,57 +148,80 @@ export async function acceptMatch(req, res) {
     }
 }
 
-//Update the state of the match to REJECTED when a user rejects the match (for now)
+
 export async function declineMatch(req, res) {
 
     const { match_id } = req.params;
     const { user_id } = req.body;
 
     try {
+        await postgres.query("BEGIN");
+
         const { rows } = await postgres.query(
-            `SELECT * FROM matches WHERE match_id = $1`, [match_id]
+            `SELECT * FROM matches WHERE match_id = $1`,
+            [match_id]
         );
 
         if (rows.length === 0) {
-            return res.status(404).json({ error: "Not Found" });
+            await postgres.query("ROLLBACK");
+            return res.status(404).json({ error: "Match not found" });
         }
 
-        let proposedMatchId = match_id;
-        if (rows[0].status === "REDIRECTED") {
-            proposedMatchId = rows[0].redirected_to;
-        }
+        const match = rows[0];
 
-        const { rows: proposed } = await postgres.query(
-            `SELECT * FROM matches WHERE match_id = $1`, [proposedMatchId]
-        );
-
-        if (proposed.length === 0) {
-            return res.status(404).json({ error: "Proposed match not found" });
-        }
-
-        const match = proposed[0];
-
-        if (user_id != match.user_id_a && user_id !== match.user_id_b) {
+        if (![match.user_id_a, match.user_id_b].includes(user_id)) {
+            await postgres.query("ROLLBACK");
             return res.status(403).json({ error: "Not a participant" });
         }
-
+        
+        //Check if match can be declined (aka in PROPOSED state)
         if (match.status !== "PROPOSED") {
-            return res.status(400).json({ error: "Match is not in declinable state" });
+            await postgres.query("ROLLBACK");
+            return res.status(400).json({ error: "Match is not declinable" });
         }
 
+        //Update match status to "CANCELLED"
         await postgres.query(
             `UPDATE matches SET status = 'CANCELLED', updated_at = NOW()
-            WHERE match_id = $1 AND status = 'PROPOSED'`, [proposedMatchId]
+            WHERE match_id = $1`, [match_id]
         );
 
-        console.log(`Match ${proposedMatchId} canceeled by ${user_id}`);
+        //Log Decline event:
+        await postgres.query(
+            `INSERT INTO match_events (event_id, match_id, event_type, payload)
+            VALUES ($1, $2, 'MATCH_DECLINED', $3)`,
+            [uuid(), match_id, JSON.stringify({ declined_by: user_id })]
+        );
+
+        await postgres.query("COMMIT");
+        res.json({ success: true, message: "Match Declined" });
+
+        //Requeue User who accepted
+        const otherUserId = match.user_id_a === user_id ? match.user_id_b : match.user_id_a;
+
+        if (otherUserId) {
+            global.rabbitChannel.publish(
+                process.env.MATCH_EXCHANGE,
+                "match.requeue",
+                Buffer.from(JSON.stringify({
+                    event_id: uuid(),
+                    match_id,
+                    user_id: otherUserId,
+                    topic: match.topic,
+                    difficulty: match.difficulty
+                })),
+                { persistent: true }
+            );
+            console.lol(`Requeue event published for user ${otherUserId}`);
+        }
+
         res.sendStatus(200);
 
     } catch (err) {
-        console.log(err);
-        res.status(500).send("Internal Error: ");
+        await postgres.query("ROLLBACK");
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
     }
-
 }
 
 //Get the status of the match (WAITING, CONFIRMED, CANCELLED)

@@ -8,23 +8,35 @@ import { postgres } from "../../infrastructure/postgres/client.js";
 
 dotenv.config();
 
-const PROPOSAL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const PROPOSAL_TIMEOUT_MS = 1 * 60 * 1000; // 1 minute
 
 async function startWorker() {
     const channel = await createChannel();
 
+    // Assert Exchange
     await channel.assertExchange(process.env.MATCH_EXCHANGE, "topic", { durable: true });
+
+    //Assert queue for worker
     const queue = await channel.assertQueue("match.worker.queue", { durable: true });
+
+    //Bind both match.enter and requeue to the same queue
     await channel.bindQueue(queue.queue, process.env.MATCH_EXCHANGE, "match.enter");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EXCHANGE, "match.requeue");
 
     channel.consume(queue.queue, async (msg) => {
         if (!msg) return;
 
         const event = JSON.parse(msg.content.toString());
+        const routingKey = msg.fields.routingKey;
         console.log("Received event:", event);
 
         try {
-            await handleMatchEnter(event);
+            if (routingKey === "match.enter") {
+                await handleMatchEnter(event);
+            }
+            if (routingKey === "match.requeue") {
+                await handleMatchRequeue(event, channel);
+            }
             channel.ack(msg);
         } catch (err) {
             if (err.message === "LOCK_BUSY") {
@@ -80,11 +92,11 @@ async function handleMatchEnter(event) {
                     `UPDATE matches
                      SET user_id_b = $1,
                          status = 'PROPOSED',
-                         proposal_expiry = $2,
+                         proposal_expiry = NOW() + INTERVAL '1 minute',
                          updated_at = NOW()
-                     WHERE match_id = $3 AND status = 'WAITING'
+                     WHERE match_id = $2 AND status = 'WAITING'
                      RETURNING *`,
-                    [userB.user_id, proposalExpiry, userA.match_id]
+                    [userB.user_id, userA.match_id]
                 );
 
                 if (updateA.rowCount === 0) {
@@ -142,5 +154,39 @@ async function handleMatchEnter(event) {
         await releaseLock(redis, lockKey);
     }
 }
+
+async function handleMatchRequeue(event, channel) {
+    const { user_id, topic, difficulty } = event;
+    const newMatchId = uuid();
+
+    await postgres.query("BEGIN");
+    try {
+        await postgres.query(
+            `INSERT INTO matches (match_id, user_id_a, topic, difficulty, status)
+            VALUES ($1, $2, $3, $4, 'WAITING')`, [newMatchId, user_id, topic, difficulty]
+        );
+
+        channel.publish(
+            process.env.MATCH_EXCHANGE,
+            "match.enter",
+            Buffer.from(JSON.stringify({
+                event_id: uuid(),
+                match_id: newMatchId,
+                user_id,
+                topic,
+                difficulty
+            })),
+            { persistent: true }
+        );
+
+        await postgres.query("COMMIT");
+        console.log(`User ${user_id} requeued with new match_id ${newMatchId}`);
+
+    } catch (err) {
+        await postgres.query("ROLLBACK");
+        throw err;
+    }
+}
+
 
 startWorker();
