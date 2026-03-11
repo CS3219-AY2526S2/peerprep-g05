@@ -11,6 +11,10 @@ node_modules/
 logs/
 *.log
 
+# Build artifacts
+dist/
+.vite/
+
 # Temporary files
 tmp/
 temp/
