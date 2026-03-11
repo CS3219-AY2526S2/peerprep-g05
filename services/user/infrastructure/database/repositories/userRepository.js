@@ -96,6 +96,14 @@ const userRepository = {
         return rows[0] || null;
     },
 
+    async updatePassword(id, passwordHash) {
+        const { rows } = await postgres.query(
+            "UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING *",
+            [passwordHash, id],
+        );
+        return rows[0] || null;
+    },
+
     /**
      * Hard-delete a user from the database.
      * ONLY use for edge cases like erasure requests or cleaning up test data.

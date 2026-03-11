@@ -46,6 +46,24 @@ const otpRepository = {
     },
 
     /**
+     * Find a valid unused, unexpired OTP by its code value and purpose.
+     * Used for password reset where we only have the token from the URL, not the userId.
+     */
+    async findValidByToken(code, purpose) {
+        const { rows } = await postgres.query(
+            `SELECT * FROM otp_codes
+             WHERE code = $1
+               AND purpose = $2
+               AND used_at IS NULL
+               AND expires_at > NOW()
+             ORDER BY created_at DESC
+             LIMIT 1`,
+            [code, purpose],
+        );
+        return rows[0] || null;
+    },
+
+    /**
      * Invalidate all unused OTPs for a user + purpose (used before issuing a fresh one).
      */
     async invalidateAll(userId, purpose) {
