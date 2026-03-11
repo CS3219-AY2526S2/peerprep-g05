@@ -188,6 +188,8 @@ Corrected some mistakes but added another variation of authentication function t
 # Author Notes:
 Agreed with the fixes and the comments but removed the additional authentication function because it was unnecessary.
 
+----------
+
 # Date/Time:
 2026-03-10 16:24
 # Tool:
@@ -203,6 +205,8 @@ Reformatted the file and added comments.
 - [ ] Rejected
 # Author Notes:
 Agreed with the re-formatting and comments.
+
+----------
 
 # Date/Time:
 2026-03-10 16:59
@@ -225,3 +229,44 @@ Previously used port 587 for nodemailer and suggested to use port 456 instead as
 - [ ] Rejected
 # Author Notes:
 Tested and the problem was resolved so the suggested solution worked.
+
+----------
+
+# Date/Time:
+2026-03-11 16:02
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+I have made the following changes to the attached files for the Reset Password and Forgot Password feature. Look through them, check if there are any typos, flaws in the logic and variables, add useful comments to them.
+
+# Output Summary:
+Some code refactoring but the functionality wasn't really changed. Also added comments and formatted the error/success messages better.
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+Looked through the comments and refactored/reformatted code and they look better but still work as intended.
+
+----------
+
+# Date/Time:
+2026-03-11 16:19
+# Tool:
+GitHub Copilot
+# Prompt/Command:
+For the reset link, I intend to use a randomly generated token that is large enough to be secure. For this, I have 2 proposals:
+
+1. Store it in the otp_codes table as another column
+2. Create a new table for reset_links and store it there
+
+Provide the pros and cons for each method and which one should I implement for this project's scale.
+
+# Output Summary:
+Propose that it may be a better solution to convert the original "code" column to accomodate the larger tokens as well and add another column, "purpose" to differentiate whether the code is an OTP of 6 digits or the 64 characters reset token to avoid null values.
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+Read through and agreed the solution before implementing and used the comments for 003_alter_otp_codes_code_length migration.
