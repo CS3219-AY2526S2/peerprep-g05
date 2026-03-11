@@ -45,3 +45,39 @@ export async function sendOtpEmail({ to, otp }) {
 }
 
 export { transporter };
+
+/**
+ * Send a password reset link email.
+ */
+export async function sendPasswordResetEmail({ to, resetLink, expiryMinutes }) {
+    await transporter.sendMail({
+        from: config.email.from,
+        to,
+        subject: "Reset your PeerPrep password",
+        text: [
+            `You requested a password reset for your PeerPrep account.`,
+            ``,
+            `Click the link below to reset your password:`,
+            `${resetLink}`,
+            ``,
+            `This link expires in ${expiryMinutes} minutes.`,
+            `If you did not request this, you can safely ignore this email.`,
+        ].join("\n"),
+        html: `
+            <p>You requested a password reset for your <strong>PeerPrep</strong> account.</p>
+            <p>Click the button below to reset your password:</p>
+            <p style="margin: 24px 0;">
+                <a href="${resetLink}"
+                   style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;">
+                    Reset Password
+                </a>
+            </p>
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break:break-all;color:#4f46e5;">${resetLink}</p>
+            <p>This link expires in <strong>${expiryMinutes} minutes</strong>.</p>
+            <p style="color:#888;font-size:12px;">
+                If you did not request a password reset, you can safely ignore this email.
+            </p>
+        `,
+    });
+}
