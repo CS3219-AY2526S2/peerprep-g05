@@ -3,7 +3,7 @@ import userRepository from "../../infrastructure/database/repositories/userRepos
 import otpRepository from "../../infrastructure/database/repositories/otpRepository.js";
 import { hashPassword, comparePassword } from "../../infrastructure/security/password.js";
 import { signToken, verifyToken } from "../../infrastructure/security/jwt.js";
-import { sendOtpEmail } from "../../infrastructure/email/client.js";
+import { sendOtpEmail, sendPasswordResetEmail } from "../../infrastructure/email/client.js";
 import User from "../models/User.js";
 import config from "../../config/index.js";
 
@@ -15,6 +15,12 @@ function generateOtp() {
 function otpExpiresAt() {
     const d = new Date();
     d.setMinutes(d.getMinutes() + config.otp.expiryMinutes);
+    return d;
+}
+
+function passwordResetExpiresAt() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + config.passwordReset.expiryMinutes);
     return d;
 }
 
@@ -171,6 +177,66 @@ const authService = {
         const accessToken = signToken({ sub: user.id, role: user.role });
 
         return { user, accessToken };
+    },
+
+    /**
+     * Initiate a password reset.
+     * Looks up the user by email, requires the account to be fully verified (is_active = true).
+     */
+    async forgotPassword({ email }) {
+        const genericResponse = {
+            message: "If that email is registered and verified, a password reset link has been sent.",
+        };
+
+        const row = await userRepository.findByEmail(email);
+
+        if (!row || !row.is_active) {
+            return genericResponse;
+        }
+
+        await otpRepository.invalidateAll(row.id, "PASSWORD_RESET");
+
+        const token = crypto.randomBytes(32).toString("hex");
+        await otpRepository.create({
+            userId: row.id,
+            code: token,
+            purpose: "PASSWORD_RESET",
+            expiresAt: passwordResetExpiresAt(),
+        });
+
+        const resetLink = `${config.frontendUrl}/reset-password?token=${token}`;
+
+        try {
+            await sendPasswordResetEmail({
+                to: row.email,
+                resetLink,
+                expiryMinutes: config.passwordReset.expiryMinutes,
+            });
+        } catch (emailErr) {
+            console.error("[authService] Failed to send password reset email:", emailErr.message);
+        }
+
+        return genericResponse;
+    },
+
+    /**
+     * Complete a password reset using the token from the reset link.
+     * Validates the token, applies the new password, and invalidates the token.
+     */
+    async resetPassword({ token, password }) {
+        const record = await otpRepository.findValidByToken(token, "PASSWORD_RESET");
+
+        if (!record) {
+            const err = new Error("Invalid or expired password reset link");
+            err.status = 400;
+            throw err;
+        }
+
+        const passwordHash = await hashPassword(password);
+        await userRepository.updatePassword(record.user_id, passwordHash);
+        await otpRepository.markUsed(record.id);
+
+        return { message: "Password has been reset successfully. You may now log in." };
     },
 
     /**
