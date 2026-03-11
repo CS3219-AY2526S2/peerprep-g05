@@ -1,6 +1,9 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
+
 :root {
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
@@ -8,15 +11,18 @@
   color: #213547;
   background-color: #ffffff;
 }
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
 }
+
 a {
   color: #4361ee;
   text-decoration: none;
 }
+
 a:hover {
   text-decoration: underline;
 }
@@ -29,6 +35,7 @@ a:hover {
   min-height: calc(100vh - 52px);
   padding: 1rem;
 }
+
 .card {
   background: #fff;
   border-radius: 12px;
@@ -37,11 +44,13 @@ a:hover {
   max-width: 420px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
+
 .card h2 {
   margin: 0 0 1.25rem;
   text-align: center;
   color: #1a1a2e;
 }
+
 .btn {
   display: inline-block;
   padding: 0.6rem 1.2rem;
@@ -53,19 +62,23 @@ a:hover {
   text-decoration: none;
   transition: background 0.2s;
 }
+
 .btn-primary {
   width: 100%;
   margin-top: 1rem;
   background: #4361ee;
   color: #fff;
 }
+
 .btn-primary:hover {
   background: #3a56d4;
 }
+
 .btn-primary:disabled {
   background: #a0b0f0;
   cursor: not-allowed;
 }
+
 .btn-sm {
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
@@ -74,9 +87,11 @@ a:hover {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
+
 .btn-sm:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+
 .alert-error {
   background: #fdecea;
   color: #b71c1c;
@@ -86,6 +101,7 @@ a:hover {
   font-size: 0.85rem;
   text-align: center;
 }
+
 .alert-success {
   background: #e8f5e9;
   color: #2e7d32;
@@ -95,12 +111,14 @@ a:hover {
   font-size: 0.85rem;
   text-align: center;
 }
+
 .overlay-footer {
   margin-top: 1.25rem;
   text-align: center;
   font-size: 0.85rem;
   color: #555;
 }
+
 .link-btn {
   background: none;
   border: none;

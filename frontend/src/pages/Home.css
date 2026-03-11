@@ -1,44 +1,52 @@
 .home {
-  position: relative;
-  min-height: calc(100vh - 52px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: relative;
+    min-height: calc(100vh - 52px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
 .home-content {
-  text-align: center;
-  padding: 2rem;
+    text-align: center;
+    padding: 2rem;
 }
+
 .home-content h1 {
-  font-size: 2.25rem;
-  color: #1a1a2e;
-  margin-bottom: 0.5rem;
+    font-size: 2.25rem;
+    color: #1a1a2e;
+    margin-bottom: 0.5rem;
 }
+
 .tagline {
-  font-size: 1.1rem;
-  color: #555;
-  margin-bottom: 2rem;
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 2rem;
 }
+
 .loading-text {
-  color: #888;
-  font-size: 1.1rem;
+    color: #888;
+    font-size: 1.1rem;
 }
+
 .user-card {
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 1.5rem 2rem;
-  display: inline-block;
-  text-align: left;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem 2rem;
+    display: inline-block;
+    text-align: left;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
+
 .user-card h3 {
-  margin: 0 0 1rem;
-  color: #1a1a2e;
+    margin: 0 0 1rem;
+    color: #1a1a2e;
 }
+
 .user-card table {
-  border-collapse: collapse;
+    border-collapse: collapse;
 }
+
 .user-card td {
-  padding: 0.3rem 1rem 0.3rem 0;
-  vertical-align: top;
+    padding: 0.3rem 1rem 0.3rem 0;
+    vertical-align: top;
 }
