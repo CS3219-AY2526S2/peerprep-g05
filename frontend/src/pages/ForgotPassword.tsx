@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import * as api from "../api/userApi.js";
+import * as api from "../api/userApi.ts";
+import type { ApiError } from "../api/userApi.ts";
 import "./ForgotPassword.css";
 
 export default function ForgotPassword() {
@@ -9,7 +10,7 @@ export default function ForgotPassword() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    async function handleSubmit(e) {
+    async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         setError("");
         setLoading(true);
@@ -17,7 +18,7 @@ export default function ForgotPassword() {
             await api.forgotPassword(email);
             setSent(true);
         } catch (err) {
-            setError(err.data?.error || "Something went wrong");
+            setError((err as ApiError).data?.error || "Something went wrong");
         } finally {
             setLoading(false);
         }

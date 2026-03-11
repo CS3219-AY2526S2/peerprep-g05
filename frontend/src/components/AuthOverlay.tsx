@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import * as api from "../api/userApi.js";
-import { useAuth } from "../context/AuthContext.jsx";
+import * as api from "../api/userApi.ts";
+import type { ApiError } from "../api/userApi.ts";
+import { useAuth } from "../context/AuthContext.tsx";
 import "./AuthOverlay.css";
 
 export default function AuthOverlay() {
-    const [mode, setMode] = useState("login"); // "login" | "register"
+    const [mode, setMode] = useState<"login" | "register">("login");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const { saveToken } = useAuth();
@@ -21,7 +22,7 @@ export default function AuthOverlay() {
     const [regPassword, setRegPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
 
-    async function handleLogin(e) {
+    async function handleLogin(e: FormEvent) {
         e.preventDefault();
         setError("");
         setLoading(true);
@@ -29,22 +30,21 @@ export default function AuthOverlay() {
             const res = await api.login(identifier, loginPassword);
             saveToken(res.accessToken);
         } catch (err) {
-            setError(err.data?.error || "Login failed");
+            setError((err as ApiError).data?.error || "Login failed");
         } finally {
             setLoading(false);
         }
     }
 
-    async function handleRegister(e) {
+    async function handleRegister(e: FormEvent) {
         e.preventDefault();
         setError("");
         setLoading(true);
         try {
             const res = await api.register(email, username, regPassword, displayName);
-            // Navigate to OTP page with userId
             navigate("/verify-otp", { state: { userId: res.userId } });
         } catch (err) {
-            setError(err.data?.error || "Registration failed");
+            setError((err as ApiError).data?.error || "Registration failed");
         } finally {
             setLoading(false);
         }

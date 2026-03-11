@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import * as api from "../api/userApi.js";
-import { useAuth } from "../context/AuthContext.jsx";
+import * as api from "../api/userApi.ts";
+import type { ApiError } from "../api/userApi.ts";
+import { useAuth } from "../context/AuthContext.tsx";
 import "./VerifyOtp.css";
 
 export default function VerifyOtp() {
     const location = useLocation();
     const navigate = useNavigate();
     const { saveToken } = useAuth();
-    const userId = location.state?.userId || "";
+    const userId = (location.state as { userId?: string } | null)?.userId || "";
 
     const [code, setCode] = useState("");
     const [error, setError] = useState("");
@@ -26,7 +27,7 @@ export default function VerifyOtp() {
         );
     }
 
-    async function handleVerify(e) {
+    async function handleVerify(e: FormEvent) {
         e.preventDefault();
         setError("");
         setInfo("");
@@ -36,7 +37,7 @@ export default function VerifyOtp() {
             saveToken(res.accessToken);
             navigate("/");
         } catch (err) {
-            setError(err.data?.error || "Verification failed");
+            setError((err as ApiError).data?.error || "Verification failed");
         } finally {
             setLoading(false);
         }
@@ -49,7 +50,7 @@ export default function VerifyOtp() {
             await api.resendOtp(userId);
             setInfo("A new OTP has been sent to your email.");
         } catch (err) {
-            setError(err.data?.error || "Failed to resend OTP");
+            setError((err as ApiError).data?.error || "Failed to resend OTP");
         }
     }
 

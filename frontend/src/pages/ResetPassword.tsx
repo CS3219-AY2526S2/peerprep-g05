@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import * as api from "../api/userApi.js";
+import * as api from "../api/userApi.ts";
+import type { ApiError } from "../api/userApi.ts";
 
 export default function ResetPassword() {
     const [searchParams] = useSearchParams();
@@ -13,7 +14,7 @@ export default function ResetPassword() {
     const [done, setDone] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    async function handleSubmit(e) {
+    async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         setError("");
         if (password !== confirm) {
@@ -25,7 +26,7 @@ export default function ResetPassword() {
             await api.resetPassword(token, password);
             setDone(true);
         } catch (err) {
-            setError(err.data?.error || "Reset failed");
+            setError((err as ApiError).data?.error || "Reset failed");
         } finally {
             setLoading(false);
         }

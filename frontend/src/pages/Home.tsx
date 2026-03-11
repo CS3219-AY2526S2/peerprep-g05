@@ -1,5 +1,5 @@
-import { useAuth } from "../context/AuthContext.jsx";
-import AuthOverlay from "../components/AuthOverlay.jsx";
+import { useAuth } from "../context/AuthContext.tsx";
+import AuthOverlay from "../components/AuthOverlay.tsx";
 import "./Home.css";
 
 export default function Home() {
