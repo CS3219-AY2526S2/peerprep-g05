@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import rateLimit from "express-rate-limit";
 
 import authRoutes from "./api/routes/authRoutes.js";
@@ -11,6 +12,10 @@ import config from "./config/index.js";
 dotenv.config();
 
 const app = express();
+app.use(cors({
+    origin: config.frontendUrl,
+    credentials: true,
+}));
 app.use(express.json());
 
 // ─── Rate limiting on auth endpoints ──────────────────
