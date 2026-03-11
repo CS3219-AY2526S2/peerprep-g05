@@ -99,3 +99,32 @@ export function jwks(_req, res) {
         algorithm: "RS256",
     });
 }
+
+/**
+ * POST /auth/forgot-password
+ * Sends a reset link to the email if it belongs to a fully verified account.
+ * Always returns the same generic response to prevent email enumeration.
+ */
+export async function forgotPassword(req, res, next) {
+    try {
+        const { email } = req.body;
+        const result = await authService.forgotPassword({ email });
+        return res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * POST /auth/reset-password
+ * Validates the reset token and applies the new password.
+ */
+export async function resetPassword(req, res, next) {
+    try {
+        const { token, password } = req.body;
+        const result = await authService.resetPassword({ token, password });
+        return res.status(200).json(result);
+    } catch (err) {
+        next(err);
+    }
+}

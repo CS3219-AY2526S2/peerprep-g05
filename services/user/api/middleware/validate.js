@@ -95,3 +95,19 @@ export const introspectRules = [
         .notEmpty().withMessage("Token is required"),
     handleValidationErrors,
 ];
+
+export const forgotPasswordRules = [
+    body("email")
+        .isEmail().withMessage("Must be a valid email")
+        .normalizeEmail(),
+    handleValidationErrors,
+];
+
+export const resetPasswordRules = [
+    body("token")
+        .trim()
+        .notEmpty().withMessage("Reset token is required"),
+    body("password")
+        .isLength({ min: 8 }).withMessage("Password must be at least 8 characters"),
+    handleValidationErrors,
+];
