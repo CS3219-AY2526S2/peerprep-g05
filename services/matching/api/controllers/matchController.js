@@ -212,7 +212,7 @@ export async function declineMatch(req, res) {
                 })),
                 { persistent: true }
             );
-            console.lol(`Requeue event published for user ${otherUserId}`);
+            console.log(`Requeue event published for user ${otherUserId}`);
         }
 
         res.sendStatus(200);
@@ -223,6 +223,49 @@ export async function declineMatch(req, res) {
         res.status(500).json({ error: "Internal Server Error" });
     }
 }
+
+export async function cancelMatch(req, res) {
+    const { user_id, topic, difficulty } = req.body;
+
+    if (!user_id || !topic || !difficulty) {
+        return res.status(400).json({ error: "user_id, topic and difficulty are required" });
+    }
+
+    try {
+        const { rows } = await postgres.query(
+            `SELECT * FROM matches
+            WHERE user_id_a = $1 AND topic = $2 AND difficulty = $3 AND status = 'WAITING'`,
+            [user_id, topic, difficulty]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "No waiting match found for user"});
+        }
+
+        const match = rows[0];
+
+        global.rabbitChannel.publish(
+            process.env.MATCH_EXCHANGE,
+            "match.leave",
+            Buffer.from(JSON.stringify({
+                event_id: uuid(),
+                match_id: match.match_id,
+                user_id,
+                topic,
+                difficulty
+            })),
+            { persistent: true }
+        );
+
+        return res.status(200).json({ message: "Left matchmaking queue successfully" });
+        
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+    
+}
+
 
 //Get the status of the match (WAITING, CONFIRMED, CANCELLED)
 export async function getMatchStatus(req, res) {

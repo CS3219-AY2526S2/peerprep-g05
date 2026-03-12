@@ -22,6 +22,7 @@ async function startWorker() {
     //Bind both match.enter and requeue to the same queue
     await channel.bindQueue(queue.queue, process.env.MATCH_EXCHANGE, "match.enter");
     await channel.bindQueue(queue.queue, process.env.MATCH_EXCHANGE, "match.requeue");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EXCHANGE, "match.leave");
 
     channel.consume(queue.queue, async (msg) => {
         if (!msg) return;
@@ -36,6 +37,9 @@ async function startWorker() {
             }
             if (routingKey === "match.requeue") {
                 await handleMatchRequeue(event, channel);
+            }
+            if (routingKey === "match.leave") {
+                await handleMatchLeave(event);
             }
             channel.ack(msg);
         } catch (err) {
@@ -148,8 +152,61 @@ async function handleMatchEnter(event) {
             }
         }
 
-        // ✅ Only mark as processed after successful handling
         await redis.set(processedKey, "1", "EX", 3600);
+
+    } finally {
+        await releaseLock(redis, lockKey);
+    }
+}
+
+async function handleMatchLeave(event) {
+    const { user_id, topic, difficulty, match_id } = event;
+
+    const queueKey = `match_queue:${topic}:${difficulty}`;
+    const lockKey = `match_lock:${topic}:${difficulty}`;
+    const lock = await acquireLock(redis, lockKey, 10);
+    if (!lock) throw new Error("LOCK_BUSY");
+
+    try {
+        // Remove user from Redis queue
+        const usersInQueue = await redis.lrange(queueKey, 0, -1);
+        for (const u of usersInQueue) {
+            const parsed = JSON.parse(u);
+            if (parsed.user_id === user_id) {
+                await redis.lrem(queueKey, 0, u);
+                console.log(`Removed ${user_id} from queue ${queueKey}`);
+            }
+        }
+
+        await postgres.query("BEGIN");
+        try {
+            const { rowCount } = await postgres.query(
+                `UPDATE matches
+                 SET status = 'CANCELLED',
+                     updated_at = NOW()
+                 WHERE match_id = $1 AND status = 'WAITING'`,
+                [match_id]
+            );
+
+            if (rowCount === 0) {
+                await postgres.query("ROLLBACK");
+                console.log(`No WAITING match to cancel for user ${user_id}`);
+                return;
+            }
+
+            await postgres.query(
+                `INSERT INTO match_events (event_id, match_id, event_type, payload)
+                 VALUES ($1, $2, 'MATCH_LEFT', $3)`,
+                [uuid(), match_id, JSON.stringify({ user_id })]
+            );
+
+            await postgres.query("COMMIT");
+            console.log(`User ${user_id} left matchmaking for topic ${topic}, difficulty ${difficulty}`);
+
+        } catch (err) {
+            await postgres.query("ROLLBACK");
+            throw err;
+        }
 
     } finally {
         await releaseLock(redis, lockKey);
