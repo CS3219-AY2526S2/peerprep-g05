@@ -8,7 +8,7 @@ import { postgres } from "../../infrastructure/postgres/client.js";
 
 dotenv.config();
 
-const PROPOSAL_TIMEOUT_MS = 1 * 60 * 1000; // 1 minute
+const PROPOSAL_TIMEOUT_MS = 5 * 60 * 1000; // 1 minute
 
 async function startWorker() {
     const channel = await createChannel();
@@ -92,7 +92,7 @@ async function handleMatchEnter(event) {
                     `UPDATE matches
                      SET user_id_b = $1,
                          status = 'PROPOSED',
-                         proposal_expiry = NOW() + INTERVAL '1 minute',
+                         proposal_expiry = NOW() + INTERVAL '5 minute',
                          updated_at = NOW()
                      WHERE match_id = $2 AND status = 'WAITING'
                      RETURNING *`,
@@ -118,6 +118,7 @@ async function handleMatchEnter(event) {
 
                 if (updateB.rowCount === 0) {
                     await postgres.query("ROLLBACK");
+                    await redis.lpush(queueKey, JSON.stringify(userB));
                     await redis.lpush(queueKey, JSON.stringify(userA));
                     console.log(`userB ${userB.user_id} stale, requeueing userA ${userA.user_id}`);
                     continue;      
