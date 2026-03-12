@@ -1,0 +1,69 @@
+services:
+  # ── Question Service ────────────────────────────────────────
+  question-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: questions_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - question_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - peerprep-network
+
+  question-service:
+    build:
+      context: ./services/question
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      NODE_ENV: production
+      POSTGRES_HOST: question-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: questions_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      question-db:
+        condition: service_healthy
+    networks:
+      - peerprep-network
+
+  # ── Seed job (run once) ─────────────────────────────────────
+  question-seed:
+    build:
+      context: ./services/question
+      dockerfile: Dockerfile
+    command: ["node", "scripts/seed.js"]
+    environment:
+      POSTGRES_HOST: question-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: questions_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      question-db:
+        condition: service_healthy
+    restart: "no"
+    profiles:
+      - seed
+    networks:
+      - peerprep-network
+
+volumes:
+  question_pgdata:
+
+networks:
+  peerprep-network:
+    driver: bridge
