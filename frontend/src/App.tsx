@@ -15,7 +15,7 @@ import VerifyOtp from "./pages/VerifyOtp.tsx";
 
 export default function App() {
   return (
-    <>
+    <div className="flex flex-col h-full">
       <Navbar />
       <Routes>
         {/* Public routes */}
@@ -62,6 +62,6 @@ export default function App() {
           />
         </Route>
       </Routes>
-    </>
+    </div>
   );
 }
