@@ -2,6 +2,7 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { yCollab } from "y-codemirror.next";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
@@ -14,7 +15,11 @@ const editorTheme = EditorView.theme({
 
 export default function CollaborativeEditor() {
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const roomId = "room-1";
+
+  const { roomId } = useParams();
+  if (!roomId) {
+    return <div>Room ID is required</div>;
+  }
 
   useEffect(() => {
     const ydoc = new Y.Doc();

@@ -29,6 +29,7 @@ export default function App() {
           <Route path="/matching" element={<Matching />} />
 
           <Route path="/editor" element={<CollaborativeEditor />} />
+          <Route path="/editor/:roomId" element={<CollaborativeEditor />} />
         </Route>
 
         {/* Admin-only routes */}
