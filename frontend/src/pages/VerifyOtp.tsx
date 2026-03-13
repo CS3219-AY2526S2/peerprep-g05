@@ -3,7 +3,6 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import * as api from "../api/userApi.ts";
 import type { ApiError } from "../api/userApi.ts";
 import { useAuth } from "../context/AuthContext.tsx";
-import "./VerifyOtp.css";
 
 export default function VerifyOtp() {
     const location = useLocation();
@@ -18,9 +17,9 @@ export default function VerifyOtp() {
 
     if (!userId) {
         return (
-            <div className="page-center">
-                <div className="card">
-                    <h2>No registration in progress</h2>
+            <div className="flex min-h-[calc(100vh-52px)] items-center justify-center px-4">
+                <div className="w-full max-w-md rounded-xl bg-white p-8 shadow">
+                    <h2 className="mb-3 text-center text-2xl font-semibold text-slate-900">No registration in progress</h2>
                     <p>Please <Link to="/">register</Link> first.</p>
                 </div>
             </div>
@@ -55,13 +54,13 @@ export default function VerifyOtp() {
     }
 
     return (
-        <div className="page-center">
-            <div className="card">
-                <h2>Verify Your Email</h2>
-                <p className="subtitle">Enter the 6-digit code sent to your email.</p>
+        <div className="flex min-h-[calc(100vh-52px)] items-center justify-center px-4">
+            <div className="w-full max-w-md rounded-xl bg-white p-8 shadow">
+                <h2 className="mb-1 text-center text-2xl font-semibold text-slate-900">Verify Your Email</h2>
+                <p className="mb-5 text-center text-slate-600">Enter the 6-digit code sent to your email.</p>
 
-                {error && <div className="alert-error">{error}</div>}
-                {info && <div className="alert-success">{info}</div>}
+                {error && <div className="mb-3 rounded-md bg-red-100 px-3 py-2 text-center text-sm text-red-700">{error}</div>}
+                {info && <div className="mb-3 rounded-md bg-emerald-100 px-3 py-2 text-center text-sm text-emerald-700">{info}</div>}
 
                 <form onSubmit={handleVerify}>
                     <input
@@ -71,17 +70,17 @@ export default function VerifyOtp() {
                         placeholder="000000"
                         value={code}
                         onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        className="otp-input"
+                        className="mb-4 w-full rounded-md border border-slate-300 px-3 py-3 text-center text-3xl tracking-[0.6em] focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         required
                     />
-                    <button className="btn btn-primary" disabled={loading || code.length !== 6}>
+                    <button className="w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300" disabled={loading || code.length !== 6}>
                         {loading ? "Verifying…" : "Verify"}
                     </button>
                 </form>
 
-                <div className="overlay-footer">
+                <div className="mt-5 text-center text-sm text-slate-600">
                     <span>Didn't receive the code? </span>
-                    <button className="link-btn" onClick={handleResend}>Resend OTP</button>
+                    <button className="bg-transparent p-0 text-sm text-indigo-600 underline hover:text-indigo-700" onClick={handleResend}>Resend OTP</button>
                 </div>
             </div>
         </div>

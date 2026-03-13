@@ -6,7 +6,7 @@ export default function AdminOnlyRoute({ children }: { children: ReactNode }) {
     const { user, loading } = useAuth();
 
     if (loading) {
-        return <div className="page-center">Loading…</div>;
+        return <div className="flex min-h-[calc(100vh-52px)] items-center justify-center text-slate-500">Loading…</div>;
     }
 
     if (!user || user.role !== "ADMIN") {
