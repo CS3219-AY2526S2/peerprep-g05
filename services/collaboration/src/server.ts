@@ -1,9 +1,16 @@
+import http from "http";
 import app from "./app.js";
-import { connectDB } from "./db.js";
 import { config } from "./config.js";
+import wss from "./websocketServer.js";
 
-await connectDB();
+const server = http.createServer(app);
 
-app.listen(config.EXPRESS_PORT, () => {
+server.on("upgrade", (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
+
+server.listen(config.EXPRESS_PORT, () => {
   console.log(`Server is running on: http://localhost:${config.EXPRESS_PORT}/`);
 });

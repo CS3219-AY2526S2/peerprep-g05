@@ -1,6 +1,10 @@
-import { basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
+import { basicSetup } from "codemirror";
 import { useEffect, useRef } from "react";
+import { yCollab } from "y-codemirror.next";
+import { WebsocketProvider } from "y-websocket";
+import * as Y from "yjs";
 
 const editorTheme = EditorView.theme({
   "&": {
@@ -9,15 +13,40 @@ const editorTheme = EditorView.theme({
 });
 
 export default function CollaborativeEditor() {
-  const editorContainerRef = useRef(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+  const roomId = "room-1";
+
   useEffect(() => {
-    const view = new EditorView({
-      doc: "print('Hi')",
-      parent: editorContainerRef.current || undefined,
-      extensions: [basicSetup, editorTheme],
+    const ydoc = new Y.Doc();
+    const provider = new WebsocketProvider(
+      "ws://localhost:51392",
+      roomId,
+      ydoc,
+    );
+    provider;
+
+    const ytext = ydoc.getText();
+    provider.awareness.setLocalStateField("user", {
+      name: "User1",
+      color: "#ccc",
     });
-    return () => view.destroy();
-  }, []);
+
+    const state = EditorState.create({
+      doc: ytext.toString(),
+      extensions: [basicSetup, editorTheme, yCollab(ytext, provider.awareness)],
+    });
+
+    const view = new EditorView({
+      state: state,
+      parent: editorContainerRef.current!,
+    });
+
+    return () => {
+      view.destroy();
+      ydoc.destroy();
+    };
+  }, [roomId]);
+
   return (
     <div
       id="editor"
