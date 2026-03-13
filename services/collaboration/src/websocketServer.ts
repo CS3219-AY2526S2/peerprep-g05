@@ -25,6 +25,7 @@ const room_docs = new Map<RoomKey, YDocWithAwareness>();
 const MESSAGE_SYNC = 0;
 const MESSAGE_AWARENESS = 1;
 
+// Websocket Event Handlers
 // Handle new message
 const handleMessage = (
   conn: CustomWebSocket,
@@ -57,55 +58,73 @@ const handleMessage = (
   }
 };
 
-// Connection Logic
-wss.on("connection", (conn: CustomWebSocket, req: IncomingMessage) => {
-  const roomName = req.url?.split("/").pop() || "default";
-  conn.room = roomName;
+// Handle close connection
+const handleClose = (roomName: RoomKey) => {
+  const roomClients = Array.from(wss.clients as Set<CustomWebSocket>).filter(
+    (c) => c.room === roomName,
+  );
+  if (roomClients.length === 0) {
+    console.log(`Room ${roomName} is empty. Cleaning up...`);
+  }
+};
 
-  // Initialize Doc for the room if it doesn't exist
+// Document Event Handlers
+// handler list https://docs.yjs.dev/api/y.doc#event-handler
+// when document update.
+const handleDocUpdate: (update: Uint8Array, roomName: RoomKey) => void = (
+  update: Uint8Array,
+  roomName: RoomKey,
+) => {
+  const encoder = encoding.createEncoder();
+  encoding.writeVarUint(encoder, MESSAGE_SYNC);
+  syncProtocol.writeUpdate(encoder, update);
+  const message = encoding.toUint8Array(encoder);
+
+  // Broadcast to all clients in the room
+  wss.clients.forEach((client: CustomWebSocket) => {
+    if (client.readyState === WebSocket.OPEN && client.room === roomName) {
+      client.send(message);
+    }
+  });
+};
+
+// Initialize a Y.Doc for the room if it doesn't exist
+const initDocForRoom = (roomName: RoomKey) => {
   if (!room_docs.has(roomName)) {
-    const doc = new Y.Doc() as Y.Doc & { awareness: awareness.Awareness };
+    const doc = new Y.Doc() as YDocWithAwareness;
     // Attach awareness to the doc instance
     doc.awareness = new awareness.Awareness(doc);
 
     // Update listener when document change, broadcast the update to all clients in the same room
-    doc.on("update", (update: Uint8Array) => {
-      const encoder = encoding.createEncoder();
-      encoding.writeVarUint(encoder, MESSAGE_SYNC);
-      syncProtocol.writeUpdate(encoder, update);
-      const message = encoding.toUint8Array(encoder);
-
-      // Broadcast to all clients in the room
-      wss.clients.forEach((client: CustomWebSocket) => {
-        if (client.readyState === WebSocket.OPEN && client.room === roomName) {
-          client.send(message);
-        }
-      });
-    });
+    doc.on("update", (update: Uint8Array) => handleDocUpdate(update, roomName));
 
     room_docs.set(roomName, doc);
   }
+};
 
-  const doc = room_docs.get(roomName)!;
-
-  // Initial Sync when user joins
+// First sync when user joins
+const initSyncForClient = (conn: CustomWebSocket, doc: YDocWithAwareness) => {
   const encoder = encoding.createEncoder();
   encoding.writeVarUint(encoder, MESSAGE_SYNC);
   syncProtocol.writeSyncStep1(encoder, doc);
   conn.send(encoding.toUint8Array(encoder));
+}
+// Connection Logic
+wss.on("connection", (conn: CustomWebSocket, req: IncomingMessage) => {
+  const roomName = req.url?.split("/").pop()!;
+  conn.room = roomName;
+
+  // Initialize Doc for the room if it doesn't exist
+  initDocForRoom(roomName);
+  const doc = room_docs.get(roomName)!;
+
+  // Initial Sync when user joins
+  initSyncForClient(conn, doc);
 
   conn.on("message", (data: Buffer) => {
     handleMessage(conn, doc, new Uint8Array(data));
   });
 
-  // Cleanup when user leaves
-  conn.on("close", () => {
-    const roomClients = Array.from(wss.clients as Set<CustomWebSocket>).filter(
-      (c) => c.room === roomName,
-    );
-    if (roomClients.length === 0) {
-      console.log(`Room ${roomName} is empty. Cleaning up...`);
-    }
-  });
+  conn.on("close", () => handleClose(roomName));
 });
 export default wss;
