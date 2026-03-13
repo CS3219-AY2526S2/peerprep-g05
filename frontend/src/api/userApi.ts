@@ -35,6 +35,8 @@ export interface VerifyOtpResponse {
     user: User;
 }
 
+export type AdminUser = User;
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const res = await fetch(`${BASE}${path}`, {
         headers: { "Content-Type": "application/json", ...options.headers },
@@ -95,4 +97,17 @@ export const updateMe = (token: string, fields: Partial<Pick<User, "display_name
         method: "PATCH",
         headers: authHeader(token),
         body: JSON.stringify(fields),
+    });
+
+// ── Admin ─────────────────────────────────────────────
+export const listAllUsers = (token: string) =>
+    request<AdminUser[]>("/admin/users", {
+        headers: authHeader(token),
+    });
+
+export const promoteUserToAdmin = (token: string, userId: string) =>
+    request<AdminUser>(`/admin/users/${userId}/role`, {
+        method: "PATCH",
+        headers: authHeader(token),
+        body: JSON.stringify({ role: "ADMIN" }),
     });

@@ -1,0 +1,60 @@
+.admin-users-page {
+  padding: 2rem;
+}
+
+.admin-users-card {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.admin-users-card h2 {
+  margin: 0;
+  color: #1a1a2e;
+}
+
+.admin-subtitle {
+  margin: 0.25rem 0 1rem;
+  color: #666;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-users-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+  border-bottom: 1px solid #e8e8e8;
+  text-align: left;
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+.admin-users-table th {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+}
+
+.btn-promote {
+  margin-top: 0;
+  width: auto;
+}
+
+.already-admin {
+  color: #2e7d32;
+  font-weight: 600;
+}
