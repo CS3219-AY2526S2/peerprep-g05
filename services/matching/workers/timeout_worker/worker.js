@@ -6,8 +6,9 @@ import { createChannel } from "../../infrastructure/rabbitmq/client.js";
 
 dotenv.config();
 
-async function startTimeoutWorker() {
+async function startTimeoutWorker(timeout_duration) {
     const channel = await createChannel();
+    const WAITING_TIMEOUT = timeout_duration;
 
     setInterval(async () => {
         try {
@@ -94,6 +95,64 @@ async function startTimeoutWorker() {
         }
 
     }, 5000);
+
+    setInterval(async () => {
+        try {
+            const stale = await postgres.query(`
+                SELECT *
+                FROM matches
+                WHERE status = 'WAITING'
+                AND created_at < NOW() - INTERVAL '${WAITING_TIMEOUT} minutes'
+            `);
+
+            for (const match of stale.rows) {
+                await postgres.query("BEGIN");
+                try {
+                    const result = await postgres.query(`
+                        UPDATE matches
+                        SET status = 'CANCELLED', updated_at = NOW()
+                        WHERE match_id = $1 AND status = 'WAITING'
+                        RETURNING *
+                    `, [match.match_id]);
+
+                    if (result.rowCount === 0) {
+                        await postgres.query("ROLLBACK");
+                        continue;
+                    }
+
+                    await postgres.query(`
+                        INSERT INTO match_events (event_id, match_id, event_type, payload)
+                        VALUES ($1, $2, 'MATCH_WAITING_TIMEOUT', $3)
+                    `, [uuid(), match.match_id, JSON.stringify({ user_id: match.user_id_a })]);
+
+                    await postgres.query("COMMIT");
+
+                    channel.publish(
+                        process.env.MATCH_EXCHANGE,
+                        "match.leave",
+                        Buffer.from(JSON.stringify({
+                            event_id: uuid(),
+                            match_id: match.match_id,
+                            user_id: match.user_id_a,
+                            topic: match.topic,
+                            difficulty: match.difficulty
+                        }))
+                    );
+
+                    console.log(`WAITING match ${match.match_id} timed out for user ${match.user_id_a} after ${WAITING_TIMEOUT} mins`);
+
+                } catch (err) {
+                    await postgres.query("ROLLBACK");
+                    console.error(`Error timing out WAITING match ${match.match_id}:`, err);
+                }
+            }
+
+        } catch (err) {
+            console.error("Waiting timeout poll error:", err);
+        }
+
+    }, 5000);
 }
 
-startTimeoutWorker();
+const timeout_duration = process.env.WAITING_TIMEOUT_MINS || 5;
+startTimeoutWorker(timeout_duration);
