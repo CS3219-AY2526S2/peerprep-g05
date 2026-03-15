@@ -2,6 +2,10 @@ import { v4 as uuid } from "uuid";
 import { postgres } from "../../infrastructure/postgres/client.js";
 import { releaseLock, acquireLock } from "../../infrastructure/redis/lock.js";
 import { redis } from "../../infrastructure/redis/client.js";
+import { findMatchById, findWaitingMatch, createMatch,
+    updateMatchAcceptedByA, updateMatchAcceptedByB, confirmMatch,
+    cancelMatch, getAcceptanceStatus, insertMatchEvent
+ } from "../../domain/match/matchRepository.js";
 
 export async function enterMatchmaking(req, res) {
 
@@ -11,20 +15,7 @@ export async function enterMatchmaking(req, res) {
 
         const match_id = uuid();
 
-        await postgres.query(
-            `
-            INSERT INTO matches
-            (match_id, user_id_a, topic, difficulty, status)
-            VALUES ($1,$2,$3,$4,$5)
-            `,
-            [
-                match_id,
-                user_id,
-                topic,
-                difficulty,
-                "WAITING"
-            ]
-        );
+        await createMatch(match_id, user_id, topic, difficulty);
 
         global.rabbitChannel.publish(
             process.env.MATCH_EXCHANGE,
@@ -54,19 +45,14 @@ export async function acceptMatch(req, res) {
     const { user_id } = req.body;
 
     try {
-        // Resolve REDIRECTED match to its PROPOSED match
-        const { rows } = await postgres.query(
-            `SELECT * FROM matches WHERE match_id = $1`, [match_id]
-        );
 
-        if (rows.length === 0) {
-            return res.status(404).json({ error: "Match Not Found" });
-        }
+        const match = await findMatchById(match_id);
+        if (!match) return res.status(404).json({ error: "Match Not Found" });
 
         // Follow redirect if needed
         let proposedMatchId = match_id;
-        if (rows[0].status === "REDIRECTED") {
-            proposedMatchId = rows[0].redirected_to;
+        if (match.status === "REDIRECTED") {
+            proposedMatchId = match.redirected_to;
         }
 
         const lockKey = `match_lock:${proposedMatchId}`;
@@ -76,18 +62,13 @@ export async function acceptMatch(req, res) {
         try {
             await postgres.query("BEGIN");
 
-            const { rows: proposed } = await postgres.query(
-                `SELECT * FROM matches WHERE match_id = $1`, [proposedMatchId]
-            );
-
-            if (proposed.length === 0) {
+            const proposed = await findMatchById(proposedMatchId);
+            if (!proposed) {
                 await postgres.query("ROLLBACK");
                 return res.status(404).json({ error: "Proposed match not found" });
             }
 
-            const match = proposed[0];
-
-            if (match.status !== "PROPOSED") {
+            if (proposed.status !== "PROPOSED") {
                 await postgres.query("ROLLBACK");
                 return res.status(400).json({ error: "Match is no longer open for acceptance" });
             }
@@ -98,37 +79,21 @@ export async function acceptMatch(req, res) {
             }
 
             // Determine which side this user is on
-            if (user_id === match.user_id_a) {
-                await postgres.query(
-                    `UPDATE matches SET accepted_by_a = TRUE, updated_at = NOW()
-                     WHERE match_id = $1 AND status = 'PROPOSED'`,
-                    [proposedMatchId]
-                );
+            if (user_id === proposed.user_id_a) {
+                await updateMatchAcceptedByA(proposedMatchId);
                 console.log(`${user_id} (user_a) accepted match ${proposedMatchId}`);
-            } else if (user_id === match.user_id_b) {
-                await postgres.query(
-                    `UPDATE matches SET accepted_by_b = TRUE, updated_at = NOW()
-                     WHERE match_id = $1 AND status = 'PROPOSED'`,
-                    [proposedMatchId]
-                );
+            } else if (user_id === proposed.user_id_b) {
+                await updateMatchAcceptedByB(proposedMatchId);
                 console.log(`${user_id} (user_b) accepted match ${proposedMatchId}`);
             } else {
                 await postgres.query("ROLLBACK");
                 return res.status(403).json({ error: "Not a participant" });
             }
 
-            // Check if both have now accepted
-            const { rows: updated } = await postgres.query(
-                `SELECT accepted_by_a, accepted_by_b FROM matches WHERE match_id = $1`,
-                [proposedMatchId]
-            );
+            const acceptance = await getAcceptanceStatus(proposedMatchId);
 
-            if (updated[0].accepted_by_a && updated[0].accepted_by_b) {
-                await postgres.query(
-                    `UPDATE matches SET status = 'CONFIRMED', updated_at = NOW()
-                     WHERE match_id = $1 AND status = 'PROPOSED'`,
-                    [proposedMatchId]
-                );
+            if (acceptance.accepted_by_a && acceptance.accepted_by_b) {
+                await confirmMatch(proposedMatchId);
                 console.log(`Match ${proposedMatchId} CONFIRMED`);
             }
 
@@ -157,17 +122,11 @@ export async function declineMatch(req, res) {
     try {
         await postgres.query("BEGIN");
 
-        const { rows } = await postgres.query(
-            `SELECT * FROM matches WHERE match_id = $1`,
-            [match_id]
-        );
-
-        if (rows.length === 0) {
+        const match = await findMatchById(match_id);
+        if (!match) {
             await postgres.query("ROLLBACK");
-            return res.status(404).json({ error: "Match not found" });
+            return res.status(404).json({ error: "Match Not Found" });
         }
-
-        const match = rows[0];
 
         if (![match.user_id_a, match.user_id_b].includes(user_id)) {
             await postgres.query("ROLLBACK");
@@ -180,18 +139,8 @@ export async function declineMatch(req, res) {
             return res.status(400).json({ error: "Match is not declinable" });
         }
 
-        //Update match status to "CANCELLED"
-        await postgres.query(
-            `UPDATE matches SET status = 'CANCELLED', updated_at = NOW()
-            WHERE match_id = $1`, [match_id]
-        );
-
-        //Log Decline event:
-        await postgres.query(
-            `INSERT INTO match_events (event_id, match_id, event_type, payload)
-            VALUES ($1, $2, 'MATCH_DECLINED', $3)`,
-            [uuid(), match_id, JSON.stringify({ declined_by: user_id })]
-        );
+        await cancelMatch(match_id);
+        await insertMatchEvent(uuid(), match_id, "MATCH_DECLINED", { declined_by: user_id });
 
         await postgres.query("COMMIT");
         res.json({ success: true, message: "Match Declined" });
@@ -224,7 +173,7 @@ export async function declineMatch(req, res) {
     }
 }
 
-export async function cancelMatch(req, res) {
+export async function leaveMatch(req, res) {
     const { user_id, topic, difficulty } = req.body;
 
     if (!user_id || !topic || !difficulty) {
@@ -232,17 +181,10 @@ export async function cancelMatch(req, res) {
     }
 
     try {
-        const { rows } = await postgres.query(
-            `SELECT * FROM matches
-            WHERE user_id_a = $1 AND topic = $2 AND difficulty = $3 AND status = 'WAITING'`,
-            [user_id, topic, difficulty]
-        );
-
-        if (rows.length === 0) {
-            return res.status(404).json({ error: "No waiting match found for user"});
+        const match = await findWaitingMatch(user_id, topic, difficulty);
+        if (!match) {
+            return res.status(404).json({ error: "No waiting match found for user" });
         }
-
-        const match = rows[0];
 
         global.rabbitChannel.publish(
             process.env.MATCH_EXCHANGE,
@@ -272,10 +214,6 @@ export async function getMatchStatus(req, res) {
 
     const { match_id } = req.params;
 
-    const result = await postgres.query(
-        `SELECT * FROM matches WHERE match_id=$1`,
-        [match_id]
-    );
-
-    res.json(result.rows[0]);
+    const match = await findMatchById(match_id);
+    res.json(match);
 }
