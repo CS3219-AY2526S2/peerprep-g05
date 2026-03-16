@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 
 import questionRoutes from "./api/routes/questionRoutes.js";
-import { postgres, initDatabase } from "./infrastructure/postgres/client.js";
+import { pool, initDatabase } from "./infrastructure/postgres/client.js";
 
 dotenv.config();
 
@@ -19,14 +19,14 @@ app.use((req, _res, next) => {
 
 async function init() {
     try {
-        await postgres.query("SELECT 1");
+        await pool.query("SELECT 1");
         console.log("PostgreSQL connected");
 
         await initDatabase();
 
         app.get("/health", async (_req, res) => {
             try {
-                await postgres.query("SELECT 1");
+                await pool.query("SELECT 1");
                 res.json({ status: "ok", service: "question", uptime: process.uptime() });
             } catch {
                 res.status(503).json({ status: "degraded", service: "question" });
@@ -55,7 +55,7 @@ async function init() {
         const shutdown = async (signal) => {
             console.log(`\n${signal} received — shutting down gracefully`);
             server.close(async () => {
-                await postgres.end();
+                await pool.end();
                 console.log("PostgreSQL pool closed");
                 process.exit(0);
             });

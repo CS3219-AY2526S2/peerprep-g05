@@ -1,7 +1,8 @@
 import pg from "pg";
 const { Pool } = pg;
 
-export const postgres = new Pool({
+// Keep one shared pool instance for the service.
+export const pool = new Pool({
     host: process.env.POSTGRES_HOST || "localhost",
     port: process.env.POSTGRES_PORT || 5432,
     database: process.env.POSTGRES_DB || "questions_db",
@@ -14,7 +15,7 @@ export const postgres = new Pool({
 
 /** Creates the questions and test_cases tables if they don't exist. */
 export async function initDatabase() {
-    const client = await postgres.connect();
+    const client = await pool.connect();
     try {
         await client.query(`
             CREATE TABLE IF NOT EXISTS questions (

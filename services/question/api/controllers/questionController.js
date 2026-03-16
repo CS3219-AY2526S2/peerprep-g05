@@ -1,10 +1,26 @@
-import { postgres } from "../../infrastructure/postgres/client.js";
+import { pool } from "../../infrastructure/postgres/client.js";
 
 const VALID_COMPLEXITIES = ["Easy", "Medium", "Hard"];
 const TITLE_MAX_LENGTH = 255;
 const DESCRIPTION_MAX_LENGTH = 10000;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+
+/**
+ * Build an absolute pagination URL while preserving existing query filters.
+ * @param {import('express').Request} req
+ * @param {number} page
+ * @param {number} limit
+ * @returns {string}
+ */
+function buildPageLink(req, page, limit) {
+    const host = req.get("host");
+    const protocol = req.protocol || "http";
+    const url = new URL(req.originalUrl || req.baseUrl || req.path, `${protocol}://${host}`);
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("limit", String(limit));
+    return url.toString();
+}
 
 /**
  * @param {Array} params - Query parameter array (mutated in-place).
@@ -115,7 +131,7 @@ function validateTestCases(testCases) {
 async function fetchTestCases(questionIds, includePrivate = false) {
     if (questionIds.length === 0) return {};
     const privacyFilter = includePrivate ? "" : " AND is_public = true";
-    const result = await postgres.query(
+    const result = await pool.query(
         `SELECT * FROM test_cases WHERE question_id = ANY($1)${privacyFilter} ORDER BY order_index, id`,
         [questionIds]
     );
@@ -137,7 +153,7 @@ export async function getAllQuestions(req, res, next) {
         const countParams = [];
         const whereClause = buildFilterClause(countParams, { complexity, category, company, search });
 
-        const countResult = await postgres.query(
+        const countResult = await pool.query(
             `SELECT COUNT(*) FROM questions ${whereClause}`,
             countParams
         );
@@ -145,7 +161,7 @@ export async function getAllQuestions(req, res, next) {
 
         const dataParams = [...countParams];
         dataParams.push(limit, offset);
-        const result = await postgres.query(
+        const result = await pool.query(
             `SELECT * FROM questions ${whereClause} ORDER BY id DESC LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}`,
             dataParams
         );
@@ -157,6 +173,10 @@ export async function getAllQuestions(req, res, next) {
             test_cases: testCaseMap[q.id] || [],
         }));
 
+        const totalPages = Math.ceil(total / limit);
+        const hasNext = page < totalPages;
+        const hasPrev = page > 1;
+
         res.json({
             success: true,
             data,
@@ -164,7 +184,12 @@ export async function getAllQuestions(req, res, next) {
                 page,
                 limit,
                 total,
-                totalPages: Math.ceil(total / limit),
+                totalPages,
+                links: {
+                    self: buildPageLink(req, page, limit),
+                    next: hasNext ? buildPageLink(req, page + 1, limit) : null,
+                    prev: hasPrev ? buildPageLink(req, page - 1, limit) : null,
+                },
             },
         });
     } catch (error) {
@@ -176,7 +201,7 @@ export async function getAllQuestions(req, res, next) {
 export async function getQuestionById(req, res, next) {
     try {
         const { id } = req.params;
-        const result = await postgres.query("SELECT * FROM questions WHERE id = $1", [id]);
+        const result = await pool.query("SELECT * FROM questions WHERE id = $1", [id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Question not found" });
@@ -202,7 +227,7 @@ export async function getRandomQuestion(req, res, next) {
         const params = [];
         const whereClause = buildFilterClause(params, { complexity, category, company });
 
-        const result = await postgres.query(
+        const result = await pool.query(
             `SELECT * FROM questions ${whereClause} ORDER BY RANDOM() LIMIT 1`,
             params
         );
@@ -230,7 +255,7 @@ export async function createQuestion(req, res, next) {
             return res.status(400).json({ success: false, errors });
         }
 
-        const dup = await postgres.query(
+        const dup = await pool.query(
             "SELECT id FROM questions WHERE LOWER(title) = LOWER($1)",
             [title.trim()]
         );
@@ -241,7 +266,7 @@ export async function createQuestion(req, res, next) {
             });
         }
 
-        const result = await postgres.query(
+        const result = await pool.query(
             `INSERT INTO questions (title, description, categories, complexity, companies)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
@@ -258,7 +283,7 @@ export async function createQuestion(req, res, next) {
                 values.push(question.id, tc.input, tc.expected_output, tc.is_public ?? true);
                 return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, ${i})`;
             });
-            const tcResult = await postgres.query(
+            const tcResult = await pool.query(
                 `INSERT INTO test_cases (question_id, input, expected_output, is_public, order_index)
                  VALUES ${placeholders.join(", ")}
                  RETURNING *`,
@@ -291,13 +316,13 @@ export async function updateQuestion(req, res, next) {
             return res.status(400).json({ success: false, errors });
         }
 
-        const existing = await postgres.query("SELECT id FROM questions WHERE id = $1", [id]);
+        const existing = await pool.query("SELECT id FROM questions WHERE id = $1", [id]);
         if (existing.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Question not found" });
         }
 
         if (title) {
-            const dup = await postgres.query(
+            const dup = await pool.query(
                 "SELECT id FROM questions WHERE LOWER(title) = LOWER($1) AND id != $2",
                 [title.trim(), id]
             );
@@ -309,7 +334,7 @@ export async function updateQuestion(req, res, next) {
             }
         }
 
-        const result = await postgres.query(
+        const result = await pool.query(
             `UPDATE questions
              SET title = COALESCE($1, title),
                  description = COALESCE($2, description),
@@ -331,7 +356,7 @@ export async function updateQuestion(req, res, next) {
 
         let updatedTestCases;
         if (test_cases !== undefined) {
-            await postgres.query("DELETE FROM test_cases WHERE question_id = $1", [id]);
+            await pool.query("DELETE FROM test_cases WHERE question_id = $1", [id]);
             if (test_cases.length > 0) {
                 const values = [];
                 const placeholders = test_cases.map((tc, i) => {
@@ -339,7 +364,7 @@ export async function updateQuestion(req, res, next) {
                     values.push(parseInt(id), tc.input, tc.expected_output, tc.is_public ?? true);
                     return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, ${i})`;
                 });
-                const tcResult = await postgres.query(
+                const tcResult = await pool.query(
                     `INSERT INTO test_cases (question_id, input, expected_output, is_public, order_index)
                      VALUES ${placeholders.join(", ")}
                      RETURNING *`,
@@ -350,7 +375,7 @@ export async function updateQuestion(req, res, next) {
                 updatedTestCases = [];
             }
         } else {
-            const tcResult = await postgres.query(
+            const tcResult = await pool.query(
                 "SELECT * FROM test_cases WHERE question_id = $1 ORDER BY order_index, id",
                 [id]
             );
@@ -368,7 +393,7 @@ export async function deleteQuestion(req, res, next) {
     try {
         const { id } = req.params;
 
-        const result = await postgres.query("DELETE FROM questions WHERE id = $1 RETURNING id", [id]);
+        const result = await pool.query("DELETE FROM questions WHERE id = $1 RETURNING id", [id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Question not found" });
@@ -383,7 +408,7 @@ export async function deleteQuestion(req, res, next) {
 /** GET /categories — list all distinct category values. */
 export async function listCategories(req, res, next) {
     try {
-        const result = await postgres.query(
+        const result = await pool.query(
             "SELECT DISTINCT UNNEST(categories) AS category FROM questions ORDER BY category"
         );
         res.json({ success: true, data: result.rows.map(r => r.category) });
@@ -395,7 +420,7 @@ export async function listCategories(req, res, next) {
 /** GET /companies — list all distinct company values. */
 export async function listCompanies(req, res, next) {
     try {
-        const result = await postgres.query(
+        const result = await pool.query(
             "SELECT DISTINCT UNNEST(companies) AS company FROM questions ORDER BY company"
         );
         res.json({ success: true, data: result.rows.map(r => r.company) });

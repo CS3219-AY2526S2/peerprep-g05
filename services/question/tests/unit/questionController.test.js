@@ -1,17 +1,17 @@
 /**
  * Unit tests for questionController.js
  *
- * We mock the postgres pool so these tests run without a database.
+ * We mock the pool so these tests run without a database.
  */
 import { jest } from "@jest/globals";
 
-// ---------- mock postgres pool ----------
+// ---------- mock pool ----------
 const mockQuery = jest.fn();
 const mockPool = { query: mockQuery };
 
-// Mock the postgres client module
+// Mock the pool client module
 jest.unstable_mockModule("../../infrastructure/postgres/client.js", () => ({
-    postgres: mockPool,
+    pool: mockPool,
     initDatabase: jest.fn(),
 }));
 
@@ -29,7 +29,15 @@ const {
 
 // ---------- helpers ----------
 function mockReq(overrides = {}) {
-    return { params: {}, query: {}, body: {}, ...overrides };
+    return {
+        params: {},
+        query: {},
+        body: {},
+        protocol: "http",
+        originalUrl: "/api/v1/questions",
+        get: jest.fn((header) => (header === "host" ? "localhost:3002" : undefined)),
+        ...overrides,
+    };
 }
 
 function mockRes() {
@@ -80,7 +88,15 @@ describe("getAllQuestions", () => {
 
         expect(res.json).toHaveBeenCalledWith(
             expect.objectContaining({
-                pagination: expect.objectContaining({ page: 2, limit: 5, total: 12, totalPages: 3 }),
+                pagination: expect.objectContaining({
+                    page: 2,
+                    limit: 5,
+                    total: 12,
+                    totalPages: 3,
+                    links: expect.objectContaining({
+                        next: "http://localhost:3002/api/v1/questions?page=3&limit=5",
+                    }),
+                }),
             })
         );
     });

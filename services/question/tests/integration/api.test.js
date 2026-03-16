@@ -1,18 +1,18 @@
 /**
  * Integration tests for the Question API.
  *
- * These spin up the Express app with a mocked postgres pool and exercise the
+ * These spin up the Express app with a mocked pool and exercise the
  * full HTTP request/response cycle via supertest.
  */
 import { jest } from "@jest/globals";
 
-// ---------- mock postgres ----------
+// ---------- mock pool ----------
 const mockQuery = jest.fn();
 const mockConnect = jest.fn();
 const mockEnd = jest.fn();
 
 jest.unstable_mockModule("../../infrastructure/postgres/client.js", () => ({
-    postgres: {
+    pool: {
         query: mockQuery,
         connect: mockConnect,
         end: mockEnd,
