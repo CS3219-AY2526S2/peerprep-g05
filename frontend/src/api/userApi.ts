@@ -1,4 +1,8 @@
-const BASE = "http://localhost:3001/api/v1";
+const BASE = import.meta.env.VITE_API_BASE_URL;
+
+if (!BASE) {
+    throw new Error("VITE_API_BASE_URL is not set. Define it in the frontend .env file.");
+}
 
 export interface ApiError {
     status: number;
