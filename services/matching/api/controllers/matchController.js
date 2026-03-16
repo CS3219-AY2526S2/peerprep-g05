@@ -165,8 +165,6 @@ export async function declineMatch(req, res) {
             console.log(`Requeue event published for user ${otherUserId}`);
         }
 
-        res.sendStatus(200);
-
     } catch (err) {
         await postgres.query("ROLLBACK");
         console.error(err);

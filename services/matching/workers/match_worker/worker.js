@@ -98,56 +98,70 @@ async function handleMatchEnter(event) {
 
             await postgres.query("BEGIN");
             try {
-                const proposalExpiry = new Date(Date.now() + PROPOSAL_TIMEOUT_MS);
 
-                const updateA = await postgres.query(
-                    `UPDATE matches
-                     SET user_id_b = $1,
-                         status = 'PROPOSED',
-                         proposal_expiry = NOW() + INTERVAL '5 minute',
-                         updated_at = NOW()
-                     WHERE match_id = $2 AND status = 'WAITING'
-                     RETURNING *`,
-                    [userB.user_id, userA.match_id]
-                );
-
-                if (updateA.rowCount === 0) {
+                const proposed = await proposeMatch(userA, userB, 5);
+                if (!proposed) {
                     await postgres.query("ROLLBACK");
                     await redis.lpush(queueKey, JSON.stringify(userB));
-                    console.log("Stale matches detected, skipping pair");
+                    console.log("Stale matches for userA, requeuing userB");
                     continue;
                 }
-
-                const updateB = await postgres.query(
-                    `UPDATE matches
-                     SET status = 'REDIRECTED',
-                         redirected_to = $1,
-                         updated_at = NOW()
-                     WHERE match_id = $2 AND status = 'WAITING'
-                     RETURNING *`,
-                    [userA.match_id, userB.match_id]
-                );
-
-                if (updateB.rowCount === 0) {
+                const redirected = await redirectMatch(userB, userA);
+                if (!redirected) {
                     await postgres.query("ROLLBACK");
                     await redis.lpush(queueKey, JSON.stringify(userB));
                     await redis.lpush(queueKey, JSON.stringify(userA));
-                    console.log(`userB ${userB.user_id} stale, requeueing userA ${userA.user_id}`);
-                    continue;      
+                    console.log("Stale match for userB, requeuing both users");
+                    continue;
                 }
+                // const updateA = await postgres.query(
+                //     `UPDATE matches
+                //      SET user_id_b = $1,
+                //          status = 'PROPOSED',
+                //          proposal_expiry = NOW() + INTERVAL '5 minute',
+                //          updated_at = NOW()
+                //      WHERE match_id = $2 AND status = 'WAITING'
+                //      RETURNING *`,
+                //     [userB.user_id, userA.match_id]
+                // );
 
-                await postgres.query(
-                    `INSERT INTO match_events (event_id, match_id, event_type, payload)
-                     VALUES ($1, $2, 'MATCH_PROPOSED', $3)`,
-                    [
-                        uuid(),
-                        userA.match_id,
-                        JSON.stringify({
-                            userA: { user_id: userA.user_id, match_id: userA.match_id },
-                            userB: { user_id: userB.user_id, match_id: userB.match_id }
-                        })
-                    ]
-                );
+                // if (updateA.rowCount === 0) {
+                //     await postgres.query("ROLLBACK");
+                //     await redis.lpush(queueKey, JSON.stringify(userB));
+                //     console.log("Stale matches detected, skipping pair");
+                //     continue;
+                // }
+
+                // const updateB = await postgres.query(
+                //     `UPDATE matches
+                //      SET status = 'REDIRECTED',
+                //          redirected_to = $1,
+                //          updated_at = NOW()
+                //      WHERE match_id = $2 AND status = 'WAITING'
+                //      RETURNING *`,
+                //     [userA.match_id, userB.match_id]
+                // );
+
+                // if (updateB.rowCount === 0) {
+                //     await postgres.query("ROLLBACK");
+                //     await redis.lpush(queueKey, JSON.stringify(userB));
+                //     await redis.lpush(queueKey, JSON.stringify(userA));
+                //     console.log(`userB ${userB.user_id} stale, requeueing userA ${userA.user_id}`);
+                //     continue;      
+                // }
+
+                // await postgres.query(
+                //     `INSERT INTO match_events (event_id, match_id, event_type, payload)
+                //      VALUES ($1, $2, 'MATCH_PROPOSED', $3)`,
+                //     [
+                //         uuid(),
+                //         userA.match_id,
+                //         JSON.stringify({
+                //             userA: { user_id: userA.user_id, match_id: userA.match_id },
+                //             userB: { user_id: userB.user_id, match_id: userB.match_id }
+                //         })
+                //     ]
+                // );
 
                 await postgres.query("COMMIT");
                 console.log(`Matched ${userA.user_id} ↔ ${userB.user_id}`);
@@ -188,25 +202,33 @@ async function handleMatchLeave(event) {
 
         await postgres.query("BEGIN");
         try {
-            const { rowCount } = await postgres.query(
-                `UPDATE matches
-                 SET status = 'CANCELLED',
-                     updated_at = NOW()
-                 WHERE match_id = $1 AND status = 'WAITING'`,
-                [match_id]
-            );
-
-            if (rowCount === 0) {
+            const cancelled = await cancelMatch(match_id);
+            if (!cancelled) {
                 await postgres.query("ROLLBACK");
                 console.log(`No WAITING match to cancel for user ${user_id}`);
                 return;
             }
 
-            await postgres.query(
-                `INSERT INTO match_events (event_id, match_id, event_type, payload)
-                 VALUES ($1, $2, 'MATCH_LEFT', $3)`,
-                [uuid(), match_id, JSON.stringify({ user_id })]
-            );
+            await insertMatchEvent(uuid(), match_id, "MATCH_LEFT", { user_id });
+            // const { rowCount } = await postgres.query(
+            //     `UPDATE matches
+            //      SET status = 'CANCELLED',
+            //          updated_at = NOW()
+            //      WHERE match_id = $1 AND status = 'WAITING'`,
+            //     [match_id]
+            // );
+
+            // if (rowCount === 0) {
+            //     await postgres.query("ROLLBACK");
+            //     console.log(`No WAITING match to cancel for user ${user_id}`);
+            //     return;
+            // }
+
+            // await postgres.query(
+            //     `INSERT INTO match_events (event_id, match_id, event_type, payload)
+            //      VALUES ($1, $2, 'MATCH_LEFT', $3)`,
+            //     [uuid(), match_id, JSON.stringify({ user_id })]
+            // );
 
             await postgres.query("COMMIT");
             console.log(`User ${user_id} left matchmaking for topic ${topic}, difficulty ${difficulty}`);
@@ -227,7 +249,7 @@ async function handleMatchRequeue(event, channel) {
 
     await postgres.query("BEGIN");
     try {
-        createMatch(newMatchId, user_id, topic, difficulty);
+        await createMatch(newMatchId, user_id, topic, difficulty);
 
         await publishEvent(channel, "match.enter", {
             event_id: uuid(),
