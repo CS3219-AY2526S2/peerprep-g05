@@ -1,5 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { postgres } from "../../infrastructure/postgres/client.js";
+import { publishEvent } from "../../infrastructure/rabbitmq/client.js";
 import { releaseLock, acquireLock } from "../../infrastructure/redis/lock.js";
 import { redis } from "../../infrastructure/redis/client.js";
 import { findMatchById, findWaitingMatch, createMatch,

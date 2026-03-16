@@ -3,8 +3,16 @@ import { v4 as uuid } from "uuid";
 
 import { createChannel } from "../../infrastructure/rabbitmq/client.js";
 import { acquireLock, releaseLock } from "../../infrastructure/redis/lock.js";
-import { redis } from "../../infrastructure/redis/client.js";
 import { postgres } from "../../infrastructure/postgres/client.js";
+import { publishEvent } from "../../infrastructure/rabbitmq/client.js";
+import { redis } from "../../infrastructure/redis/client.js";
+import {
+    createMatch,
+    cancelMatch,
+    insertMatchEvent,
+    proposeMatch,
+    redirectMatch
+} from "../../domain/match/matchRepository.js";
 
 dotenv.config();
 
@@ -219,23 +227,15 @@ async function handleMatchRequeue(event, channel) {
 
     await postgres.query("BEGIN");
     try {
-        await postgres.query(
-            `INSERT INTO matches (match_id, user_id_a, topic, difficulty, status)
-            VALUES ($1, $2, $3, $4, 'WAITING')`, [newMatchId, user_id, topic, difficulty]
-        );
+        createMatch(newMatchId, user_id, topic, difficulty);
 
-        channel.publish(
-            process.env.MATCH_EXCHANGE,
-            "match.enter",
-            Buffer.from(JSON.stringify({
-                event_id: uuid(),
-                match_id: newMatchId,
-                user_id,
-                topic,
-                difficulty
-            })),
-            { persistent: true }
-        );
+        await publishEvent(channel, "match.enter", {
+            event_id: uuid(),
+            match_id: newMatchId,
+            user_id,
+            topic,
+            difficulty
+        });
 
         await postgres.query("COMMIT");
         console.log(`User ${user_id} requeued with new match_id ${newMatchId}`);
