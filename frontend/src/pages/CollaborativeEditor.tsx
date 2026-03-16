@@ -7,6 +7,13 @@ import { yCollab } from "y-codemirror.next";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 
+const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
+if (!WEBSOCKET_URL) {
+  throw new Error(
+    "VITE_WEBSOCKET_URL is not set. Define it in the frontend .env file.",
+  );
+}
+
 const editorTheme = EditorView.theme({
   "&": {
     height: "100%",
@@ -23,11 +30,7 @@ export default function CollaborativeEditor() {
 
   useEffect(() => {
     const ydoc = new Y.Doc();
-    const provider = new WebsocketProvider(
-      "ws://localhost:51392",
-      roomId,
-      ydoc,
-    );
+    const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc);
     provider;
 
     const ytext = ydoc.getText();
