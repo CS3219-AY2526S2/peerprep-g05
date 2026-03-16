@@ -18,18 +18,26 @@ export async function enterMatchmaking(req, res) {
 
         await createMatch(match_id, user_id, topic, difficulty);
 
-        global.rabbitChannel.publish(
-            process.env.MATCH_EXCHANGE,
-            "match.enter",
-            Buffer.from(JSON.stringify({
-                event_id: uuid(),
-                match_id,
-                user_id,
-                topic,
-                difficulty
-            })),
-            { persistent: true }
-        );
+        publishEvent(global.rabbitChannel, "match.enter", {
+            event_id: uuid(),
+            match_id,
+            user_id,
+            topic,
+            difficulty
+        });
+        
+        // global.rabbitChannel.publish(
+        //     process.env.MATCH_EXCHANGE,
+        //     "match.enter",
+        //     Buffer.from(JSON.stringify({
+        //         event_id: uuid(),
+        //         match_id,
+        //         user_id,
+        //         topic,
+        //         difficulty
+        //     })),
+        //     { persistent: true }
+        // );
 
         res.json({ match_id });
 
@@ -150,18 +158,25 @@ export async function declineMatch(req, res) {
         const otherUserId = match.user_id_a === user_id ? match.user_id_b : match.user_id_a;
 
         if (otherUserId) {
-            global.rabbitChannel.publish(
-                process.env.MATCH_EXCHANGE,
-                "match.requeue",
-                Buffer.from(JSON.stringify({
-                    event_id: uuid(),
-                    match_id,
-                    user_id: otherUserId,
-                    topic: match.topic,
-                    difficulty: match.difficulty
-                })),
-                { persistent: true }
-            );
+            publishEvent(global.rabbitChannel, "match.requeue", {
+                event_id: uuid(),
+                match_id,
+                user_id: otherUserId,
+                topic: match.topic,
+                difficulty: match.difficulty
+            });
+            // global.rabbitChannel.publish(
+            //     process.env.MATCH_EXCHANGE,
+            //     "match.requeue",
+            //     Buffer.from(JSON.stringify({
+            //         event_id: uuid(),
+            //         match_id,
+            //         user_id: otherUserId,
+            //         topic: match.topic,
+            //         difficulty: match.difficulty
+            //     })),
+            //     { persistent: true }
+            // );
             console.log(`Requeue event published for user ${otherUserId}`);
         }
 
@@ -185,18 +200,25 @@ export async function leaveMatch(req, res) {
             return res.status(404).json({ error: "No waiting match found for user" });
         }
 
-        global.rabbitChannel.publish(
-            process.env.MATCH_EXCHANGE,
-            "match.leave",
-            Buffer.from(JSON.stringify({
-                event_id: uuid(),
-                match_id: match.match_id,
-                user_id,
-                topic,
-                difficulty
-            })),
-            { persistent: true }
-        );
+        publishEvent(global.rabbitChannel, "match.leave", {
+            event_id: uuid(),
+            match_id: match.match_id,
+            user_id,
+            topic,
+            difficulty
+        });
+        // global.rabbitChannel.publish(
+        //     process.env.MATCH_EXCHANGE,
+        //     "match.leave",
+        //     Buffer.from(JSON.stringify({
+        //         event_id: uuid(),
+        //         match_id: match.match_id,
+        //         user_id,
+        //         topic,
+        //         difficulty
+        //     })),
+        //     { persistent: true }
+        // );
 
         return res.status(200).json({ message: "Left matchmaking queue successfully" });
         

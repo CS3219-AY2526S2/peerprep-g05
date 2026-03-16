@@ -2,7 +2,14 @@ import dotenv from "dotenv";
 import { v4 as uuid } from "uuid";
 
 import { postgres } from "../../infrastructure/postgres/client.js";
-import { createChannel } from "../../infrastructure/rabbitmq/client.js";
+import { createChannel, publishEvent } from "../../infrastructure/rabbitmq/client.js";
+import { 
+    cancelWaitingMatch, 
+    createMatch,
+    expireMatch,
+    getExpiredProposedMatches, 
+    getStaleWaitingMatches, 
+    insertMatchEvent } from "../../domain/match/matchRepository.js";
 
 dotenv.config();
 
@@ -12,34 +19,19 @@ async function startTimeoutWorker(timeout_duration) {
 
     setInterval(async () => {
         try {
-            const expired = await postgres.query(`
-                SELECT *
-                FROM matches
-                WHERE status = 'PROPOSED'
-                AND proposal_expiry < NOW()
-            `);
+            const expired = await getExpiredProposedMatches();
 
-            for (const match of expired.rows) {
+            for (const match of expired) {
                 await postgres.query("BEGIN");
                 try {
                     // Atomically claim this match for expiry
-                    const result = await postgres.query(`
-                        UPDATE matches
-                        SET status = 'EXPIRED', updated_at = NOW()
-                        WHERE match_id = $1 AND status = 'PROPOSED'
-                        RETURNING *
-                    `, [match.match_id]);
-
-                    // Another worker already handled this
-                    if (result.rowCount === 0) {
+                    const result = await expireMatch(match.match_id);
+                    if (!result) {
                         await postgres.query("ROLLBACK");
                         continue;
                     }
 
-                    await postgres.query(`
-                        INSERT INTO match_events (event_id, match_id, event_type, payload)
-                        VALUES ($1, $2, 'MATCH_TIMED_OUT', $3)
-                    `, [uuid(), match.match_id, JSON.stringify({})]);
+                    await insertMatchEvent(uuid(), match.match_id, "MATCH_TIMED_OUT", {});
 
                     // Case 1: only one user accepted → requeue them
                     // Case 2: neither accepted → requeue nobody
@@ -55,10 +47,7 @@ async function startTimeoutWorker(timeout_duration) {
                     const newSessions = [];
                     for (const user of requeueUsers) {
                         const newMatchId = uuid();
-                        await postgres.query(`
-                            INSERT INTO matches (match_id, user_id_a, topic, difficulty, status)
-                            VALUES ($1, $2, $3, $4, 'WAITING')
-                        `, [newMatchId, user, match.topic, match.difficulty]);
+                        await createMatch(newMatchId, user, match.topic, match.difficulty);
                         newSessions.push({ user, newMatchId });
                     }
 
@@ -66,17 +55,24 @@ async function startTimeoutWorker(timeout_duration) {
 
                     // Publish requeue events after commit
                     for (const session of newSessions) {
-                        channel.publish(
-                            process.env.MATCH_EXCHANGE,
-                            "match.enter",
-                            Buffer.from(JSON.stringify({
-                                event_id: uuid(), // required for idempotency
-                                match_id: session.newMatchId,
-                                user_id: session.user,
-                                topic: match.topic,
-                                difficulty: match.difficulty
-                            }))
-                        );
+                        await publishEvent(channel, "match.enter", {
+                            event_id: uuid(),
+                            match_id: session.newMatchId,
+                            user_id: session.user,
+                            topic: match.topic,
+                            difficulty: match.difficulty
+                        });
+                        // channel.publish(
+                        //     process.env.MATCH_EXCHANGE,
+                        //     "match.enter",
+                        //     Buffer.from(JSON.stringify({
+                        //         event_id: uuid(), // required for idempotency
+                        //         match_id: session.newMatchId,
+                        //         user_id: session.user,
+                        //         topic: match.topic,
+                        //         difficulty: match.difficulty
+                        //     }))
+                        // );
                         console.log(`Requeued ${session.user} after timeout on match ${match.match_id}`);
                     }
 
@@ -88,6 +84,8 @@ async function startTimeoutWorker(timeout_duration) {
                     await postgres.query("ROLLBACK");
                     console.error(`Error expiring match ${match.match_id}:`, err);
                 }
+
+                await postgres.query("COMMIT");
             }
 
         } catch (err) {
@@ -98,46 +96,41 @@ async function startTimeoutWorker(timeout_duration) {
 
     setInterval(async () => {
         try {
-            const stale = await postgres.query(`
-                SELECT *
-                FROM matches
-                WHERE status = 'WAITING'
-                AND created_at < NOW() - INTERVAL '${WAITING_TIMEOUT} minutes'
-            `);
+            const stale = await getStaleWaitingMatches(timeout_duration);
 
-            for (const match of stale.rows) {
+            for (const match of stale) {
                 await postgres.query("BEGIN");
                 try {
-                    const result = await postgres.query(`
-                        UPDATE matches
-                        SET status = 'CANCELLED', updated_at = NOW()
-                        WHERE match_id = $1 AND status = 'WAITING'
-                        RETURNING *
-                    `, [match.match_id]);
-
-                    if (result.rowCount === 0) {
+                    const cancelled = await cancelWaitingMatch(match.match_id);
+                    if (!cancelled) {
                         await postgres.query("ROLLBACK");
                         continue;
                     }
 
-                    await postgres.query(`
-                        INSERT INTO match_events (event_id, match_id, event_type, payload)
-                        VALUES ($1, $2, 'MATCH_WAITING_TIMEOUT', $3)
-                    `, [uuid(), match.match_id, JSON.stringify({ user_id: match.user_id_a })]);
+                    await insertMatchEvent(uuid(), match.match_id, "MATCH_WAITING_TIMEOUT", {
+                        user_id: match.user_id_a
+                    });
 
                     await postgres.query("COMMIT");
 
-                    channel.publish(
-                        process.env.MATCH_EXCHANGE,
-                        "match.leave",
-                        Buffer.from(JSON.stringify({
-                            event_id: uuid(),
-                            match_id: match.match_id,
-                            user_id: match.user_id_a,
-                            topic: match.topic,
-                            difficulty: match.difficulty
-                        }))
-                    );
+                    await publishEvent(channel, "match.leave", {
+                        event_id: uuid(),
+                        match_id: match.match_id,
+                        user_id: match.user_id_a,
+                        topic: match.topic,
+                        difficulty: match.difficulty
+                    })
+                    // channel.publish(
+                    //     process.env.MATCH_EXCHANGE,
+                    //     "match.leave",
+                    //     Buffer.from(JSON.stringify({
+                    //         event_id: uuid(),
+                    //         match_id: match.match_id,
+                    //         user_id: match.user_id_a,
+                    //         topic: match.topic,
+                    //         difficulty: match.difficulty
+                    //     }))
+                    // );
 
                     console.log(`WAITING match ${match.match_id} timed out for user ${match.user_id_a} after ${WAITING_TIMEOUT} mins`);
 
@@ -145,6 +138,7 @@ async function startTimeoutWorker(timeout_duration) {
                     await postgres.query("ROLLBACK");
                     console.error(`Error timing out WAITING match ${match.match_id}:`, err);
                 }
+                await postgres.query("COMMIT");
             }
 
         } catch (err) {
@@ -154,5 +148,5 @@ async function startTimeoutWorker(timeout_duration) {
     }, 5000);
 }
 
-const timeout_duration = process.env.WAITING_TIMEOUT_MINS || 5;
+const timeout_duration = process.env.WAITING_TIMEOUT_MINS;
 startTimeoutWorker(timeout_duration);

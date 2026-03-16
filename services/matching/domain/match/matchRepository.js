@@ -117,3 +117,36 @@ export async function redirectMatch(userB, userA) {
     );
     return rowCount > 0;
 }
+
+export async function expireMatch(match_id) {
+    const { rowCount } = await postgres.query(
+        `UPDATE matches SET status = 'EXPIRED', updated_at = NOW()
+        WHERE match_id = $1 AND status = 'PROPOSED' RETURNING *`,
+        [match_id]
+    );
+    return rowCount > 0;
+}
+
+export async function cancelWaitingMatch(match_id) {
+    const { rowCount } = await postgres.query(
+        `UPDATE matches SET status = 'CANCELLED', updated_at = NOW()
+        WHERE match_id = $1 AND status = 'WAITING' RETURNING *`,
+        [match_id]
+    );
+    return rowCount > 0;
+}
+
+export async function getExpiredProposedMatches() {
+    const { rows } = await postgres.query(
+        `SELECT * FROM matches WHERE status = 'PROPOSED' AND proposal_expiry < NOW()`
+    );
+    return rows;
+}
+
+export async function getStaleWaitingMatches(timeout_mins) {
+    const { rows } = await postgres.query(
+        `SELECT * FROM matches WHERE status = 'WAITING' 
+        AND created_at < NOW() - INTERVAL '${timeout_mins} minutes'`
+    );
+    return rows;
+}

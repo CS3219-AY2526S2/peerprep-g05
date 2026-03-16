@@ -99,7 +99,7 @@ async function handleMatchEnter(event) {
             await postgres.query("BEGIN");
             try {
 
-                const proposed = await proposeMatch(userA, userB, 5);
+                const proposed = await proposeMatch(userA, userB, 0.5);
                 if (!proposed) {
                     await postgres.query("ROLLBACK");
                     await redis.lpush(queueKey, JSON.stringify(userB));
