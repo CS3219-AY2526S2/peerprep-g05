@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.tsx";
 import * as api from "../api/userApi.ts";
 import type { AdminUser, ApiError } from "../api/userApi.ts";
+import { isAdminRole } from "../utils/roles.ts";
 
 export default function AdminUsers() {
     const { token } = useAuth();
@@ -71,8 +72,10 @@ export default function AdminUsers() {
                                         <td className="border-b border-slate-200 px-3 py-3 align-middle">{user.username}</td>
                                         <td className="border-b border-slate-200 px-3 py-3 align-middle">{user.role}</td>
                                         <td className="border-b border-slate-200 px-3 py-3 align-middle">
-                                            {user.role === "ADMIN" ? (
-                                                <span className="font-semibold text-emerald-700">Already ADMIN</span>
+                                            {isAdminRole(user.role) ? (
+                                                <span className="font-semibold text-emerald-700">
+                                                    {user.role === "MASTER_ADMIN" ? "MASTER_ADMIN" : "Already ADMIN"}
+                                                </span>
                                             ) : (
                                                 <button
                                                     className="w-auto rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"

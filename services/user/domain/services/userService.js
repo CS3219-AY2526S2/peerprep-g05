@@ -1,7 +1,12 @@
 import userRepository from "../../infrastructure/database/repositories/userRepository.js";
 import User from "../models/User.js";
+import { API_ASSIGNABLE_ROLES, ROLES } from "../models/roles.js";
 
-const VALID_ROLES = ["USER", "ADMIN"];
+function makeError(message, status) {
+    const err = new Error(message);
+    err.status = status;
+    return err;
+}
 
 const userService = {
     async getProfile(userId) {
@@ -64,35 +69,61 @@ const userService = {
         return rows.map((r) => new User(r));
     },
 
-    async updateUserRole(targetUserId, role) {
-        if (!VALID_ROLES.includes(role)) {
-            const err = new Error(`Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`);
-            err.status = 400;
-            throw err;
+    async updateUserRole(actor, targetUserId, role) {
+        if (!API_ASSIGNABLE_ROLES.includes(role)) {
+            throw makeError(`Invalid role. Must be one of: ${API_ASSIGNABLE_ROLES.join(", ")}`, 400);
+        }
+
+        const target = await userRepository.findById(targetUserId);
+        if (!target) {
+            throw makeError("User not found", 404);
+        }
+
+        if (target.role === role) {
+            return new User(target);
+        }
+
+        if (target.role === ROLES.MASTER_ADMIN) {
+            throw makeError("MASTER_ADMIN accounts cannot be modified via this endpoint", 403);
+        }
+
+        if (actor.role === ROLES.ADMIN) {
+            if (!(target.role === ROLES.USER && role === ROLES.ADMIN)) {
+                throw makeError("Only MASTER_ADMIN can demote admins or modify privileged accounts", 403);
+            }
+        }
+
+        if (actor.role === ROLES.MASTER_ADMIN && actor.id === targetUserId) {
+            throw makeError("MASTER_ADMIN cannot change their own role", 403);
         }
 
         const row = await userRepository.updateRole(targetUserId, role);
-        if (!row) {
-            const err = new Error("User not found");
-            err.status = 404;
-            throw err;
-        }
         return new User(row);
     },
 
-    async updateUserStatus(targetUserId, isActive) {
+    async updateUserStatus(actor, targetUserId, isActive) {
         if (typeof isActive !== "boolean") {
-            const err = new Error("is_active must be a boolean");
-            err.status = 400;
-            throw err;
+            throw makeError("is_active must be a boolean", 400);
+        }
+
+        const target = await userRepository.findById(targetUserId);
+        if (!target) {
+            throw makeError("User not found", 404);
+        }
+
+        if (target.role === ROLES.MASTER_ADMIN) {
+            throw makeError("MASTER_ADMIN accounts cannot be deactivated", 403);
+        }
+
+        if (target.is_active === isActive) {
+            return new User(target);
+        }
+
+        if (actor.role === ROLES.ADMIN && target.role !== ROLES.USER) {
+            throw makeError("Only MASTER_ADMIN can change the status of admin accounts", 403);
         }
 
         const row = await userRepository.updateStatus(targetUserId, isActive);
-        if (!row) {
-            const err = new Error("User not found");
-            err.status = 404;
-            throw err;
-        }
         return new User(row);
     },
 };

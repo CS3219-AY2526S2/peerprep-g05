@@ -5,6 +5,7 @@ import { hashPassword, comparePassword } from "../../infrastructure/security/pas
 import { signToken, verifyToken } from "../../infrastructure/security/jwt.js";
 import { sendOtpEmail, sendPasswordResetEmail } from "../../infrastructure/email/client.js";
 import User from "../models/User.js";
+import { ROLES, toExternalRole } from "../models/roles.js";
 import config from "../../config/index.js";
 
 function generateOtp() {
@@ -51,7 +52,7 @@ const authService = {
             email,
             username,
             passwordHash,
-            role: "USER",
+            role: ROLES.USER,
             displayName: displayName || username,
             isActive: false,
         });
@@ -100,7 +101,7 @@ const authService = {
 
         const row = await userRepository.findById(userId);
         const user = new User(row);
-        const accessToken = signToken({ sub: user.id, role: user.role });
+        const accessToken = signToken({ sub: user.id, role: toExternalRole(user.role) });
 
         return { user, accessToken };
     },
@@ -174,7 +175,7 @@ const authService = {
         }
 
         const user = new User(row);
-        const accessToken = signToken({ sub: user.id, role: user.role });
+        const accessToken = signToken({ sub: user.id, role: toExternalRole(user.role) });
 
         return { user, accessToken };
     },
@@ -255,7 +256,8 @@ const authService = {
             return {
                 active: true,
                 userId: decoded.sub,
-                role: decoded.role,
+                role: toExternalRole(row.role),
+                accountRole: row.role,
                 exp: decoded.exp,
             };
         } catch {
