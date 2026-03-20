@@ -10,11 +10,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Non-root user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-USER appuser
 EXPOSE 3001
 CMD ["node", "server.js"]
