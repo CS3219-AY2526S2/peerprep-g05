@@ -5,6 +5,9 @@ import VerifyOtp from "./pages/VerifyOtp.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import AdminUsers from "./pages/AdminUsers.tsx";
+import Questions from "./pages/Questions.tsx";
+import QuestionDetail from "./pages/QuestionDetail.tsx";
+import QuestionEditor from "./pages/QuestionEditor.tsx";
 import AdminOnlyRoute from "./components/AdminOnlyRoute.tsx";
 
 export default function App() {
@@ -24,7 +27,26 @@ export default function App() {
                         </AdminOnlyRoute>
                     )}
                 />
+                <Route path="/questions" element={<Questions />} />
+                <Route
+                    path="/questions/new"
+                    element={(
+                        <AdminOnlyRoute>
+                            <QuestionEditor />
+                        </AdminOnlyRoute>
+                    )}
+                />
+                <Route path="/questions/:id" element={<QuestionDetail />} />
+                <Route
+                    path="/questions/:id/edit"
+                    element={(
+                        <AdminOnlyRoute>
+                            <QuestionEditor />
+                        </AdminOnlyRoute>
+                    )}
+                />
             </Routes>
         </>
     );
 }
+
