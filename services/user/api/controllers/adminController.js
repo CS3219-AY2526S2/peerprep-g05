@@ -18,7 +18,7 @@ export async function listUsers(req, res, next) {
 export async function updateUserRole(req, res, next) {
     try {
         const { role } = req.body;
-        const user = await userService.updateUserRole(req.params.id, role);
+        const user = await userService.updateUserRole(req.user, req.params.id, role);
         return res.status(200).json(user.toJSON());
     } catch (err) {
         next(err);
@@ -31,7 +31,7 @@ export async function updateUserRole(req, res, next) {
 export async function updateUserStatus(req, res, next) {
     try {
         const { isActive } = req.body;
-        const user = await userService.updateUserStatus(req.params.id, isActive);
+        const user = await userService.updateUserStatus(req.user, req.params.id, isActive);
         return res.status(200).json(user.toJSON());
     } catch (err) {
         next(err);
