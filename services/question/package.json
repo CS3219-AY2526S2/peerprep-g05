@@ -5,6 +5,9 @@
   "scripts": {
     "start": "node server.js",
     "seed": "node scripts/seed.js",
+    "seed:loadtest": "node scripts/seed.js --load-test",
+    "seed:10000": "node tests/integration/seed-10000.js",
+    "test:load:200": "node tests/integration/loadtest-200-users.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles",
     "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles --coverage"
   },

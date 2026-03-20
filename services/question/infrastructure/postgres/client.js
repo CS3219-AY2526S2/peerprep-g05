@@ -53,6 +53,12 @@ export async function initDatabase() {
 
             CREATE INDEX IF NOT EXISTS idx_test_cases_question_id
                 ON test_cases(question_id);
+
+            CREATE TABLE IF NOT EXISTS question_locks (
+                question_id INTEGER PRIMARY KEY REFERENCES questions(id) ON DELETE CASCADE,
+                locked_by   VARCHAR(255) NOT NULL,
+                locked_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
         console.log("Database schema initialized");
     } finally {
