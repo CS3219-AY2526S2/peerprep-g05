@@ -1,3 +1,5 @@
+import { ROLES } from "../../domain/models/roles.js";
+
 /**
  * Role-based authorization middleware factories.
  */
@@ -24,7 +26,13 @@ export function requireRole(...roles) {
         if (!req.user) {
             return res.status(401).json({ error: "Authentication required" });
         }
-        if (!roles.includes(req.user.role)) {
+        const allowedRoles = new Set(roles);
+
+        if (allowedRoles.has(ROLES.ADMIN)) {
+            allowedRoles.add(ROLES.MASTER_ADMIN);
+        }
+
+        if (!allowedRoles.has(req.user.role)) {
             return res.status(403).json({ error: "Insufficient permissions" });
         }
         next();
