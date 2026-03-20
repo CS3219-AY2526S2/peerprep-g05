@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - question_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -61,8 +61,64 @@ services:
     networks:
       - peerprep-network
 
+  # ── User Service ─────────────────────────────────────────────
+  user-db:
+    image: postgres:16-alpine
+    container_name: peerprep-user-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: peerprep_users
+    ports:
+      - "5434:5432"
+    volumes:
+      - user_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d peerprep_users"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - peerprep-network
+
+  user-migrate:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run migrate"
+    volumes:
+      - ./services/user:/app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@user-db:5432/peerprep_users
+    depends_on:
+      user-db:
+        condition: service_healthy
+    restart: "no"
+    profiles:
+      - migrate
+    networks:
+      - peerprep-network
+
+  user-service:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@user-db:5432/peerprep_users
+    depends_on:
+      user-db:
+        condition: service_healthy
+    networks:
+      - peerprep-network
+
 volumes:
   question_pgdata:
+  user_pgdata:
 
 networks:
   peerprep-network:
