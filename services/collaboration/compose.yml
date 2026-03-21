@@ -9,8 +9,10 @@ services:
       - ${EXPRESS_PORT}:${EXPRESS_PORT}
     depends_on:
       - mongodb
+      - redis
     environment:
       MONGO_URI: "mongodb://mongodb:27017/peerprep-collaboration"
+      REDIS_URL: "redis://redis:6379"
       EXPRESS_PORT: ${EXPRESS_PORT}
 
   mongodb:
@@ -19,3 +21,8 @@ services:
       - 27117:27017
     volumes:
       - ./data/mongodb:/data/db
+
+  redis:
+    image: redis:8.2.1-alpine
+    ports:
+      - 6379:6379

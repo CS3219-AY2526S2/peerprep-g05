@@ -12,6 +12,7 @@
 
 - Node.js 24+
 - MongoDB instance (or use Docker Compose)
+- Redis instance (or use Docker Compose)
 
 ### Environment Variables
 
@@ -24,6 +25,7 @@ cp .env.example .env
 | Variable       | Description                     | Example                                            |
 | -------------- | ------------------------------- | -------------------------------------------------- |
 | `MONGO_URI`    | MongoDB connection string       | `mongodb://localhost:27017/peerprep-collaboration` |
+| `REDIS_URL`    | Redis connection string         | `redis://localhost:6379`                           |
 | `EXPRESS_PORT` | Port the HTTP server listens on | `51392`                                            |
 
 ### Running with Docker Compose
