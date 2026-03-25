@@ -41,13 +41,13 @@ async function startWorker() {
 
         try {
             if (routingKey === "match.enter") {
-                await handleMatchEnter(event);
+                await handleMatchEnter(event, channel);
             }
             if (routingKey === "match.requeue") {
                 await handleMatchRequeue(event, channel);
             }
             if (routingKey === "match.leave") {
-                await handleMatchLeave(event);
+                await handleMatchLeave(event, channel);
             }
             channel.ack(msg);
         } catch (err) {
@@ -60,7 +60,7 @@ async function startWorker() {
     });
 }
 
-async function handleMatchEnter(event) {
+async function handleMatchEnter(event, channel) {
     const { match_id, user_id, topic, difficulty } = event;
 
     // Check but DON'T set yet
@@ -96,81 +96,56 @@ async function handleMatchEnter(event) {
 
             await redis.ltrim(queueKey, 2, -1);
 
-            await postgres.query("BEGIN");
+            const client = await postgres.connect();
             try {
+                await client.query("BEGIN");
 
-                const proposed = await proposeMatch(userA, userB, 10);
+                const proposed = await proposeMatch(client, userA, userB, 0.5);
+                console.log(proposed);
                 if (!proposed) {
-                    await postgres.query("ROLLBACK");
+                    await client.query("ROLLBACK");
                     await redis.lpush(queueKey, JSON.stringify(userB));
                     console.log("Stale matches for userA, requeuing userB");
                     continue;
                 }
-                const redirected = await redirectMatch(userB, userA);
+                
+                const redirected = await redirectMatch(client, userB, userA);
+                console.log(redirected);
                 if (!redirected) {
-                    await postgres.query("ROLLBACK");
+                    await client.query("ROLLBACK");
                     await redis.lpush(queueKey, JSON.stringify(userB));
                     await redis.lpush(queueKey, JSON.stringify(userA));
                     console.log("Stale match for userB, requeuing both users");
                     continue;
                 }
-                // const updateA = await postgres.query(
-                //     `UPDATE matches
-                //      SET user_id_b = $1,
-                //          status = 'PROPOSED',
-                //          proposal_expiry = NOW() + INTERVAL '5 minute',
-                //          updated_at = NOW()
-                //      WHERE match_id = $2 AND status = 'WAITING'
-                //      RETURNING *`,
-                //     [userB.user_id, userA.match_id]
-                // );
 
-                // if (updateA.rowCount === 0) {
-                //     await postgres.query("ROLLBACK");
-                //     await redis.lpush(queueKey, JSON.stringify(userB));
-                //     console.log("Stale matches detected, skipping pair");
-                //     continue;
-                // }
+                await client.query("COMMIT");
 
-                // const updateB = await postgres.query(
-                //     `UPDATE matches
-                //      SET status = 'REDIRECTED',
-                //          redirected_to = $1,
-                //          updated_at = NOW()
-                //      WHERE match_id = $2 AND status = 'WAITING'
-                //      RETURNING *`,
-                //     [userA.match_id, userB.match_id]
-                // );
+                console.log(userA);
+                console.log(userB);
+                //Notify userA: Proposed
+                publishEvent(channel, "match.proposed", {
+                    match_id: userA.match_id,
+                    user_id_a: userA.user_id,
+                    user_id_b: userB.user_id,
+                }, process.env.MATCH_EVENTS_EXCHANGE);
 
-                // if (updateB.rowCount === 0) {
-                //     await postgres.query("ROLLBACK");
-                //     await redis.lpush(queueKey, JSON.stringify(userB));
-                //     await redis.lpush(queueKey, JSON.stringify(userA));
-                //     console.log(`userB ${userB.user_id} stale, requeueing userA ${userA.user_id}`);
-                //     continue;      
-                // }
+                //Notify userB: redirected
+                publishEvent(channel, "match.redirected", {
+                    match_id: userB.match_id,
+                    user_id_b: userB.user_id,
+                    redirected_to: userA.match_id
+                }, process.env.MATCH_EVENTS_EXCHANGE);
 
-                // await postgres.query(
-                //     `INSERT INTO match_events (event_id, match_id, event_type, payload)
-                //      VALUES ($1, $2, 'MATCH_PROPOSED', $3)`,
-                //     [
-                //         uuid(),
-                //         userA.match_id,
-                //         JSON.stringify({
-                //             userA: { user_id: userA.user_id, match_id: userA.match_id },
-                //             userB: { user_id: userB.user_id, match_id: userB.match_id }
-                //         })
-                //     ]
-                // );
-
-                await postgres.query("COMMIT");
                 console.log(`Matched ${userA.user_id} ↔ ${userB.user_id}`);
 
             } catch (err) {
-                await postgres.query("ROLLBACK");
+                await client.query("ROLLBACK");
                 await redis.lpush(queueKey, JSON.stringify(userB));
                 await redis.lpush(queueKey, JSON.stringify(userA));
                 throw err;
+            } finally {
+                client.release();
             }
         }
 
@@ -181,7 +156,7 @@ async function handleMatchEnter(event) {
     }
 }
 
-async function handleMatchLeave(event) {
+async function handleMatchLeave(event, channel) {
     const { user_id, topic, difficulty, match_id } = event;
 
     const queueKey = `match_queue:${topic}:${difficulty}`;
@@ -200,42 +175,27 @@ async function handleMatchLeave(event) {
             }
         }
 
-        await postgres.query("BEGIN");
+        const client = await postgres.connect();
         try {
-            const cancelled = await cancelMatch(match_id);
+            await client.query("BEGIN");
+
+            const cancelled = await cancelMatch(client, match_id);
             if (!cancelled) {
-                await postgres.query("ROLLBACK");
+                await client.query("ROLLBACK");
                 console.log(`No WAITING match to cancel for user ${user_id}`);
                 return;
             }
 
-            await insertMatchEvent(uuid(), match_id, "MATCH_LEFT", { user_id });
-            // const { rowCount } = await postgres.query(
-            //     `UPDATE matches
-            //      SET status = 'CANCELLED',
-            //          updated_at = NOW()
-            //      WHERE match_id = $1 AND status = 'WAITING'`,
-            //     [match_id]
-            // );
+            await insertMatchEvent(client, uuid(), match_id, "MATCH_CANCELLED", { user_id });
 
-            // if (rowCount === 0) {
-            //     await postgres.query("ROLLBACK");
-            //     console.log(`No WAITING match to cancel for user ${user_id}`);
-            //     return;
-            // }
-
-            // await postgres.query(
-            //     `INSERT INTO match_events (event_id, match_id, event_type, payload)
-            //      VALUES ($1, $2, 'MATCH_LEFT', $3)`,
-            //     [uuid(), match_id, JSON.stringify({ user_id })]
-            // );
-
-            await postgres.query("COMMIT");
+            await client.query("COMMIT");
             console.log(`User ${user_id} left matchmaking for topic ${topic}, difficulty ${difficulty}`);
 
         } catch (err) {
-            await postgres.query("ROLLBACK");
+            await client.query("ROLLBACK");
             throw err;
+        } finally {
+            client.release();
         }
 
     } finally {
@@ -247,9 +207,12 @@ async function handleMatchRequeue(event, channel) {
     const { user_id, topic, difficulty } = event;
     const newMatchId = uuid();
 
-    await postgres.query("BEGIN");
+    const client = await postgres.connect();
     try {
-        await createMatch(newMatchId, user_id, topic, difficulty);
+        await client.query("BEGIN");
+        await createMatch(client, newMatchId, user_id, topic, difficulty);
+
+        await client.query("COMMIT");
 
         await publishEvent(channel, "match.enter", {
             event_id: uuid(),
@@ -259,12 +222,19 @@ async function handleMatchRequeue(event, channel) {
             difficulty
         });
 
-        await postgres.query("COMMIT");
+        console.log("Publishing requeue to socket...")
+        await publishEvent(channel, "match.waiting", {
+            user_id,
+            match_id: newMatchId
+        }, process.env.MATCH_EVENTS_EXCHANGE);
+
         console.log(`User ${user_id} requeued with new match_id ${newMatchId}`);
 
     } catch (err) {
-        await postgres.query("ROLLBACK");
+        await client.query("ROLLBACK");
         throw err;
+    } finally {
+        client.release();
     }
 }
 

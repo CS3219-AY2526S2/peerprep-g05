@@ -60,6 +60,7 @@ services:
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
     ports:
       - "3000:3000"
 

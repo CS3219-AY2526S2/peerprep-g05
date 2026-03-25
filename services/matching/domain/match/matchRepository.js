@@ -29,8 +29,8 @@ export async function findWaitingMatch(user_id, topic, difficulty) {
     return rows[0] || null;
 }
 
-export async function createMatch(match_id, user_id, topic, difficulty) {
-    await postgres.query(
+export async function createMatch(client, match_id, user_id, topic, difficulty) {
+    await client.query(
         `INSERT INTO matches (match_id, user_id_a, topic, difficulty, status)
          VALUES ($1, $2, $3, $4, 'WAITING')`,
         [match_id, user_id, topic, difficulty]
@@ -61,8 +61,8 @@ export async function confirmMatch(match_id) {
     );
 }
 
-export async function cancelMatch(match_id) {
-    const { rowCount } = await postgres.query(
+export async function cancelMatch(client, match_id) {
+    const { rowCount } = await client.query(
         `UPDATE matches SET status = 'CANCELLED', updated_at = NOW()
          WHERE match_id = $1`,
         [match_id]
@@ -78,16 +78,16 @@ export async function getAcceptanceStatus(match_id) {
     return rows[0] || null;
 }
 
-export async function insertMatchEvent(event_id, match_id, event_type, payload) {
-    await postgres.query(
+export async function insertMatchEvent(client, event_id, match_id, event_type, payload) {
+    await client.query(
         `INSERT INTO match_events (event_id, match_id, event_type, payload)
          VALUES ($1, $2, $3, $4)`,
         [event_id, match_id, event_type, JSON.stringify(payload)]
     );
 }
 
-export async function proposeMatch(userA, userB, interval) {
-    const { rowCount } = await postgres.query(
+export async function proposeMatch(client, userA, userB, interval) {
+    const { rowCount } = await client.query(
         `UPDATE matches
          SET user_id_b = $1,
              status = 'PROPOSED',
@@ -98,7 +98,7 @@ export async function proposeMatch(userA, userB, interval) {
     );
     if (rowCount === 0) return false;
 
-    await insertMatchEvent(uuid(), userA.match_id, "MATCH_PROPOSED", {
+    await insertMatchEvent(client, uuid(), userA.match_id, "MATCH_PROPOSED", {
         userA: { user_id: userA.user_id, match_id: userA.match_id },
         userB: { user_id: userB.user_id, match_id: userB.match_id }
     });
@@ -106,8 +106,8 @@ export async function proposeMatch(userA, userB, interval) {
     return true;
 }
 
-export async function redirectMatch(userB, userA) {
-    const { rowCount } = await postgres.query(
+export async function redirectMatch(client, userB, userA) {
+    const { rowCount } = await client.query(
         `UPDATE matches
          SET status = 'REDIRECTED',
              redirected_to = $1,

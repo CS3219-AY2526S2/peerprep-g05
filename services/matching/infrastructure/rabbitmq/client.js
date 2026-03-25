@@ -15,9 +15,9 @@ export async function createChannel() {
     return channel;
 }
 
-export async function publishEvent(channel, routingKey, payload) {
+export async function publishEvent(channel, routingKey, payload, exchange = process.env.MATCH_EXCHANGE) {
     channel.publish(
-        process.env.MATCH_EXCHANGE,
+        exchange,
         routingKey,
         Buffer.from(JSON.stringify(payload)),
         { persistent: true }

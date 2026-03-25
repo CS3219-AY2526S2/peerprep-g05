@@ -22,16 +22,18 @@ async function startTimeoutWorker(timeout_duration) {
             const expired = await getExpiredProposedMatches();
 
             for (const match of expired) {
-                await postgres.query("BEGIN");
+                const client = await postgres.connect();
+                
                 try {
+                    await client.query("BEGIN");
                     // Atomically claim this match for expiry
                     const result = await expireMatch(match.match_id);
                     if (!result) {
-                        await postgres.query("ROLLBACK");
+                        await client.query("ROLLBACK");
                         continue;
                     }
 
-                    await insertMatchEvent(uuid(), match.match_id, "MATCH_TIMED_OUT", {});
+                    await insertMatchEvent(client, uuid(), match.match_id, "MATCH_TIMED_OUT", {});
 
                     // Case 1: only one user accepted → requeue them
                     // Case 2: neither accepted → requeue nobody
@@ -47,12 +49,18 @@ async function startTimeoutWorker(timeout_duration) {
                     const newSessions = [];
                     for (const user of requeueUsers) {
                         const newMatchId = uuid();
-                        await createMatch(newMatchId, user, match.topic, match.difficulty);
+                        await createMatch(client, newMatchId, user, match.topic, match.difficulty);
                         newSessions.push({ user, newMatchId });
                     }
 
-                    await postgres.query("COMMIT");
+                    await client.query("COMMIT");
 
+                    await publishEvent(channel, "match.timeout", {
+                        match_id: match.match_id,
+                        user_id_a: match.user_id_a,
+                        user_id_b: match.user_id_b
+                    }, process.env.MATCH_EVENTS_EXCHANGE);
+                    
                     // Publish requeue events after commit
                     for (const session of newSessions) {
                         await publishEvent(channel, "match.enter", {
@@ -62,17 +70,11 @@ async function startTimeoutWorker(timeout_duration) {
                             topic: match.topic,
                             difficulty: match.difficulty
                         });
-                        // channel.publish(
-                        //     process.env.MATCH_EXCHANGE,
-                        //     "match.enter",
-                        //     Buffer.from(JSON.stringify({
-                        //         event_id: uuid(), // required for idempotency
-                        //         match_id: session.newMatchId,
-                        //         user_id: session.user,
-                        //         topic: match.topic,
-                        //         difficulty: match.difficulty
-                        //     }))
-                        // );
+                        await publishEvent(channel, "match.waiting", {
+                            user_id: session.user,
+                            match_id: session.newMatchId
+                        }, process.env.MATCH_EVENTS_EXCHANGE);
+
                         console.log(`Requeued ${session.user} after timeout on match ${match.match_id}`);
                     }
 
@@ -81,11 +83,11 @@ async function startTimeoutWorker(timeout_duration) {
                     }
 
                 } catch (err) {
-                    await postgres.query("ROLLBACK");
+                    await client.query("ROLLBACK");
                     console.error(`Error expiring match ${match.match_id}:`, err);
+                } finally {
+                    client.release();
                 }
-
-                await postgres.query("COMMIT");
             }
 
         } catch (err) {
@@ -99,20 +101,27 @@ async function startTimeoutWorker(timeout_duration) {
             const stale = await getStaleWaitingMatches(timeout_duration);
 
             for (const match of stale) {
-                await postgres.query("BEGIN");
+                const client = await postgres.connect();
                 try {
+                    await client.query("BEGIN");
                     const cancelled = await cancelWaitingMatch(match.match_id);
                     if (!cancelled) {
-                        await postgres.query("ROLLBACK");
+                        await client.query("ROLLBACK");
                         continue;
                     }
 
-                    await insertMatchEvent(uuid(), match.match_id, "MATCH_WAITING_TIMEOUT", {
+                    await insertMatchEvent(client, uuid(), match.match_id, "MATCH_WAITING_TIMEOUT", {
                         user_id: match.user_id_a
                     });
 
-                    await postgres.query("COMMIT");
+                    await client.query("COMMIT");
 
+                    await publishEvent(channel, "match.timeout", {
+                        match_id: match.match_id,
+                        user_id_a: match.user_id_a,
+                        user_id_b: match.user_id_b
+                    }, process.env.MATCH_EVENTS_EXCHANGE);
+                    
                     await publishEvent(channel, "match.leave", {
                         event_id: uuid(),
                         match_id: match.match_id,
@@ -120,25 +129,15 @@ async function startTimeoutWorker(timeout_duration) {
                         topic: match.topic,
                         difficulty: match.difficulty
                     })
-                    // channel.publish(
-                    //     process.env.MATCH_EXCHANGE,
-                    //     "match.leave",
-                    //     Buffer.from(JSON.stringify({
-                    //         event_id: uuid(),
-                    //         match_id: match.match_id,
-                    //         user_id: match.user_id_a,
-                    //         topic: match.topic,
-                    //         difficulty: match.difficulty
-                    //     }))
-                    // );
 
                     console.log(`WAITING match ${match.match_id} timed out for user ${match.user_id_a} after ${WAITING_TIMEOUT} mins`);
 
                 } catch (err) {
-                    await postgres.query("ROLLBACK");
+                    await client.query("ROLLBACK");
                     console.error(`Error timing out WAITING match ${match.match_id}:`, err);
+                } finally {
+                    client.release();
                 }
-                await postgres.query("COMMIT");
             }
 
         } catch (err) {
