@@ -1,127 +1,234 @@
+# services:
+#   # ── Question Service ────────────────────────────────────────
+#   question-db:
+#     image: postgres:16-alpine
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_DB: questions_db
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#     ports:
+#       - "5433:5432"
+#     volumes:
+#       - question_pgdata:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U postgres"]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 5
+#     networks:
+#       - peerprep-network
+
+#   question-service:
+#     build:
+#       context: ./services/question
+#       dockerfile: Dockerfile
+#     restart: unless-stopped
+#     ports:
+#       - "3002:3002"
+#     environment:
+#       PORT: 3002
+#       NODE_ENV: production
+#       POSTGRES_HOST: question-db
+#       POSTGRES_PORT: 5432
+#       POSTGRES_DB: questions_db
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#     depends_on:
+#       question-db:
+#         condition: service_healthy
+#     networks:
+#       - peerprep-network
+
+#   # ── Seed job (run once) ─────────────────────────────────────
+#   question-seed:
+#     build:
+#       context: ./services/question
+#       dockerfile: Dockerfile
+#     command: ["node", "scripts/seed.js"]
+#     environment:
+#       POSTGRES_HOST: question-db
+#       POSTGRES_PORT: 5432
+#       POSTGRES_DB: questions_db
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#     depends_on:
+#       question-db:
+#         condition: service_healthy
+#     restart: "no"
+#     profiles:
+#       - seed
+#     networks:
+#       - peerprep-network
+
+#   # ── User Service ─────────────────────────────────────────────
+#   user-db:
+#     image: postgres:16-alpine
+#     container_name: peerprep-user-db
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#       POSTGRES_DB: peerprep_users
+#     ports:
+#       - "5434:5432"
+#     volumes:
+#       - user_pgdata:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U postgres -d peerprep_users"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 5
+#     networks:
+#       - peerprep-network
+
+#   user-migrate:
+#     image: node:20-alpine
+#     working_dir: /app
+#     command: sh -c "npm install && npm run migrate"
+#     volumes:
+#       - ./services/user:/app
+#     environment:
+#       DATABASE_URL: postgresql://postgres:postgres@user-db:5432/peerprep_users
+#     depends_on:
+#       user-db:
+#         condition: service_healthy
+#     restart: "no"
+#     profiles:
+#       - migrate
+#     networks:
+#       - peerprep-network
+
+#   user-service:
+#     build:
+#       context: ./services/user
+#       dockerfile: Dockerfile
+#     restart: unless-stopped
+#     ports:
+#       - "3001:3001"
+#     env_file:
+#       - ./services/user/.env
+#     environment:
+#       PORT: 3001
+#       NODE_ENV: production
+#       DATABASE_URL: postgresql://postgres:postgres@user-db:5432/peerprep_users
+#     depends_on:
+#       user-db:
+#         condition: service_healthy
+#     networks:
+#       - peerprep-network
+
+# volumes:
+#   question_pgdata:
+#   user_pgdata:
+
+# networks:
+#   peerprep-network:
+#     driver: bridge
+
+version: "3.9"
+
 services:
-  # ── Question Service ────────────────────────────────────────
-  question-db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: questions_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
     ports:
-      - "5433:5432"
+      - "5672:5672"
+      - "15672:15672"
+
+  postgres:
+    image: postgres:16
+    container_name: matchmaking-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: matchdb
+    ports:
+      - "5432:5432"
     volumes:
-      - question_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - peerprep-network
+      - postgres_data:/var/lib/postgresql/data
+      - ./services/matching/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  question-service:
-    build:
-      context: ./services/question
-      dockerfile: Dockerfile
-    restart: unless-stopped
+  redis:
+    image: redis
+    container_name: matchmaking-redis
     ports:
-      - "3002:3002"
-    environment:
-      PORT: 3002
-      NODE_ENV: production
-      POSTGRES_HOST: question-db
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: questions_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    depends_on:
-      question-db:
-        condition: service_healthy
-    networks:
-      - peerprep-network
+      - "6379:6379"
 
-  # ── Seed job (run once) ─────────────────────────────────────
-  question-seed:
-    build:
-      context: ./services/question
-      dockerfile: Dockerfile
-    command: ["node", "scripts/seed.js"]
-    environment:
-      POSTGRES_HOST: question-db
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: questions_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+  # ---------------- MATCHING SERVICE ----------------
+  matching-service:
+    build: ./services/matching
+    container_name: matching-service
+    command: node server.js
     depends_on:
-      question-db:
-        condition: service_healthy
-    restart: "no"
-    profiles:
-      - seed
-    networks:
-      - peerprep-network
-
-  # ── User Service ─────────────────────────────────────────────
-  user-db:
-    image: postgres:16-alpine
-    container_name: peerprep-user-db
-    restart: unless-stopped
+      - postgres
+      - redis
+      - rabbitmq
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: peerprep_users
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
     ports:
-      - "5434:5432"
-    volumes:
-      - user_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d peerprep_users"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - peerprep-network
+      - "3000:3000"
 
-  user-migrate:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm install && npm run migrate"
-    volumes:
-      - ./services/user:/app
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@user-db:5432/peerprep_users
+  matching-worker:
+    build: ./services/matching
+    container_name: matching-worker
+    command: node workers/match_worker/worker.js
     depends_on:
-      user-db:
-        condition: service_healthy
-    restart: "no"
-    profiles:
-      - migrate
-    networks:
-      - peerprep-network
+      - postgres
+      - redis
+      - rabbitmq
+    environment:
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
 
-  user-service:
-    build:
-      context: ./services/user
-      dockerfile: Dockerfile
-    restart: unless-stopped
+  timeout-worker:
+    build: ./services/matching
+    container_name: timeout-worker
+    command: node workers/timeout_worker/worker.js
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    environment:
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
+
+  # ---------------- GATEWAY ----------------
+  gateway:
+    build: ./backend
+    container_name: gateway
+    command: node server.js
+    depends_on:
+      - matching-service
+      - rabbitmq
+    environment:
+      MATCHING_SERVICE_URL: http://matching-service:3000
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EVENTS_EXCHANGE: match.events
     ports:
-      - "3001:3001"
-    env_file:
-      - ./services/user/.env
-    environment:
-      PORT: 3001
-      NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgres@user-db:5432/peerprep_users
+      - "4000:4000"
+
+  # ---------------- WEBSOCKET SERVICE ----------------
+  ws-service:
+    build: ./backend/ws-Service
+    container_name: ws-service
+    command: node server.js
     depends_on:
-      user-db:
-        condition: service_healthy
-    networks:
-      - peerprep-network
+      - rabbitmq
+    environment:
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EVENTS_EXCHANGE: match.events
+    ports:
+      - "4001:4001"
 
 volumes:
-  question_pgdata:
-  user_pgdata:
-
-networks:
-  peerprep-network:
-    driver: bridge
+  postgres_data:

@@ -30,10 +30,10 @@ async function init() {
         app.use("/api/v1/matches", matchRoutes);
 
         // Attach WebSocket server to the HTTP server
-        createWsServer(server);
+        //createWsServer(server);
 
         // Start WebSocket RabbitMQ consumer
-        await startWsWorker();
+        //await startWsWorker();
 
         // Start HTTP server
         server.listen(3000, () => {

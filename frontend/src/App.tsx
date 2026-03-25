@@ -6,6 +6,7 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import AdminUsers from "./pages/AdminUsers.tsx";
 import AdminOnlyRoute from "./components/AdminOnlyRoute.tsx";
+import Matching from "./pages/Matching.tsx";
 
 export default function App() {
     return (
@@ -16,6 +17,7 @@ export default function App() {
                 <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/matching" element={<Matching />} />
                 <Route
                     path="/admin/users"
                     element={(
