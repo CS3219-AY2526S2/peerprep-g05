@@ -38,11 +38,17 @@ async function startTimeoutWorker(timeout_duration) {
                     // Case 1: only one user accepted → requeue them
                     // Case 2: neither accepted → requeue nobody
                     // Case 3: both accepted → should never reach here (would be CONFIRMED)
+                    const timeoutUsers = [];
+
                     const requeueUsers = [];
                     if (match.accepted_by_a && !match.accepted_by_b) {
                         requeueUsers.push(match.user_id_a);
+                        timeoutUsers.push(match.user_id_b);
                     } else if (match.accepted_by_b && !match.accepted_by_a) {
                         requeueUsers.push(match.user_id_b);
+                        timeoutUsers.push(match.user_id_a);
+                    } else if (!match.accepted_by_a && !match.accepted_by_b) {
+                        timeoutUsers.push(match.user_id_a, match.user_id_b);
                     }
                     // If neither accepted, requeueUsers stays empty
 
@@ -54,12 +60,14 @@ async function startTimeoutWorker(timeout_duration) {
                     }
 
                     await client.query("COMMIT");
-
-                    await publishEvent(channel, "match.timeout", {
-                        match_id: match.match_id,
-                        user_id_a: match.user_id_a,
-                        user_id_b: match.user_id_b
-                    }, process.env.MATCH_EVENTS_EXCHANGE);
+                    
+                    for (const userId of timeoutUsers) {
+                        console.log(userId)
+                        await publishEvent(channel, "match.timeout", {
+                            match_id: match.match_id,
+                            user_id: userId
+                        }, process.env.MATCH_EVENTS_EXCHANGE);
+                    }
                     
                     // Publish requeue events after commit
                     for (const session of newSessions) {

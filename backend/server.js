@@ -2,11 +2,18 @@ import express from "express";
 import http from "http";
 import dotenv from "dotenv";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
-app.use(express.json());
+
+//CORS
+app.use(cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 const server = http.createServer(app);
 
@@ -17,6 +24,7 @@ function initProxyRoutes() {
     app.use("/api/v1/matches", createProxyMiddleware({
         target: process.env.MATCHING_SERVICE_URL,
         changeOrigin: true,
+        pathRewrite : (path) => `/api/v1/matches${path}`,
         on: {
             error: (err, req, res) => {
                 console.error("[Proxy] matching:", err.message);
@@ -28,6 +36,7 @@ function initProxyRoutes() {
     app.use("/api/v1/users", createProxyMiddleware({
         target: process.env.USER_SERVICE_URL,
         changeOrigin: true,
+        pathRewrite : (path) => `/api/v1/users${path}`,
         on: {
             error: (err, req, res) => {
                 console.error("[Proxy] user:", err.message);
@@ -39,6 +48,7 @@ function initProxyRoutes() {
     app.use("/api/v1/questions", createProxyMiddleware({
         target: process.env.QUESTION_SERVICE_URL,
         changeOrigin: true,
+        pathRewrite : (path) => `/api/v1/questions${path}`,
         on: {
             error: (err, req, res) => {
                 console.error("[Proxy] questions:", err.message);

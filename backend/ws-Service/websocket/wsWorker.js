@@ -76,13 +76,9 @@ export async function startWsWorker() {
                     break;
                 //Proposal Expired or waiting timeout
                 case "match.timeout":
-                    if (event.user_id_a) sendToUser(event.user_id_a, { 
-                        type: "MATCH_TIMEOUT", 
-                        match_id: event.match_id 
-                    });
-                    if (event.user_id_b) sendToUser(event.user_id_b, { 
-                        type: "MATCH_TIMEOUT", 
-                        match_id: event.match_id 
+                    sendToUser(event.user_id, {
+                        type: "MATCH_TIMEOUT",
+                        match_id: event.match_id
                     });
                     break;
                 //Both users accepted

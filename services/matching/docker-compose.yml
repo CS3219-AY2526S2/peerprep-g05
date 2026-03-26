@@ -2,7 +2,7 @@ services:
 
   postgres:
     image: postgres:16
-    container_name: matchmaking-postgres
+    # container_name: matchmaking-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -18,10 +18,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - peerprep-network
 
   redis:
     image: redis
-    container_name: matchmaking-redis
+    # container_name: matchmaking-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -30,6 +32,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - peerprep-network
 
   # rabbitmq:
   #   image: rabbitmq:3-management
@@ -44,7 +48,7 @@ services:
   #     timeout: 5s
   #     retries: 5
 
-  server:
+  matchmaking-server:
     build: .
     container_name: matchmaking-server
     command: node server.js
@@ -52,8 +56,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      rabbitmq:
         condition: service_healthy
     environment:
       POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
@@ -63,40 +65,48 @@ services:
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
       - "3000:3000"
+    networks:
+      - peerprep-network
 
   matching-worker:
     build: .
-    container_name: matching-worker
+    # container_name: matching-worker
     command: node workers/match_worker/worker.js
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     environment:
       POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
+    networks:
+      - peerprep-network
 
   timeout-worker:
     build: .
-    container_name: timeout-worker
+    # container_name: timeout-worker
     command: node workers/timeout_worker/worker.js
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
     environment:
       POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
+    networks:
+      - peerprep-network
 
 volumes:
   postgres_data:
+
+networks: 
+  peerprep-network:
+    external: true

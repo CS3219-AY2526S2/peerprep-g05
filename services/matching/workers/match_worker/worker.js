@@ -82,7 +82,7 @@ async function handleMatchEnter(event, channel) {
         await redis.rpush(queueKey, JSON.stringify({ user_id, match_id }));
 
         while (true) {
-            const users = await redis.lrange(queueKey, 0, 1);
+            const users = await redis.lrange(queueKey, 0, -1);
             if (users.length < 2) break;
 
             const userA = JSON.parse(users[0]);

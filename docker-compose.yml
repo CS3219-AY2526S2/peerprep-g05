@@ -126,81 +126,23 @@
 #   peerprep-network:
 #     driver: bridge
 
-version: "3.9"
-
 services:
 
+  # ---------------- INFRASTRUCTURE ----------------
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
+    healthcheck:
+      test: ["CMD", "ping", "rabbitmq-diagnostics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     ports:
       - "5672:5672"
       - "15672:15672"
-
-  postgres:
-    image: postgres:16
-    container_name: matchmaking-postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: matchdb
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./services/matching/init.sql:/docker-entrypoint-initdb.d/init.sql
-
-  redis:
-    image: redis
-    container_name: matchmaking-redis
-    ports:
-      - "6379:6379"
-
-  # ---------------- MATCHING SERVICE ----------------
-  matching-service:
-    build: ./services/matching
-    container_name: matching-service
-    command: node server.js
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-    environment:
-      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
-      REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://rabbitmq:5672
-      MATCH_EXCHANGE: matchmaking.exchange
-      MATCH_EVENTS_EXCHANGE: match.events
-    ports:
-      - "3000:3000"
-
-  matching-worker:
-    build: ./services/matching
-    container_name: matching-worker
-    command: node workers/match_worker/worker.js
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-    environment:
-      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
-      REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://rabbitmq:5672
-      MATCH_EXCHANGE: matchmaking.exchange
-
-  timeout-worker:
-    build: ./services/matching
-    container_name: timeout-worker
-    command: node workers/timeout_worker/worker.js
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-    environment:
-      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
-      REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://rabbitmq:5672
-      MATCH_EXCHANGE: matchmaking.exchange
+    networks:
+      - peerprep-network
 
   # ---------------- GATEWAY ----------------
   gateway:
@@ -208,14 +150,15 @@ services:
     container_name: gateway
     command: node server.js
     depends_on:
-      - matching-service
       - rabbitmq
     environment:
-      MATCHING_SERVICE_URL: http://matching-service:3000
+      MATCHING_SERVICE_URL: http://matchmaking-server:3000
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
       - "4000:4000"
+    networks:
+      - peerprep-network
 
   # ---------------- WEBSOCKET SERVICE ----------------
   ws-service:
@@ -229,6 +172,12 @@ services:
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
       - "4001:4001"
+    networks:
+      - peerprep-network
 
 volumes:
   postgres_data:
+
+networks:
+  peerprep-network:
+    external: true

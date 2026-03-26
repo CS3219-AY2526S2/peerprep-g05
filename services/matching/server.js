@@ -6,8 +6,6 @@ import matchRoutes from "./api/routes/matchRoutes.js";
 import { postgres } from "./infrastructure/postgres/client.js";
 import { redis } from "./infrastructure/redis/client.js";
 import { createChannel } from "./infrastructure/rabbitmq/client.js";
-import { createWsServer } from "./infrastructure/websocket/wsServer.js";
-import { startWsWorker } from "./infrastructure/websocket/wsWorker.js";
 
 
 dotenv.config();
@@ -36,7 +34,7 @@ async function init() {
         //await startWsWorker();
 
         // Start HTTP server
-        server.listen(3000, () => {
+        server.listen(3000, "0.0.0.0", () => {
             console.log("Matching service running on port 3000");
         });
 

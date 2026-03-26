@@ -5,7 +5,8 @@ export async function findActiveMatch(user_id) {
     const { rows } = await postgres.query(
         `SELECT match_id, status FROM matches
          WHERE (user_id_a = $1 OR user_id_b = $1)
-         AND status IN ('WAITING', 'PROPOSED', 'REDIRECTED', 'CONFIRMED')
+         AND status IN ('WAITING', 'PROPOSED', 'REDIRECTED')
+         AND NOT (status = 'REDIRECTED' AND user_id_b IS NULL)
          LIMIT 1`,
         [user_id]
     );
