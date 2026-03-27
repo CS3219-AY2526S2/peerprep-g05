@@ -5,22 +5,15 @@ services:
       context: .
       args:
         EXPRESS_PORT: ${EXPRESS_PORT}
+        QUESTION_API_BASE_URL: ${QUESTION_API_BASE_URL}
     ports:
       - ${EXPRESS_PORT}:${EXPRESS_PORT}
     depends_on:
-      - mongodb
       - redis
     environment:
-      MONGO_URI: "mongodb://mongodb:27017/peerprep-collaboration"
+      QUESTON_API_BASE_URL: ${QUESTION_API_BASE_URL}
       REDIS_URL: "redis://redis:6379"
       EXPRESS_PORT: ${EXPRESS_PORT}
-
-  mongodb:
-    image: mongo:8.2.6-rc0
-    ports:
-      - 27117:27017
-    volumes:
-      - ./data/mongodb:/data/db
 
   redis:
     image: redis:8.2.1-alpine
