@@ -1,39 +1,106 @@
-import { isValidObjectId } from "mongoose";
-import { EditorSessionModel } from "@/models/EditorSession.js";
+import { randomUUID } from "node:crypto";
+import { createClient } from "redis";
+import { config } from "@/config.js";
 
-export const getSessions = async (status?: string) => {
-  const filter: Record<string, string> = {
-    // users: { $in: ["a"] },
-  };
-  if (status) {
-    filter["status"] = status;
+export type SessionStatus = "ACTIVE" | "ENDED";
+
+export type CollaborationSession = {
+  id: string;
+  status: SessionStatus;
+  questionId: string;
+  descriptionContent: string;
+  editorContent: string;
+  users: string[];
+  startedOn: string;
+  updatedOn: string;
+  endedOn: string | null;
+};
+
+const SESSION_KEY_PREFIX = "collaboration:session:";
+const SESSION_IDS_KEY = "collaboration:sessions";
+
+const redisClient = createClient({
+  url: config.REDIS_URL,
+});
+
+redisClient.on("error", (err) => {
+  console.error("Redis client error", err);
+});
+await redisClient.connect();
+
+const getSessionKey = (sessionId: string) =>
+  `${SESSION_KEY_PREFIX}${sessionId}`;
+
+const _getSessionById = async (sessionId: string) => {
+  const session = await redisClient.get(getSessionKey(sessionId));
+  if (!session) return null;
+
+  return JSON.parse(session) as CollaborationSession;
+};
+
+export const getSessions = async (status?: SessionStatus) => {
+  const sessionIds = await redisClient.sMembers(SESSION_IDS_KEY);
+  if (sessionIds.length === 0) {
+    return [];
   }
-  return EditorSessionModel.find(filter);
+
+  // TODO: use redis to check and filter? or maybe redisClient.json.set/get?
+  const sessions = (
+    await Promise.all(sessionIds.map((sessionId) => _getSessionById(sessionId)))
+  ).filter((session): session is CollaborationSession => session !== null);
+
+  if (!status) {
+    return sessions;
+  }
+
+  return sessions.filter((session) => session.status === status);
 };
 
 export const createSession = async (
   users: string[],
   editorContent: string,
   descriptionContent: string,
+  questionId: string,
 ) => {
-  const newSession = new EditorSessionModel({
+  const newSession: CollaborationSession = {
+    id: randomUUID(),
     users,
     editorContent,
     descriptionContent,
     status: "ACTIVE",
-  });
-  return newSession.save();
+    questionId,
+    startedOn: new Date().toISOString(),
+    updatedOn: new Date().toISOString(),
+    endedOn: null,
+  };
+
+  await redisClient.set(
+    getSessionKey(newSession.id),
+    JSON.stringify(newSession),
+  );
+  await redisClient.sAdd(SESSION_IDS_KEY, newSession.id);
+
+  return newSession;
 };
 
 export const getSessionById = async (sessionId: string) => {
-  if (!isValidObjectId(sessionId)) return null;
-  return EditorSessionModel.findById(sessionId);
+  return _getSessionById(sessionId);
 };
 
 export const endSession = async (sessionId: string) => {
-  if (!isValidObjectId(sessionId)) return null;
-  const session = await EditorSessionModel.findById(sessionId);
+  const session = await _getSessionById(sessionId);
   if (!session) return null;
-  session.$set({ status: "ENDED", endedOn: new Date() });
-  return session.save();
+
+  const endedSession: CollaborationSession = {
+    ...session,
+    status: "ENDED",
+    endedOn: new Date().toISOString(),
+  };
+
+  await redisClient.set(
+    getSessionKey(session.id),
+    JSON.stringify(endedSession),
+  );
+
+  return endedSession;
 };
