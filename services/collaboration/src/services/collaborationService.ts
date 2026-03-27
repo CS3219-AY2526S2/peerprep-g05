@@ -56,7 +56,23 @@ export const getSessions = async (status?: SessionStatus) => {
   return sessions.filter((session) => session.status === status);
 };
 
-export const createSession = async (
+export const createSession = async (users: string[], questionId: string) => {
+  // fetch question
+  const response = await fetch(
+    config.QUESTION_API_BASE_URL + `/questions/${questionId}`,
+  );
+  // TODO: maybe move to an adapter to support more feature like test cases.
+  const { data: questionData } = (await response.json()) as {
+    data: { title: string; description: string };
+  };
+  return _createSession(
+    users,
+    "# Type your code here",
+    questionData.title + "\n" + questionData.description,
+    questionId,
+  );
+};
+const _createSession = async (
   users: string[],
   editorContent: string,
   descriptionContent: string,

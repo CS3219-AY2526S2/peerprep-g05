@@ -35,14 +35,8 @@ export const createCollaborationSession: RequestHandler = async (req, res) => {
     res.status(400).json({ errors: errorMessage });
     return;
   }
-  const { users, editorContent, descriptionContent, questionId } =
-    parsedBody.data;
-  const session = await createSession(
-    users,
-    editorContent,
-    descriptionContent,
-    questionId,
-  );
+  const { users, questionId } = parsedBody.data;
+  const session = await createSession(users, questionId);
   res.json({ sessionId: session.id });
 };
 
