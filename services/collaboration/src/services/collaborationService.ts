@@ -1,6 +1,6 @@
+import { config } from "@/config.js";
 import { randomUUID } from "node:crypto";
 import { createClient } from "redis";
-import { config } from "@/config.js";
 
 export type SessionStatus = "ACTIVE" | "ENDED";
 
@@ -58,13 +58,23 @@ export const getSessions = async (status?: SessionStatus) => {
 
 export const createSession = async (users: string[], questionId: string) => {
   // fetch question
-  const response = await fetch(
-    config.QUESTION_API_BASE_URL + `/questions/${questionId}`,
-  );
+  const url = config.QUESTION_API_BASE_URL + `/questions/${questionId}`;
+
+  const response = (await fetch(url)
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error("Failed to fetch question data");
+      }
+      return res.json();
+    })
+    .catch((err) => {
+      console.error("Error fetching question data: ", err);
+      throw new Error("Failed to fetch question data");
+    })) as { data: { title: string; description: string } };
+
   // TODO: maybe move to an adapter to support more feature like test cases.
-  const { data: questionData } = (await response.json()) as {
-    data: { title: string; description: string };
-  };
+  const { data: questionData } = response;
+
   return _createSession(
     users,
     "# Type your code here",
@@ -72,6 +82,7 @@ export const createSession = async (users: string[], questionId: string) => {
     questionId,
   );
 };
+
 const _createSession = async (
   users: string[],
   editorContent: string,

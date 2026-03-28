@@ -51,7 +51,6 @@ export const checkSessionIdExists: RequestHandler = async (req, res, next) => {
     return;
   }
   res.locals["session"] = session;
-
   next();
 };
 export const getCollaborationSession: RequestHandler = async (_, res) => {

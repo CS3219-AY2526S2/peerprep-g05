@@ -1,17 +1,38 @@
+import { useEffect, useState } from "react";
+import { getSessionInformation } from "../api/collaborationApi";
 import { CollaborativeEditor } from "../components/collaborative/CollaborativeEditor";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
 import { useParams } from "react-router-dom";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 
 export default function CollaborativeEditorPage() {
   const { roomId } = useParams();
+  const [sessionInfo, setSessionInfo] = useState<{
+    descriptionContent: string;
+  } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   if (!roomId) {
     return <div>Room ID is required</div>;
+  }
+
+  useEffect(() => {
+    getSessionInformation(roomId).then((info) => {
+      console.log("Session info:", info);
+      setSessionInfo(info);
+      setIsLoading(false);
+    });
+  }, [roomId]);
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+  if (sessionInfo == null) {
+    return <div>Invalid Editor Room</div>;
   }
   return (
     <div className="h-full grid grid-cols-2">
       <QuestionDescriptionPreview
-        description={`# Question Title
-This is a **Question description**. Supports markdown`}
+        description={sessionInfo.descriptionContent}
       />
       <CollaborativeEditor roomId={roomId} />
     </div>

@@ -1,11 +1,10 @@
 name: collaboration-service
 services:
-  server:
+  collaboration-server:
     build:
       context: .
       args:
         EXPRESS_PORT: ${EXPRESS_PORT}
-        QUESTION_API_BASE_URL: ${QUESTION_API_BASE_URL}
     ports:
       - ${EXPRESS_PORT}:${EXPRESS_PORT}
     depends_on:
@@ -14,8 +13,19 @@ services:
       QUESTON_API_BASE_URL: ${QUESTION_API_BASE_URL}
       REDIS_URL: "redis://redis:6379"
       EXPRESS_PORT: ${EXPRESS_PORT}
+      NODE_ENV: production
+    networks:
+      - peerprep-network
+      - collaboration-network
+    restart: always
 
   redis:
     image: redis:8.2.1-alpine
     ports:
       - 6379:6379
+    restart: always
+    networks:
+      - collaboration-network
+networks:
+  collaboration-network:
+    driver: bridge

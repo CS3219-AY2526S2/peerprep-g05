@@ -2,7 +2,6 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
 import { yCollab } from "y-codemirror.next";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
@@ -26,7 +25,6 @@ export function CollaborativeEditor({ roomId }: { roomId: string }) {
   useEffect(() => {
     const ydoc = new Y.Doc();
     const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc);
-    provider;
 
     const ytext = ydoc.getText();
     provider.awareness.setLocalStateField("user", {
