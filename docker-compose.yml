@@ -145,6 +145,7 @@ services:
       - rabbitmq
     environment:
       MATCHING_SERVICE_URL: http://matchmaking-server:3000
+      QUESTION_SERVICE_URL: http://question-service:3002
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
