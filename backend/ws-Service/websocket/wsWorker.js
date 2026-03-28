@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { createChannel } from "./rabbitmq/client.js";
 import { sendToUser } from "./wsServer.js";
+import { setUserMatchContext, clearUserMatchContext } from "./wsServer.js";
 
 dotenv.config();
 
@@ -32,6 +33,11 @@ export async function startWsWorker() {
             switch (routingKey) {
                 //User joins queue or gets requeued
                 case "match.waiting":
+                    setUserMatchContext(event.user_id, {
+                        match_id: event.match_id,
+                        topic: event.topic,
+                        difficulty: event.difficulty,
+                    });
                     sendToUser(event.user_id, { 
                         type: "MATCH_WAITING", 
                         match_id: event.match_id 
@@ -41,16 +47,14 @@ export async function startWsWorker() {
                 case "match.proposed":
                     sendToUser(event.user_id_a, { 
                         type: "MATCH_PROPOSED", 
-                        match_id: event.match_id, 
-                        peer: event.user_id_b 
+                        match_id: event.match_id
                     });
                     break;
                 //UserB gets redirected
                 case "match.redirected":
                     sendToUser(event.user_id_b, { 
                         type: "MATCH_PROPOSED", 
-                        match_id: event.redirected_to, 
-                        peer: event.user_id_a 
+                        match_id: event.redirected_to
                     });
                     break;
                 //User Accepts
@@ -76,6 +80,7 @@ export async function startWsWorker() {
                     break;
                 //Proposal Expired or waiting timeout
                 case "match.timeout":
+                    clearUserMatchContext(event.user_id);
                     sendToUser(event.user_id, {
                         type: "MATCH_TIMEOUT",
                         match_id: event.match_id
@@ -83,13 +88,18 @@ export async function startWsWorker() {
                     break;
                 //Both users accepted
                 case "match.confirmed":
+                    clearUserMatchContext(event.user_id);
                     sendToUser(event.user_id_a, { 
                         type: "MATCH_CONFIRMED", 
-                        match_id: event.match_id 
+                        match_id: event.match_id,
+                        topic: event.topic,
+                        difficulty: event.difficulty 
                     });
                     sendToUser(event.user_id_b, { 
                         type: "MATCH_CONFIRMED", 
-                        match_id: event.match_id 
+                        match_id: event.match_id,
+                        topic: event.topic,
+                        difficulty: event.difficulty
                     });
                     break;
             }

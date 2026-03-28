@@ -122,7 +122,9 @@ export async function acceptMatch(req, res) {
                 await publishEvent(global.rabbitChannel, "match.confirmed", {
                     match_id: proposedMatchId,
                     user_id_a: proposed.user_id_a,
-                    user_id_b: proposed.user_id_b
+                    user_id_b: proposed.user_id_b,
+                    topic: proposed.topic,
+                    difficulty: proposed.difficulty
                 }, process.env.MATCH_EVENTS_EXCHANGE);
             }
 
