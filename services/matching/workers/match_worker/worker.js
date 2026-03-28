@@ -20,6 +20,7 @@ const PROPOSAL_TIMEOUT_MS = 5 * 60 * 1000; // 1 minute
 
 async function startWorker() {
     const channel = await createChannel();
+    await channel.prefetch(1);
 
     // Assert Exchange
     await channel.assertExchange(process.env.MATCH_EXCHANGE, "topic", { durable: true });
@@ -105,6 +106,7 @@ async function handleMatchEnter(event, channel) {
                 if (!proposed) {
                     await client.query("ROLLBACK");
                     await redis.lpush(queueKey, JSON.stringify(userB));
+                    await redis.lpush(queueKey, JSON.stringify(userA));
                     console.log("Stale matches for userA, requeuing userB");
                     continue;
                 }
@@ -204,7 +206,10 @@ async function handleMatchLeave(event, channel) {
 }
 
 async function handleMatchRequeue(event, channel) {
-    const { user_id, topic, difficulty } = event;
+    const { event_id,user_id, topic, difficulty } = event;
+
+    const processedKey = `processed_event:${event_id}`;
+    if (await redis.get(processedKey)) return;
     const newMatchId = uuid();
 
     const client = await postgres.connect();
