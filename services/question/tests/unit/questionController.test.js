@@ -289,6 +289,26 @@ describe("deleteQuestion", () => {
         expect(res.status).toHaveBeenCalledWith(404);
     });
 
+    it("returns 409 when the question is currently being edited", async () => {
+        const req = mockReq({ params: { id: "1" } });
+        const res = mockRes();
+
+        mockQuery
+            .mockResolvedValueOnce({ rows: [] }) // guarded DELETE did not remove row
+            .mockResolvedValueOnce({ rows: [{ id: 1 }] }) // question exists
+            .mockResolvedValueOnce({ rows: [{ locked_by: "alice" }] }); // active lock
+
+        await deleteQuestion(req, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(409);
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                success: false,
+                error: expect.stringContaining("currently being edited by alice"),
+            })
+        );
+    });
+
     it("deletes and returns success", async () => {
         const req = mockReq({ params: { id: "1" } });
         const res = mockRes();

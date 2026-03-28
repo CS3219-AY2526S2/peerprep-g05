@@ -43,8 +43,8 @@ export type AdminUser = User;
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const res = await fetch(`${BASE}${path}`, {
-        headers: { "Content-Type": "application/json", ...options.headers },
         ...options,
+        headers: { "Content-Type": "application/json", ...options.headers },
     });
     const data = await res.json().catch(() => null);
     if (!res.ok) throw { status: res.status, data } as ApiError;

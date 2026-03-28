@@ -24,10 +24,34 @@ const pool = new Pool({
     password: process.env.POSTGRES_PASSWORD || "postgres",
 });
 
+const cliArgs = process.argv.slice(2);
+
+function getCliArgValue(flag) {
+    const idx = cliArgs.findIndex((arg) => arg === flag);
+    if (idx >= 0 && idx + 1 < cliArgs.length) {
+        return cliArgs[idx + 1];
+    }
+    return undefined;
+}
+
+function parsePositiveInt(value) {
+    if (!value) return undefined;
+    const parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function splitIntoChunks(items, chunkSize) {
+    const chunks = [];
+    for (let i = 0; i < items.length; i += chunkSize) {
+        chunks.push(items.slice(i, i + chunkSize));
+    }
+    return chunks;
+}
+
 // ---------------------------------------------------------------------------
 // Questions with test cases
 // ---------------------------------------------------------------------------
-const QUESTIONS = [
+const BASE_QUESTIONS = [
     {
         title: "Two Sum",
         description:
@@ -313,51 +337,132 @@ const QUESTIONS = [
 // ---------------------------------------------------------------------------
 // Seed logic
 // ---------------------------------------------------------------------------
+const DEFAULT_QUESTION_COUNT = 200;
+const LOAD_TEST_QUESTION_COUNT = 10000;
+const cliLoadTest = cliArgs.includes("--load-test");
+const envLoadTest = String(process.env.SEED_LOAD_TEST || "").toLowerCase() === "true";
+const explicitTargetCount =
+    parsePositiveInt(getCliArgValue("--count")) ||
+    parsePositiveInt(process.env.SEED_TARGET_QUESTION_COUNT);
+
+const TARGET_QUESTION_COUNT =
+    explicitTargetCount ||
+    (cliLoadTest || envLoadTest ? LOAD_TEST_QUESTION_COUNT : DEFAULT_QUESTION_COUNT);
+
+function buildSeedQuestions(targetCount) {
+    if (BASE_QUESTIONS.length >= targetCount) {
+        return BASE_QUESTIONS.slice(0, targetCount);
+    }
+
+    const expanded = [...BASE_QUESTIONS];
+    let variant = 1;
+
+    while (expanded.length < targetCount) {
+        const base = BASE_QUESTIONS[(expanded.length - BASE_QUESTIONS.length) % BASE_QUESTIONS.length];
+        expanded.push({
+            ...base,
+            title: `${base.title} (Practice Variant ${variant})`,
+            description:
+                `${base.description}\n\nThis is an additional practice variant used to increase question coverage for matching and practice.`,
+            test_cases: (base.test_cases || []).map((tc) => ({ ...tc })),
+        });
+        variant += 1;
+    }
+
+    return expanded;
+}
+
 async function seed() {
     const client = await pool.connect();
+    const QUESTIONS = buildSeedQuestions(TARGET_QUESTION_COUNT);
     try {
         await client.query("BEGIN");
 
-        for (const q of QUESTIONS) {
-            // Skip if already exists
-            const existing = await client.query(
-                "SELECT id FROM questions WHERE LOWER(title) = LOWER($1)",
-                [q.title]
-            );
-            if (existing.rows.length > 0) {
-                console.log(`  ⏭  "${q.title}" already exists (id: ${existing.rows[0].id})`);
-                continue;
-            }
+        const allTitleKeys = QUESTIONS.map((q) => q.title.toLowerCase());
+        const existingResult = await client.query(
+            "SELECT LOWER(title) AS key FROM questions WHERE LOWER(title) = ANY($1::text[])",
+            [allTitleKeys]
+        );
 
-            // Insert question
-            const result = await client.query(
+        const existingKeys = new Set(existingResult.rows.map((row) => row.key));
+        const questionsToInsert = QUESTIONS.filter((q) => !existingKeys.has(q.title.toLowerCase()));
+
+        const insertedIdByTitle = new Map();
+        const questionChunks = splitIntoChunks(questionsToInsert, 500);
+        let insertedCount = 0;
+
+        for (const [index, chunk] of questionChunks.entries()) {
+            const values = [];
+            const placeholders = chunk.map((q, i) => {
+                const offset = i * 5;
+                values.push(q.title, q.description, q.categories, q.complexity, q.companies || []);
+                return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`;
+            });
+
+            const inserted = await client.query(
                 `INSERT INTO questions (title, description, categories, complexity, companies)
-                 VALUES ($1, $2, $3, $4, $5)
-                 RETURNING id`,
-                [q.title, q.description, q.categories, q.complexity, q.companies || []]
+                 VALUES ${placeholders.join(", ")}
+                 ON CONFLICT DO NOTHING
+                 RETURNING id, title`,
+                values
             );
-            const questionId = result.rows[0].id;
 
-            // Insert test cases
-            if (q.test_cases && q.test_cases.length > 0) {
-                const values = [];
-                const placeholders = q.test_cases.map((tc, i) => {
-                    const offset = i * 4;
-                    values.push(questionId, tc.input, tc.expected_output, tc.is_public);
-                    return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, ${i})`;
-                });
-                await client.query(
-                    `INSERT INTO test_cases (question_id, input, expected_output, is_public, order_index)
-                     VALUES ${placeholders.join(", ")}`,
-                    values
-                );
+            for (const row of inserted.rows) {
+                insertedIdByTitle.set(row.title, row.id);
             }
 
-            console.log(`  ✅  "${q.title}" [${q.complexity}] — ${q.test_cases?.length || 0} test cases`);
+            insertedCount += inserted.rows.length;
+            console.log(`  Questions batch ${index + 1}/${questionChunks.length}: +${inserted.rows.length}`);
         }
 
+        const testCaseRows = [];
+        for (const q of questionsToInsert) {
+            const questionId = insertedIdByTitle.get(q.title);
+            if (!questionId || !q.test_cases?.length) continue;
+
+            q.test_cases.forEach((tc, orderIndex) => {
+                testCaseRows.push([
+                    questionId,
+                    tc.input,
+                    tc.expected_output,
+                    tc.is_public,
+                    orderIndex,
+                ]);
+            });
+        }
+
+        let insertedTestCaseCount = 0;
+        const testCaseChunks = splitIntoChunks(testCaseRows, 2000);
+        for (const [index, chunk] of testCaseChunks.entries()) {
+            if (chunk.length === 0) continue;
+
+            const values = [];
+            const placeholders = chunk.map((row, i) => {
+                const offset = i * 5;
+                values.push(...row);
+                return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`;
+            });
+
+            await client.query(
+                `INSERT INTO test_cases (question_id, input, expected_output, is_public, order_index)
+                 VALUES ${placeholders.join(", ")}`,
+                values
+            );
+
+            insertedTestCaseCount += chunk.length;
+            console.log(`  Test-case batch ${index + 1}/${testCaseChunks.length}: +${chunk.length}`);
+        }
+
+        const skippedCount = QUESTIONS.length - insertedCount;
+
         await client.query("COMMIT");
-        console.log(`\nSeeded ${QUESTIONS.length} questions successfully.`);
+        console.log(`\nSeed target: ${QUESTIONS.length} questions`);
+        console.log(`Inserted: ${insertedCount}`);
+        console.log(`Skipped (already existed): ${skippedCount}`);
+        console.log(`Inserted test cases: ${insertedTestCaseCount}`);
+        if (cliLoadTest || envLoadTest || TARGET_QUESTION_COUNT >= LOAD_TEST_QUESTION_COUNT) {
+            console.log("Load-test seeding mode was used");
+        }
     } catch (err) {
         await client.query("ROLLBACK");
         console.error("Seed failed:", err);

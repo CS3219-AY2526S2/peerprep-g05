@@ -267,8 +267,24 @@ export async function createQuestion(req, res, next) {
         }
 
         const result = await pool.query(
-            `INSERT INTO questions (title, description, categories, complexity, companies)
-             VALUES ($1, $2, $3, $4, $5)
+            `WITH id_lock AS (
+                 SELECT pg_advisory_xact_lock(2147483001)
+             ),
+             next_id AS (
+                 SELECT gs AS id
+                 FROM generate_series(
+                     1,
+                     COALESCE((SELECT MAX(id) FROM questions), 0) + 1
+                 ) AS gs
+                 WHERE NOT EXISTS (
+                     SELECT 1 FROM questions q WHERE q.id = gs
+                 )
+                 ORDER BY gs
+                 LIMIT 1
+             )
+             INSERT INTO questions (id, title, description, categories, complexity, companies)
+             SELECT next_id.id, $1, $2, $3, $4, $5
+             FROM next_id
              RETURNING *`,
             [title.trim(), description.trim(), categories, complexity, companies || []]
         );
@@ -302,7 +318,9 @@ export async function createQuestion(req, res, next) {
 export async function updateQuestion(req, res, next) {
     try {
         const { id } = req.params;
-        const { title, description, categories, complexity, companies, test_cases } = req.body;
+        const payload = req.body || {};
+        const lockHolder = req.get("x-lock-holder") || payload.locked_by;
+        const { title, description, categories, complexity, companies, test_cases } = payload;
 
         if (!title && !description && !categories && !complexity && !companies && !test_cases) {
             return res.status(400).json({ success: false, error: "Provide at least one field to update" });
@@ -319,6 +337,29 @@ export async function updateQuestion(req, res, next) {
         const existing = await pool.query("SELECT id FROM questions WHERE id = $1", [id]);
         if (existing.rows.length === 0) {
             return res.status(404).json({ success: false, error: "Question not found" });
+        }
+
+        if (!lockHolder || typeof lockHolder !== "string" || lockHolder.trim().length === 0) {
+            return res.status(400).json({ success: false, error: "x-lock-holder header (or locked_by) is required" });
+        }
+
+        const lockResult = await pool.query(
+            "SELECT locked_by FROM question_locks WHERE question_id = $1",
+            [id]
+        );
+
+        if (lockResult.rows.length === 0) {
+            return res.status(409).json({
+                success: false,
+                error: "Question is not locked for editing. Acquire lock before saving.",
+            });
+        }
+
+        if (lockResult.rows[0].locked_by !== lockHolder.trim()) {
+            return res.status(409).json({
+                success: false,
+                error: `Question is currently being edited by ${lockResult.rows[0].locked_by}`,
+            });
         }
 
         if (title) {
@@ -393,10 +434,38 @@ export async function deleteQuestion(req, res, next) {
     try {
         const { id } = req.params;
 
-        const result = await pool.query("DELETE FROM questions WHERE id = $1 RETURNING id", [id]);
+        const result = await pool.query(
+            `DELETE FROM questions
+             WHERE id = $1
+             AND NOT EXISTS (
+                 SELECT 1 FROM question_locks WHERE question_id = $1
+             )
+             RETURNING id`,
+            [id]
+        );
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, error: "Question not found" });
+        if ((result?.rows || []).length === 0) {
+            const exists = await pool.query("SELECT id FROM questions WHERE id = $1", [id]);
+            if ((exists?.rows || []).length === 0) {
+                return res.status(404).json({ success: false, error: "Question not found" });
+            }
+
+            const lockResult = await pool.query(
+                "SELECT locked_by FROM question_locks WHERE question_id = $1",
+                [id]
+            );
+
+            if ((lockResult?.rows || []).length > 0) {
+                return res.status(409).json({
+                    success: false,
+                    error: `Question is currently being edited by ${lockResult.rows[0].locked_by}. Deletion is not allowed.`,
+                });
+            }
+
+            return res.status(409).json({
+                success: false,
+                error: "Unable to delete question. Please retry.",
+            });
         }
 
         res.json({ success: true, message: "Question deleted successfully" });
