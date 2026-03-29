@@ -103,6 +103,19 @@ services:
       MATCH_EVENTS_EXCHANGE: match.events
     networks:
       - peerprep-network
+  outbox-worker:
+    build: .
+    command: node workers/outbox/worker.js
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
+    networks:
+      - peerprep-network
 
 volumes:
   postgres_data:

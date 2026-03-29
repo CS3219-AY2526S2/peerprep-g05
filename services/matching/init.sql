@@ -40,3 +40,12 @@ CREATE TABLE match_events (
 
 CREATE INDEX idx_match_events_match_id
 ON match_events(match_id);
+
+CREATE TABLE outbox (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    exchange    TEXT NOT NULL,
+    routing_key TEXT NOT NULL,
+    payload     JSONB NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    published_at TIMESTAMPTZ
+);

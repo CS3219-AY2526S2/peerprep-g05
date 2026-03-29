@@ -2,32 +2,33 @@ import dotenv from "dotenv";
 import { v4 as uuid } from "uuid";
 
 import { postgres } from "../../infrastructure/postgres/client.js";
-import { createChannel, publishEvent } from "../../infrastructure/rabbitmq/client.js";
-import { 
-    cancelWaitingMatch, 
+import { createChannel } from "../../infrastructure/rabbitmq/client.js";
+import {
+    cancelWaitingMatch,
     createMatch,
     expireMatch,
-    getExpiredProposedMatches, 
-    getStaleWaitingMatches, 
-    insertMatchEvent } from "../../domain/match/matchRepository.js";
+    getExpiredProposedMatches,
+    getStaleWaitingMatches,
+    insertMatchEvent
+} from "../../domain/match/matchRepository.js";
+import { insertOutboxEvent } from "../../domain/match/outboxRepository.js";
 
 dotenv.config();
 
 async function startTimeoutWorker(timeout_duration) {
     const channel = await createChannel();
-    const WAITING_TIMEOUT = timeout_duration;
 
+    // ── Poll: PROPOSED matches whose proposal_expiry has passed ──────
     setInterval(async () => {
         try {
             const expired = await getExpiredProposedMatches();
 
             for (const match of expired) {
                 const client = await postgres.connect();
-                
                 try {
                     await client.query("BEGIN");
-                    // Atomically claim this match for expiry
-                    const result = await expireMatch(client,match.match_id);
+
+                    const result = await expireMatch(client, match.match_id);
                     if (!result) {
                         await client.query("ROLLBACK");
                         continue;
@@ -35,59 +36,55 @@ async function startTimeoutWorker(timeout_duration) {
 
                     await insertMatchEvent(client, uuid(), match.match_id, "MATCH_TIMED_OUT", {});
 
-                    // Case 1: only one user accepted → requeue them
-                    // Case 2: neither accepted → requeue nobody
-                    // Case 3: both accepted → should never reach here (would be CONFIRMED)
-                    const timeoutUsers = [];
+                    // Case 1: only one user accepted → requeue them, notify the other
+                    // Case 2: neither accepted → notify both, requeue nobody
+                    // Case 3: both accepted → never reaches here (status = CONFIRMED)
+                    const timeoutUsers  = [];
+                    const requeueUsers  = [];
 
-                    const requeueUsers = [];
                     if (match.accepted_by_a && !match.accepted_by_b) {
                         requeueUsers.push(match.user_id_a);
                         timeoutUsers.push(match.user_id_b);
                     } else if (match.accepted_by_b && !match.accepted_by_a) {
                         requeueUsers.push(match.user_id_b);
                         timeoutUsers.push(match.user_id_a);
-                    } else if (!match.accepted_by_a && !match.accepted_by_b) {
+                    } else {
                         timeoutUsers.push(match.user_id_a, match.user_id_b);
                     }
-                    // If neither accepted, requeueUsers stays empty
 
-                    const newSessions = [];
-                    for (const user of requeueUsers) {
+                    // Notify timed-out users (no requeue)
+                    for (const userId of timeoutUsers) {
+                        await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.timeout", {
+                            match_id: match.match_id,
+                            user_id: userId,
+                        });
+                    }
+
+                    // Create new matches and outbox events for requeued users
+                    for (const userId of requeueUsers) {
                         const newMatchId = uuid();
-                        await createMatch(client, newMatchId, user, match.topic, match.difficulty);
-                        newSessions.push({ user, newMatchId });
+                        await createMatch(client, newMatchId, userId, match.topic, match.difficulty);
+
+                        await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.enter", {
+                            event_id: uuid(),
+                            match_id: newMatchId,
+                            user_id: userId,
+                            topic: match.topic,
+                            difficulty: match.difficulty,
+                        });
+
+                        await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.waiting", {
+                            user_id: userId,
+                            match_id: newMatchId,
+                        });
                     }
 
                     await client.query("COMMIT");
-                    
-                    for (const userId of timeoutUsers) {
-                        console.log(userId)
-                        await publishEvent(channel, "match.timeout", {
-                            match_id: match.match_id,
-                            user_id: userId
-                        }, process.env.MATCH_EVENTS_EXCHANGE);
-                    }
-                    
-                    // Publish requeue events after commit
-                    for (const session of newSessions) {
-                        await publishEvent(channel, "match.enter", {
-                            event_id: uuid(),
-                            match_id: session.newMatchId,
-                            user_id: session.user,
-                            topic: match.topic,
-                            difficulty: match.difficulty
-                        });
-                        await publishEvent(channel, "match.waiting", {
-                            user_id: session.user,
-                            match_id: session.newMatchId
-                        }, process.env.MATCH_EVENTS_EXCHANGE);
-
-                        console.log(`Requeued ${session.user} after timeout on match ${match.match_id}`);
-                    }
 
                     if (requeueUsers.length === 0) {
                         console.log(`Match ${match.match_id} expired — no users requeued`);
+                    } else {
+                        console.log(`Match ${match.match_id} expired — requeued: ${requeueUsers.join(", ")}`);
                     }
 
                 } catch (err) {
@@ -97,13 +94,12 @@ async function startTimeoutWorker(timeout_duration) {
                     client.release();
                 }
             }
-
         } catch (err) {
             console.error("Timeout worker poll error:", err);
         }
-
     }, 5000);
 
+    // ── Poll: WAITING matches that have been sitting too long ─────────
     setInterval(async () => {
         try {
             const stale = await getStaleWaitingMatches(timeout_duration);
@@ -112,6 +108,7 @@ async function startTimeoutWorker(timeout_duration) {
                 const client = await postgres.connect();
                 try {
                     await client.query("BEGIN");
+
                     const cancelled = await cancelWaitingMatch(client, match.match_id);
                     if (!cancelled) {
                         await client.query("ROLLBACK");
@@ -119,26 +116,26 @@ async function startTimeoutWorker(timeout_duration) {
                     }
 
                     await insertMatchEvent(client, uuid(), match.match_id, "MATCH_WAITING_TIMEOUT", {
-                        user_id: match.user_id_a
+                        user_id: match.user_id_a,
                     });
 
-                    await client.query("COMMIT");
-
-                    await publishEvent(channel, "match.timeout", {
+                    // Notify user their queue search timed out
+                    await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.timeout", {
                         match_id: match.match_id,
-                        user_id_a: match.user_id_a,
-                        user_id_b: match.user_id_b
-                    }, process.env.MATCH_EVENTS_EXCHANGE);
-                    
-                    await publishEvent(channel, "match.leave", {
+                        user_id: match.user_id_a,
+                    });
+
+                    // Drive the match worker to clean up Redis queue state
+                    await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.leave", {
                         event_id: uuid(),
                         match_id: match.match_id,
                         user_id: match.user_id_a,
                         topic: match.topic,
-                        difficulty: match.difficulty
-                    })
+                        difficulty: match.difficulty,
+                    });
 
-                    console.log(`WAITING match ${match.match_id} timed out for user ${match.user_id_a} after ${WAITING_TIMEOUT} mins`);
+                    await client.query("COMMIT");
+                    console.log(`WAITING match ${match.match_id} timed out for user ${match.user_id_a} after ${timeout_duration} mins`);
 
                 } catch (err) {
                     await client.query("ROLLBACK");
@@ -147,11 +144,9 @@ async function startTimeoutWorker(timeout_duration) {
                     client.release();
                 }
             }
-
         } catch (err) {
             console.error("Waiting timeout poll error:", err);
         }
-
     }, 5000);
 }
 

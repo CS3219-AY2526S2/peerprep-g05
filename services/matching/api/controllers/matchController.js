@@ -3,23 +3,44 @@ import { postgres } from "../../infrastructure/postgres/client.js";
 import { publishEvent } from "../../infrastructure/rabbitmq/client.js";
 import { releaseLock, acquireLock } from "../../infrastructure/redis/lock.js";
 import { redis } from "../../infrastructure/redis/client.js";
-import { findMatchById, findWaitingMatch, createMatch,
-    updateMatchAcceptedByA, updateMatchAcceptedByB, confirmMatch,
-    cancelMatch, getAcceptanceStatus, insertMatchEvent
- } from "../../domain/match/matchRepository.js";
+import {
+    findMatchById,
+    findWaitingMatch,
+    createMatch,
+    updateMatchAcceptedByA,
+    updateMatchAcceptedByB,
+    confirmMatch,
+    cancelMatch,
+    getAcceptanceStatus,
+    insertMatchEvent
+} from "../../domain/match/matchRepository.js";
+import { insertOutboxEvent } from "../../domain/match/outboxRepository.js";
 
 export async function enterMatchmaking(req, res) {
-
     try {
-
         const { user_id, topic, difficulty } = req.body;
-
         const match_id = uuid();
 
         const client = await postgres.connect();
         try {
             await client.query("BEGIN");
+
             await createMatch(client, match_id, user_id, topic, difficulty);
+
+            // Enqueue match.enter and notify user they are waiting — atomically
+            await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.enter", {
+                event_id: uuid(),
+                match_id,
+                user_id,
+                topic,
+                difficulty,
+            });
+
+            await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.waiting", {
+                user_id,
+                match_id,
+            });
+
             await client.query("COMMIT");
         } catch (err) {
             await client.query("ROLLBACK");
@@ -27,19 +48,6 @@ export async function enterMatchmaking(req, res) {
         } finally {
             client.release();
         }
-
-        await publishEvent(global.rabbitChannel, "match.enter", {
-            event_id: uuid(),
-            match_id,
-            user_id,
-            topic,
-            difficulty
-        });
-
-        await publishEvent(global.rabbitChannel, "match.waiting", {
-            user_id,
-            match_id
-        }, process.env.MATCH_EVENTS_EXCHANGE);
 
         res.json({ match_id });
 
@@ -49,18 +57,14 @@ export async function enterMatchmaking(req, res) {
     }
 }
 
-//Update the state of the match to CONFIRMED when both users accept the match (for now)
 export async function acceptMatch(req, res) {
-
     const { match_id } = req.params;
     const { user_id } = req.body;
 
     try {
-
         const match = await findMatchById(match_id);
         if (!match) return res.status(404).json({ error: "Match Not Found" });
 
-        // Follow redirect if needed
         let proposedMatchId = match_id;
         if (match.status === "REDIRECTED") {
             proposedMatchId = match.redirected_to;
@@ -71,7 +75,6 @@ export async function acceptMatch(req, res) {
         if (!lock) return res.status(409).json({ error: "Locked" });
 
         const client = await postgres.connect();
-
         try {
             await client.query("BEGIN");
 
@@ -91,7 +94,6 @@ export async function acceptMatch(req, res) {
                 return res.status(400).json({ error: "Proposal has expired" });
             }
 
-            // Determine which side this user is on
             if (user_id === proposed.user_id_a) {
                 await updateMatchAcceptedByA(client, proposedMatchId);
                 console.log(`${user_id} (user_a) accepted match ${proposedMatchId}`);
@@ -111,23 +113,24 @@ export async function acceptMatch(req, res) {
                 console.log(`Match ${proposedMatchId} CONFIRMED`);
             }
 
-            await client.query("COMMIT");
-
-            await publishEvent(global.rabbitChannel, "match.accepted", {
+            // Always notify the accepting user
+            await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.accepted", {
                 user_id,
-                match_id: proposedMatchId
-            }, process.env.MATCH_EVENTS_EXCHANGE);
+                match_id: proposedMatchId,
+            });
 
+            // If both accepted, notify both users to proceed to session
             if (bothAccepted) {
-                await publishEvent(global.rabbitChannel, "match.confirmed", {
+                await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.confirmed", {
                     match_id: proposedMatchId,
                     user_id_a: proposed.user_id_a,
                     user_id_b: proposed.user_id_b,
                     topic: proposed.topic,
-                    difficulty: proposed.difficulty
-                }, process.env.MATCH_EVENTS_EXCHANGE);
+                    difficulty: proposed.difficulty,
+                });
             }
 
+            await client.query("COMMIT");
             res.json({ success: true, match_id: proposedMatchId });
 
         } catch (err) {
@@ -144,11 +147,10 @@ export async function acceptMatch(req, res) {
     }
 }
 
-
 export async function declineMatch(req, res) {
-
     const { match_id } = req.params;
     const { user_id } = req.body;
+
     const client = await postgres.connect();
     try {
         await client.query("BEGIN");
@@ -163,8 +165,7 @@ export async function declineMatch(req, res) {
             await client.query("ROLLBACK");
             return res.status(403).json({ error: "Not a participant" });
         }
-        
-        //Check if match can be declined (aka in PROPOSED state)
+
         if (match.status !== "PROPOSED") {
             await client.query("ROLLBACK");
             return res.status(400).json({ error: "Match is not declinable" });
@@ -173,28 +174,28 @@ export async function declineMatch(req, res) {
         await cancelMatch(client, match_id);
         await insertMatchEvent(client, uuid(), match_id, "MATCH_DECLINED", { declined_by: user_id });
 
-        //Requeue User who accepted
         const otherUserId = match.user_id_a === user_id ? match.user_id_b : match.user_id_a;
 
-        await client.query("COMMIT");
-        res.json({ success: true, message: "Match Declined" });
-
-        await publishEvent(global.rabbitChannel, "match.declined", {
+        // Notify decliner — frontend sends them home
+        await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.declined", {
             match_id,
             declined_by: user_id,
-            other_user: otherUserId
-        }, process.env.MATCH_EVENTS_EXCHANGE);
-        
+            other_user: otherUserId,
+        });
 
+        // Requeue the other user via match worker
         if (otherUserId) {
-            publishEvent(global.rabbitChannel, "match.requeue", {
+            await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.requeue", {
                 event_id: uuid(),
                 match_id,
                 user_id: otherUserId,
                 topic: match.topic,
-                difficulty: match.difficulty
+                difficulty: match.difficulty,
             });
         }
+
+        await client.query("COMMIT");
+        res.json({ success: true, message: "Match Declined" });
 
     } catch (err) {
         await client.query("ROLLBACK");
@@ -218,35 +219,43 @@ export async function leaveMatch(req, res) {
             return res.status(404).json({ error: "No Waiting match found for user" });
         }
 
+        const client = await postgres.connect();
+        try {
+            await client.query("BEGIN");
 
-        await publishEvent(global.rabbitChannel, "match.leave", {
-            event_id: uuid(),
-            match_id: match.match_id,
-            user_id,
-            topic,
-            difficulty
-        });
+            // Drive match worker to remove user from Redis queue and cancel DB row
+            await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.leave", {
+                event_id: uuid(),
+                match_id: match.match_id,
+                user_id,
+                topic,
+                difficulty,
+            });
 
-        await publishEvent(global.rabbitChannel, "match.cancelled", {
-            match_id: match.match_id,
-            user_id
-        }, process.env.MATCH_EVENTS_EXCHANGE);
+            // Notify WS gateway that user cancelled
+            await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.cancelled", {
+                match_id: match.match_id,
+                user_id,
+            });
+
+            await client.query("COMMIT");
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
 
         return res.status(200).json({ message: "Left matchmaking queue successfully" });
-        
+
     } catch (err) {
         console.error(err);
         return res.status(500).json({ error: "Internal Server Error" });
     }
-    
 }
 
-
-//Get the status of the match (WAITING, CONFIRMED, CANCELLED)
 export async function getMatchStatus(req, res) {
-
     const { match_id } = req.params;
-
     const match = await findMatchById(match_id);
     res.json(match);
 }
