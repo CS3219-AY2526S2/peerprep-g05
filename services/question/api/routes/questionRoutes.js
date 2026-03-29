@@ -6,7 +6,7 @@ import {
     createQuestion,
     updateQuestion,
     deleteQuestion,
-    listCategories,
+    listTopics,
     listCompanies,
     markQuestionCompleted,
     markQuestionCompletedByUsers,
@@ -21,7 +21,7 @@ import {
 
 const router = express.Router();
 
-router.get("/categories", listCategories);
+router.get("/topics", listTopics);
 router.get("/companies", listCompanies);
 router.get("/completions/users/:userId", getCompletedQuestionsByUser);
 router.get("/", getAllQuestions);

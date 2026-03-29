@@ -2,7 +2,7 @@
   {
     "title": "3Sum",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Sorting"
@@ -22,7 +22,7 @@
   {
     "title": "3Sum Closest",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Sorting"
@@ -42,7 +42,7 @@
   {
     "title": "4Sum",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Sorting"
@@ -62,7 +62,7 @@
   {
     "title": "Add Binary",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Math",
       "String",
       "Bit Manipulation",
@@ -83,7 +83,7 @@
   {
     "title": "Add Two Numbers",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Linked List",
       "Math",
       "Recursion"
@@ -103,7 +103,7 @@
   {
     "title": "Alien Dictionary",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "String",
       "Depth-First Search",
@@ -124,7 +124,7 @@
   {
     "title": "Asteroid Collision",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Stack",
       "Simulation"
@@ -144,7 +144,7 @@
   {
     "title": "Backspace String Compare",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String",
       "Stack",
@@ -165,7 +165,7 @@
   {
     "title": "Basic Calculator",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Math",
       "String",
       "Stack",
@@ -186,7 +186,7 @@
   {
     "title": "Basic Calculator II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Math",
       "String",
       "Stack"
@@ -206,7 +206,7 @@
   {
     "title": "Best Time to Buy and Sell Stock",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -225,7 +225,7 @@
   {
     "title": "Best Time to Buy and Sell Stock II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Greedy"
@@ -245,7 +245,7 @@
   {
     "title": "Best Time to Buy and Sell Stock III",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -264,7 +264,7 @@
   {
     "title": "Best Time to Buy and Sell Stock IV",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -283,7 +283,7 @@
   {
     "title": "Binary Tree Cameras",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Dynamic Programming",
       "Tree",
       "Depth-First Search",
@@ -304,7 +304,7 @@
   {
     "title": "Binary Tree Level Order Traversal",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Tree",
       "Breadth-First Search",
       "Binary Tree"
@@ -324,7 +324,7 @@
   {
     "title": "Binary Tree Maximum Path Sum",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Dynamic Programming",
       "Tree",
       "Depth-First Search",
@@ -345,7 +345,7 @@
   {
     "title": "Binary Tree Right Side View",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Tree",
       "Depth-First Search",
       "Breadth-First Search",
@@ -366,7 +366,7 @@
   {
     "title": "Binary Tree Zigzag Level Order Traversal",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Tree",
       "Breadth-First Search",
       "Binary Tree"
@@ -386,7 +386,7 @@
   {
     "title": "Can Place Flowers",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Greedy"
     ],
@@ -405,7 +405,7 @@
   {
     "title": "Candy",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Greedy"
     ],
@@ -424,7 +424,7 @@
   {
     "title": "Capacity To Ship Packages Within D Days",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -443,7 +443,7 @@
   {
     "title": "Cheapest Flights Within K Stops",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Dynamic Programming",
       "Depth-First Search",
       "Breadth-First Search",
@@ -464,7 +464,7 @@
   {
     "title": "Climbing Stairs",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Math",
       "Dynamic Programming",
       "Memoization"
@@ -484,7 +484,7 @@
   {
     "title": "Clone Graph",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Depth-First Search",
       "Breadth-First Search",
@@ -505,7 +505,7 @@
   {
     "title": "Coin Change",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Breadth-First Search"
@@ -525,7 +525,7 @@
   {
     "title": "Combination Sum",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Backtracking"
     ],
@@ -544,7 +544,7 @@
   {
     "title": "Combination Sum II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Backtracking"
     ],
@@ -563,7 +563,7 @@
   {
     "title": "Construct Binary Tree from Preorder and Inorder Traversal",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Divide and Conquer",
@@ -584,7 +584,7 @@
   {
     "title": "Container With Most Water",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Greedy"
@@ -604,7 +604,7 @@
   {
     "title": "Contains Duplicate",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Sorting"
@@ -624,7 +624,7 @@
   {
     "title": "Copy List with Random Pointer",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Linked List"
     ],
@@ -643,7 +643,7 @@
   {
     "title": "Count and Say",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String"
     ],
     "companies": [
@@ -661,7 +661,7 @@
   {
     "title": "Count Primes",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Math",
       "Enumeration",
@@ -682,7 +682,7 @@
   {
     "title": "Course Schedule",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Depth-First Search",
       "Breadth-First Search",
       "Graph",
@@ -703,7 +703,7 @@
   {
     "title": "Course Schedule II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Depth-First Search",
       "Breadth-First Search",
       "Graph",
@@ -724,7 +724,7 @@
   {
     "title": "Daily Temperatures",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Stack",
       "Monotonic Stack"
@@ -744,7 +744,7 @@
   {
     "title": "Decode String",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Stack",
       "Recursion"
@@ -764,7 +764,7 @@
   {
     "title": "Decode Ways",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Dynamic Programming"
     ],
@@ -783,7 +783,7 @@
   {
     "title": "Degree of an Array",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table"
     ],
@@ -802,7 +802,7 @@
   {
     "title": "Design Circular Queue",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Linked List",
       "Design",
@@ -823,7 +823,7 @@
   {
     "title": "Design Hit Counter",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Design",
@@ -844,7 +844,7 @@
   {
     "title": "Design In-Memory File System",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Design",
@@ -865,7 +865,7 @@
   {
     "title": "Design Tic-Tac-Toe",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Design",
@@ -886,7 +886,7 @@
   {
     "title": "Divide Two Integers",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Math",
       "Bit Manipulation"
     ],
@@ -905,7 +905,7 @@
   {
     "title": "Edit Distance",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Dynamic Programming"
     ],
@@ -924,7 +924,7 @@
   {
     "title": "Evaluate Division",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "String",
       "Depth-First Search",
@@ -945,7 +945,7 @@
   {
     "title": "Evaluate Reverse Polish Notation",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Math",
       "Stack"
@@ -965,7 +965,7 @@
   {
     "title": "Fibonacci Number",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Math",
       "Dynamic Programming",
       "Recursion",
@@ -986,7 +986,7 @@
   {
     "title": "Find All Anagrams in a String",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Sliding Window"
@@ -1006,7 +1006,7 @@
   {
     "title": "Find First and Last Position of Element in Sorted Array",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -1025,7 +1025,7 @@
   {
     "title": "Find Median from Data Stream",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "Design",
       "Sorting",
@@ -1046,7 +1046,7 @@
   {
     "title": "Find Minimum in Rotated Sorted Array",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -1065,7 +1065,7 @@
   {
     "title": "Find Peak Element",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -1084,7 +1084,7 @@
   {
     "title": "Find the Duplicate Number",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Binary Search",
@@ -1105,7 +1105,7 @@
   {
     "title": "Find the Index of the First Occurrence in a String",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String",
       "String Matching"
@@ -1125,7 +1125,7 @@
   {
     "title": "First Missing Positive",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table"
     ],
@@ -1144,7 +1144,7 @@
   {
     "title": "First Unique Character in a String",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Queue",
@@ -1165,7 +1165,7 @@
   {
     "title": "Fizz Buzz",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Math",
       "String",
       "Simulation"
@@ -1185,7 +1185,7 @@
   {
     "title": "Flatten Binary Tree to Linked List",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Linked List",
       "Stack",
       "Tree",
@@ -1206,7 +1206,7 @@
   {
     "title": "Flatten Nested List Iterator",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Stack",
       "Tree",
       "Depth-First Search",
@@ -1227,7 +1227,7 @@
   {
     "title": "Game of Life",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Matrix",
       "Simulation"
@@ -1247,7 +1247,7 @@
   {
     "title": "Gas Station",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Greedy"
     ],
@@ -1266,7 +1266,7 @@
   {
     "title": "Generate Parentheses",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Dynamic Programming",
       "Backtracking"
@@ -1286,7 +1286,7 @@
   {
     "title": "Group Anagrams",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "String",
@@ -1307,7 +1307,7 @@
   {
     "title": "Happy Number",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Math",
       "Two Pointers"
@@ -1327,7 +1327,7 @@
   {
     "title": "House Robber",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -1346,7 +1346,7 @@
   {
     "title": "House Robber II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -1365,7 +1365,7 @@
   {
     "title": "Implement Trie (Prefix Tree)",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Design",
@@ -1386,7 +1386,7 @@
   {
     "title": "Insert Delete GetRandom O(1)",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Math",
@@ -1407,7 +1407,7 @@
   {
     "title": "Insert Interval",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array"
     ],
     "companies": [
@@ -1425,7 +1425,7 @@
   {
     "title": "Integer to English Words",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Math",
       "String",
       "Recursion"
@@ -1445,7 +1445,7 @@
   {
     "title": "Integer to Roman",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Math",
       "String"
@@ -1465,7 +1465,7 @@
   {
     "title": "Interleaving String",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Dynamic Programming"
     ],
@@ -1484,7 +1484,7 @@
   {
     "title": "Intersection of Two Arrays",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Two Pointers",
@@ -1505,7 +1505,7 @@
   {
     "title": "Is Subsequence",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String",
       "Dynamic Programming"
@@ -1525,7 +1525,7 @@
   {
     "title": "Isomorphic Strings",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String"
     ],
@@ -1544,7 +1544,7 @@
   {
     "title": "Jump Game",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Greedy"
@@ -1564,7 +1564,7 @@
   {
     "title": "Jump Game II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Greedy"
@@ -1584,7 +1584,7 @@
   {
     "title": "Koko Eating Bananas",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -1603,7 +1603,7 @@
   {
     "title": "Kth Largest Element in an Array",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Divide and Conquer",
       "Sorting",
@@ -1624,7 +1624,7 @@
   {
     "title": "Largest Number",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "String",
       "Greedy",
@@ -1645,7 +1645,7 @@
   {
     "title": "Largest Rectangle in Histogram",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Stack",
       "Monotonic Stack"
@@ -1665,7 +1665,7 @@
   {
     "title": "Length of Last Word",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "String"
     ],
     "companies": [
@@ -1683,7 +1683,7 @@
   {
     "title": "Letter Combinations of a Phone Number",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Backtracking"
@@ -1703,7 +1703,7 @@
   {
     "title": "LFU Cache",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Linked List",
       "Design",
@@ -1724,7 +1724,7 @@
   {
     "title": "Linked List Cycle",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Linked List",
       "Two Pointers"
@@ -1744,7 +1744,7 @@
   {
     "title": "Longest Common Prefix",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "String",
       "Trie"
     ],
@@ -1763,7 +1763,7 @@
   {
     "title": "Longest Common Subsequence",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Dynamic Programming"
     ],
@@ -1782,7 +1782,7 @@
   {
     "title": "Longest Consecutive Sequence",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Union Find"
@@ -1802,7 +1802,7 @@
   {
     "title": "Longest Increasing Subsequence",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Dynamic Programming"
@@ -1822,7 +1822,7 @@
   {
     "title": "Longest Palindromic Substring",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String",
       "Dynamic Programming"
@@ -1842,7 +1842,7 @@
   {
     "title": "Longest Repeating Character Replacement",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Sliding Window"
@@ -1862,7 +1862,7 @@
   {
     "title": "Longest String Chain",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Two Pointers",
@@ -1883,7 +1883,7 @@
   {
     "title": "Longest Substring Without Repeating Characters",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Sliding Window"
@@ -1903,7 +1903,7 @@
   {
     "title": "Longest Valid Parentheses",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "String",
       "Dynamic Programming",
       "Stack"
@@ -1923,7 +1923,7 @@
   {
     "title": "Lowest Common Ancestor of a Binary Tree",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Tree",
       "Depth-First Search",
       "Binary Tree"
@@ -1943,7 +1943,7 @@
   {
     "title": "LRU Cache",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Linked List",
       "Design",
@@ -1964,7 +1964,7 @@
   {
     "title": "Majority Element",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Divide and Conquer",
@@ -1985,7 +1985,7 @@
   {
     "title": "Max Area of Island",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Depth-First Search",
       "Breadth-First Search",
@@ -2006,7 +2006,7 @@
   {
     "title": "Max Consecutive Ones III",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Sliding Window",
@@ -2027,7 +2027,7 @@
   {
     "title": "Max Points on a Line",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Math",
@@ -2048,7 +2048,7 @@
   {
     "title": "Maximal Rectangle",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Stack",
@@ -2069,7 +2069,7 @@
   {
     "title": "Maximal Square",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Matrix"
@@ -2089,7 +2089,7 @@
   {
     "title": "Maximum Depth of Binary Tree",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Tree",
       "Depth-First Search",
       "Breadth-First Search",
@@ -2110,7 +2110,7 @@
   {
     "title": "Maximum Product Subarray",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -2129,7 +2129,7 @@
   {
     "title": "Maximum Profit in Job Scheduling",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Dynamic Programming",
@@ -2150,7 +2150,7 @@
   {
     "title": "Maximum Subarray",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Divide and Conquer",
       "Dynamic Programming"
@@ -2170,7 +2170,7 @@
   {
     "title": "Median of Two Sorted Arrays",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Divide and Conquer"
@@ -2190,7 +2190,7 @@
   {
     "title": "Meeting Rooms II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Greedy",
@@ -2211,7 +2211,7 @@
   {
     "title": "Merge Intervals",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Sorting"
     ],
@@ -2230,7 +2230,7 @@
   {
     "title": "Merge k Sorted Lists",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Linked List",
       "Divide and Conquer",
       "Heap (Priority Queue)",
@@ -2251,7 +2251,7 @@
   {
     "title": "Merge Sorted Array",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Sorting"
@@ -2271,7 +2271,7 @@
   {
     "title": "Merge Two Sorted Lists",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Linked List",
       "Recursion"
     ],
@@ -2290,7 +2290,7 @@
   {
     "title": "Min Stack",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Stack",
       "Design"
     ],
@@ -2309,7 +2309,7 @@
   {
     "title": "Minimum Path Sum",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Matrix"
@@ -2329,7 +2329,7 @@
   {
     "title": "Minimum Size Subarray Sum",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Sliding Window",
@@ -2350,7 +2350,7 @@
   {
     "title": "Minimum Window Substring",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Sliding Window"
@@ -2370,7 +2370,7 @@
   {
     "title": "Missing Number",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Math",
@@ -2391,7 +2391,7 @@
   {
     "title": "Move Zeroes",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers"
     ],
@@ -2410,7 +2410,7 @@
   {
     "title": "Multiply Strings",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Math",
       "String",
       "Simulation"
@@ -2430,7 +2430,7 @@
   {
     "title": "N-Queens",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Backtracking"
     ],
@@ -2449,7 +2449,7 @@
   {
     "title": "Next Permutation",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers"
     ],
@@ -2468,7 +2468,7 @@
   {
     "title": "Number of Islands",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Depth-First Search",
       "Breadth-First Search",
@@ -2489,7 +2489,7 @@
   {
     "title": "Open the Lock",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "String",
@@ -2510,7 +2510,7 @@
   {
     "title": "Palindrome Linked List",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Linked List",
       "Two Pointers",
       "Stack",
@@ -2531,7 +2531,7 @@
   {
     "title": "Palindrome Number",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Math"
     ],
     "companies": [
@@ -2549,7 +2549,7 @@
   {
     "title": "Palindromic Substrings",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String",
       "Dynamic Programming"
@@ -2569,7 +2569,7 @@
   {
     "title": "Partition Equal Subset Sum",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -2588,7 +2588,7 @@
   {
     "title": "Pascal's Triangle",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming"
     ],
@@ -2607,7 +2607,7 @@
   {
     "title": "Permutations",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Backtracking"
     ],
@@ -2626,7 +2626,7 @@
   {
     "title": "Permutations II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Backtracking",
       "Sorting"
@@ -2646,7 +2646,7 @@
   {
     "title": "Plus One",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Math"
     ],
@@ -2665,7 +2665,7 @@
   {
     "title": "Populating Next Right Pointers in Each Node",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Linked List",
       "Tree",
       "Depth-First Search",
@@ -2686,7 +2686,7 @@
   {
     "title": "Pow(x, n)",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Math",
       "Recursion"
     ],
@@ -2705,7 +2705,7 @@
   {
     "title": "Product of Array Except Self",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Prefix Sum"
     ],
@@ -2724,7 +2724,7 @@
   {
     "title": "Random Pick with Weight",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Math",
       "Binary Search",
@@ -2745,7 +2745,7 @@
   {
     "title": "Reconstruct Itinerary",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Depth-First Search",
       "Graph",
       "Eulerian Circuit"
@@ -2765,7 +2765,7 @@
   {
     "title": "Regular Expression Matching",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "String",
       "Dynamic Programming",
       "Recursion"
@@ -2785,7 +2785,7 @@
   {
     "title": "Remove Duplicates from Sorted Array",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers"
     ],
@@ -2804,7 +2804,7 @@
   {
     "title": "Remove Duplicates from Sorted Array II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers"
     ],
@@ -2823,7 +2823,7 @@
   {
     "title": "Remove Duplicates from Sorted List",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Linked List"
     ],
     "companies": [
@@ -2841,7 +2841,7 @@
   {
     "title": "Remove Element",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers"
     ],
@@ -2860,7 +2860,7 @@
   {
     "title": "Remove K Digits",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Stack",
       "Greedy",
@@ -2881,7 +2881,7 @@
   {
     "title": "Remove Nth Node From End of List",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Linked List",
       "Two Pointers"
     ],
@@ -2900,7 +2900,7 @@
   {
     "title": "Reorganize String",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Greedy",
@@ -2921,7 +2921,7 @@
   {
     "title": "Restore IP Addresses",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Backtracking"
     ],
@@ -2940,7 +2940,7 @@
   {
     "title": "Reverse Integer",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Math"
     ],
     "companies": [
@@ -2958,7 +2958,7 @@
   {
     "title": "Reverse Linked List",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Linked List",
       "Recursion"
     ],
@@ -2977,7 +2977,7 @@
   {
     "title": "Reverse Linked List II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Linked List"
     ],
     "companies": [
@@ -2995,7 +2995,7 @@
   {
     "title": "Reverse Nodes in k-Group",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Linked List",
       "Recursion"
     ],
@@ -3014,7 +3014,7 @@
   {
     "title": "Reverse String",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String"
     ],
@@ -3033,7 +3033,7 @@
   {
     "title": "Reverse Words in a String",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String"
     ],
@@ -3052,7 +3052,7 @@
   {
     "title": "Roman to Integer",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Hash Table",
       "Math",
       "String"
@@ -3072,7 +3072,7 @@
   {
     "title": "Rotate Array",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Math",
       "Two Pointers"
@@ -3092,7 +3092,7 @@
   {
     "title": "Rotate Image",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Math",
       "Matrix"
@@ -3112,7 +3112,7 @@
   {
     "title": "Rotate List",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Linked List",
       "Two Pointers"
     ],
@@ -3131,7 +3131,7 @@
   {
     "title": "Rotting Oranges",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Breadth-First Search",
       "Matrix"
@@ -3151,7 +3151,7 @@
   {
     "title": "Same Tree",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Tree",
       "Depth-First Search",
       "Breadth-First Search",
@@ -3172,7 +3172,7 @@
   {
     "title": "Search a 2D Matrix",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Matrix"
@@ -3192,7 +3192,7 @@
   {
     "title": "Search a 2D Matrix II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Divide and Conquer",
@@ -3213,7 +3213,7 @@
   {
     "title": "Search in Rotated Sorted Array",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -3232,7 +3232,7 @@
   {
     "title": "Search in Rotated Sorted Array II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -3251,7 +3251,7 @@
   {
     "title": "Search Insert Position",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -3270,7 +3270,7 @@
   {
     "title": "Search Suggestions System",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "String",
       "Binary Search",
@@ -3291,7 +3291,7 @@
   {
     "title": "Second Highest Salary",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Database"
     ],
     "companies": [
@@ -3309,7 +3309,7 @@
   {
     "title": "Serialize and Deserialize Binary Tree",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "String",
       "Tree",
       "Depth-First Search",
@@ -3330,7 +3330,7 @@
   {
     "title": "Set Matrix Zeroes",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Matrix"
@@ -3350,7 +3350,7 @@
   {
     "title": "Simplify Path",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String",
       "Stack"
     ],
@@ -3369,7 +3369,7 @@
   {
     "title": "Single Element in a Sorted Array",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search"
     ],
@@ -3388,7 +3388,7 @@
   {
     "title": "Single Number",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Bit Manipulation"
     ],
@@ -3407,7 +3407,7 @@
   {
     "title": "Sliding Window Maximum",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Queue",
       "Sliding Window",
@@ -3428,7 +3428,7 @@
   {
     "title": "Sort Colors",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Sorting"
@@ -3448,7 +3448,7 @@
   {
     "title": "Spiral Matrix",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Matrix",
       "Simulation"
@@ -3468,7 +3468,7 @@
   {
     "title": "Spiral Matrix II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Matrix",
       "Simulation"
@@ -3488,7 +3488,7 @@
   {
     "title": "Split Array Largest Sum",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Dynamic Programming",
@@ -3509,7 +3509,7 @@
   {
     "title": "Sqrt(x)",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Math",
       "Binary Search"
     ],
@@ -3528,7 +3528,7 @@
   {
     "title": "Squares of a Sorted Array",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Sorting"
@@ -3548,7 +3548,7 @@
   {
     "title": "String Compression",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Two Pointers",
       "String"
     ],
@@ -3567,7 +3567,7 @@
   {
     "title": "String to Integer (atoi)",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "String"
     ],
     "companies": [
@@ -3585,7 +3585,7 @@
   {
     "title": "Subarray Product Less Than K",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Binary Search",
       "Sliding Window",
@@ -3606,7 +3606,7 @@
   {
     "title": "Subarray Sum Equals K",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Prefix Sum"
@@ -3626,7 +3626,7 @@
   {
     "title": "Subsets",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Backtracking",
       "Bit Manipulation"
@@ -3646,7 +3646,7 @@
   {
     "title": "Subsets II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Backtracking",
       "Bit Manipulation"
@@ -3666,7 +3666,7 @@
   {
     "title": "Substring with Concatenation of All Words",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Sliding Window"
@@ -3686,7 +3686,7 @@
   {
     "title": "Sudoku Solver",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Backtracking",
@@ -3707,7 +3707,7 @@
   {
     "title": "Swap Nodes in Pairs",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Linked List",
       "Recursion"
     ],
@@ -3726,7 +3726,7 @@
   {
     "title": "Symmetric Tree",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Tree",
       "Depth-First Search",
       "Breadth-First Search",
@@ -3747,7 +3747,7 @@
   {
     "title": "Task Scheduler",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Greedy",
@@ -3768,7 +3768,7 @@
   {
     "title": "Text Justification",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "String",
       "Simulation"
@@ -3788,7 +3788,7 @@
   {
     "title": "Time Based Key-Value Store",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Binary Search",
@@ -3809,7 +3809,7 @@
   {
     "title": "Top K Frequent Elements",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "Divide and Conquer",
@@ -3830,7 +3830,7 @@
   {
     "title": "Top K Frequent Words",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table",
       "String",
@@ -3851,7 +3851,7 @@
   {
     "title": "Trapping Rain Water",
     "complexity": "Hard",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Dynamic Programming",
@@ -3872,7 +3872,7 @@
   {
     "title": "Two Sum",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Array",
       "Hash Table"
     ],
@@ -3891,7 +3891,7 @@
   {
     "title": "Two Sum II - Input Array Is Sorted",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Two Pointers",
       "Binary Search"
@@ -3911,7 +3911,7 @@
   {
     "title": "Unique Binary Search Trees",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Math",
       "Dynamic Programming",
       "Tree",
@@ -3932,7 +3932,7 @@
   {
     "title": "Unique Paths",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Math",
       "Dynamic Programming",
       "Combinatorics"
@@ -3952,7 +3952,7 @@
   {
     "title": "Unique Paths II",
     "complexity": "Medium",
-    "categories": [
+    "topics": [
       "Array",
       "Dynamic Programming",
       "Matrix"
@@ -3972,7 +3972,7 @@
   {
     "title": "Valid Anagram",
     "complexity": "Easy",
-    "categories": [
+    "topics": [
       "Hash Table",
       "String",
       "Sorting"

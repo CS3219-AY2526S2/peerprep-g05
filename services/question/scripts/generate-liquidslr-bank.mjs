@@ -118,7 +118,7 @@ async function main() {
                 byTitle.set(key, {
                     title: row.title,
                     complexity: normalizeDifficulty(row.difficulty),
-                    categories: row.topics
+                    topics: row.topics
                         ? row.topics.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 4)
                         : ["Algorithms"],
                     companies: [],
@@ -137,7 +137,7 @@ async function main() {
         .map((q) => ({
             ...q,
             companies: q.companies.sort((a, b) => a.localeCompare(b)).slice(0, 8),
-            categories: q.categories.length ? q.categories : ["Algorithms"],
+            topics: q.topics.length ? q.topics : ["Algorithms"],
         }))
         .sort((a, b) => b.companies.length - a.companies.length || a.title.localeCompare(b.title));
 

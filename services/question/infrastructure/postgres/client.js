@@ -22,7 +22,7 @@ export async function initDatabase() {
                 id SERIAL PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 description TEXT NOT NULL,
-                categories TEXT[] NOT NULL,
+                topics TEXT[] NOT NULL,
                 complexity VARCHAR(20) NOT NULL CHECK (complexity IN ('Easy', 'Medium', 'Hard')),
                 companies TEXT[] NOT NULL DEFAULT '{}',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -45,9 +45,6 @@ export async function initDatabase() {
             CREATE INDEX IF NOT EXISTS idx_questions_complexity
                 ON questions(complexity);
 
-            CREATE INDEX IF NOT EXISTS idx_questions_categories
-                ON questions USING GIN(categories);
-
             CREATE INDEX IF NOT EXISTS idx_questions_companies
                 ON questions USING GIN(companies);
 
@@ -66,6 +63,26 @@ export async function initDatabase() {
                 completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (question_id, user_id)
             );
+
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'questions' AND column_name = 'categories'
+                ) AND NOT EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'questions' AND column_name = 'topics'
+                ) THEN
+                    ALTER TABLE questions RENAME COLUMN categories TO topics;
+                END IF;
+            END $$;
+
+            DROP INDEX IF EXISTS idx_questions_categories;
+
+            CREATE INDEX IF NOT EXISTS idx_questions_topics
+                ON questions USING GIN(topics);
 
             CREATE INDEX IF NOT EXISTS idx_question_completions_user_id
                 ON question_completions(user_id);

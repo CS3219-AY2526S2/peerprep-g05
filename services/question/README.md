@@ -6,11 +6,11 @@ Manages coding questions for the PeerPrep platform.
 
 - CRUD operations for questions
 - Filter questions by complexity (Easy, Medium, Hard)
-- Filter questions by category
+- Filter questions by topic
 - Full-text search across title & description
 - Pagination with metadata (page, limit, total, totalPages)
 - Duplicate title prevention (case-insensitive)
-- List all distinct categories
+- List all distinct topics
 - Get random questions for matching
 - Track unique question completions per user
 - Centralised error handling & request logging
@@ -26,7 +26,7 @@ Get all questions with optional filters and pagination.
 
 Query Parameters:
 - `complexity` (optional): Easy, Medium, or Hard
-- `category` (optional): Filter by category
+- `topic` (optional): Filter by topic
 - `search` (optional): Case-insensitive text search on title & description
 - `page` (optional, default 1): Page number
 - `limit` (optional, default 20, max 100): Items per page
@@ -45,10 +45,10 @@ Get a random question with optional filters.
 
 Query Parameters:
 - `complexity` (optional): Easy, Medium, or Hard
-- `category` (optional): Filter by category
+- `topic` (optional): Filter by topic
 
-### GET /api/v1/questions/categories
-List all distinct categories currently in the database.
+### GET /api/v1/questions/topics
+List all distinct topics currently in the database.
 
 ### GET /api/v1/questions/:id
 Get a specific question by ID.
@@ -61,7 +61,7 @@ Request Body:
 {
   "title": "Two Sum",
   "description": "Given an array of integers...",
-  "categories": ["Array", "Hash Table"],
+  "topics": ["Array", "Hash Table"],
   "complexity": "Easy"
 }
 ```
@@ -74,7 +74,7 @@ Request Body: (all fields optional)
 {
   "title": "Updated Title",
   "description": "Updated description...",
-  "categories": ["Array"],
+  "topics": ["Array"],
   "complexity": "Medium"
 }
 ```
@@ -142,7 +142,7 @@ Example response:
 Get all questions completed by a specific user.
 
 Query Parameters:
-- `include_details=true` (optional): Include question metadata like title, complexity, categories.
+- `include_details=true` (optional): Include question metadata like title, complexity, topics.
 
 Example response:
 ```json
@@ -157,7 +157,7 @@ Example response:
         "completed_at": "2026-03-29T09:31:12.000Z",
         "title": "Valid Anagram",
         "complexity": "Easy",
-        "categories": ["Hash Table", "String", "Sorting"]
+        "topics": ["Hash Table", "String", "Sorting"]
       }
     ]
   }

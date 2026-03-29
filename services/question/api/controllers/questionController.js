@@ -26,10 +26,10 @@ function buildPageLink(req, page, limit) {
 
 /**
  * @param {Array} params - Query parameter array (mutated in-place).
- * @param {{ complexity?: string, category?: string, company?: string, search?: string }} filters
+ * @param {{ complexity?: string, topic?: string, company?: string, search?: string }} filters
  * @returns {string} SQL WHERE clause or empty string.
  */
-function buildFilterClause(params, { complexity, category, company, search }) {
+function buildFilterClause(params, { complexity, topic, company, search }) {
     const conditions = [];
 
     if (complexity) {
@@ -37,9 +37,9 @@ function buildFilterClause(params, { complexity, category, company, search }) {
         conditions.push(`complexity = $${params.length}`);
     }
 
-    if (category) {
-        params.push(category);
-        conditions.push(`$${params.length} = ANY(categories)`);
+    if (topic) {
+        params.push(topic);
+        conditions.push(`$${params.length} = ANY(topics)`);
     }
 
     if (company) {
@@ -56,15 +56,15 @@ function buildFilterClause(params, { complexity, category, company, search }) {
 }
 
 /**
- * @param {{ title?: string, description?: string, categories?: string[], complexity?: string, companies?: string[] }} body
+ * @param {{ title?: string, description?: string, topics?: string[], complexity?: string, companies?: string[] }} body
  * @param {boolean} requireAll - If true, all core fields are mandatory.
  * @returns {string[]} Validation error messages.
  */
-function validateQuestionBody({ title, description, categories, complexity, companies }, requireAll = true) {
+function validateQuestionBody({ title, description, topics, complexity, companies }, requireAll = true) {
     const errors = [];
 
-    if (requireAll && (!title || !description || !categories || !complexity)) {
-        return ["Missing required fields: title, description, categories, complexity"];
+    if (requireAll && (!title || !description || !topics || !complexity)) {
+        return ["Missing required fields: title, description, topics, complexity"];
     }
 
     if (title !== undefined) {
@@ -83,11 +83,11 @@ function validateQuestionBody({ title, description, categories, complexity, comp
         }
     }
 
-    if (categories !== undefined) {
-        if (!Array.isArray(categories) || categories.length === 0) {
-            errors.push("categories must be a non-empty array of strings");
-        } else if (!categories.every(c => typeof c === "string" && c.trim().length > 0)) {
-            errors.push("each category must be a non-empty string");
+    if (topics !== undefined) {
+        if (!Array.isArray(topics) || topics.length === 0) {
+            errors.push("topics must be a non-empty array of strings");
+        } else if (!topics.every(c => typeof c === "string" && c.trim().length > 0)) {
+            errors.push("each topic must be a non-empty string");
         }
     }
 
@@ -186,13 +186,13 @@ async function questionExists(questionId) {
 /** GET / — paginated list with optional filters and text search. */
 export async function getAllQuestions(req, res, next) {
     try {
-        const { complexity, category, company, search } = req.query;
+        const { complexity, topic, company, search } = req.query;
         const page = Math.max(1, parseInt(req.query.page, 10) || 1);
         const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_PAGE_SIZE));
         const offset = (page - 1) * limit;
 
         const countParams = [];
-        const whereClause = buildFilterClause(countParams, { complexity, category, company, search });
+        const whereClause = buildFilterClause(countParams, { complexity, topic, company, search });
 
         const countResult = await pool.query(
             `SELECT COUNT(*) FROM questions ${whereClause}`,
@@ -264,10 +264,10 @@ export async function getQuestionById(req, res, next) {
 /** GET /random — return one question matching optional filters. */
 export async function getRandomQuestion(req, res, next) {
     try {
-        const { complexity, category, company } = req.query;
+        const { complexity, topic, company } = req.query;
 
         const params = [];
-        const whereClause = buildFilterClause(params, { complexity, category, company });
+        const whereClause = buildFilterClause(params, { complexity, topic, company });
 
         const result = await pool.query(
             `SELECT * FROM questions ${whereClause} ORDER BY RANDOM() LIMIT 1`,
@@ -287,9 +287,9 @@ export async function getRandomQuestion(req, res, next) {
 /** POST / — create a new question (with optional test cases). */
 export async function createQuestion(req, res, next) {
     try {
-        const { title, description, categories, complexity, companies, test_cases } = req.body;
+        const { title, description, topics, complexity, companies, test_cases } = req.body;
 
-        const errors = validateQuestionBody({ title, description, categories, complexity, companies }, true);
+        const errors = validateQuestionBody({ title, description, topics, complexity, companies }, true);
         if (test_cases !== undefined) {
             errors.push(...validateTestCases(test_cases));
         }
@@ -325,7 +325,7 @@ export async function createQuestion(req, res, next) {
                  LIMIT 1
              ),
              inserted AS (
-                 INSERT INTO questions (id, title, description, categories, complexity, companies)
+                 INSERT INTO questions (id, title, description, topics, complexity, companies)
                  SELECT next_id.id, $1, $2, $3, $4, $5
                  FROM next_id
                  RETURNING *
@@ -338,7 +338,7 @@ export async function createQuestion(req, res, next) {
                  )
              )
              SELECT * FROM inserted`,
-            [title.trim(), description.trim(), categories, complexity, companies || []]
+            [title.trim(), description.trim(), topics, complexity, companies || []]
         );
 
         const question = result.rows[0];
@@ -372,13 +372,13 @@ export async function updateQuestion(req, res, next) {
         const { id } = req.params;
         const payload = req.body || {};
         const lockHolder = req.get("x-lock-holder") || payload.locked_by;
-        const { title, description, categories, complexity, companies, test_cases } = payload;
+        const { title, description, topics, complexity, companies, test_cases } = payload;
 
-        if (!title && !description && !categories && !complexity && !companies && !test_cases) {
+        if (!title && !description && !topics && !complexity && !companies && !test_cases) {
             return res.status(400).json({ success: false, error: "Provide at least one field to update" });
         }
 
-        const errors = validateQuestionBody({ title, description, categories, complexity, companies }, false);
+        const errors = validateQuestionBody({ title, description, topics, complexity, companies }, false);
         if (test_cases !== undefined) {
             errors.push(...validateTestCases(test_cases));
         }
@@ -431,7 +431,7 @@ export async function updateQuestion(req, res, next) {
             `UPDATE questions
              SET title = COALESCE($1, title),
                  description = COALESCE($2, description),
-                 categories = COALESCE($3, categories),
+                 topics = COALESCE($3, topics),
                  complexity = COALESCE($4, complexity),
                  companies = COALESCE($5, companies),
                  updated_at = CURRENT_TIMESTAMP
@@ -440,7 +440,7 @@ export async function updateQuestion(req, res, next) {
             [
                 title ? title.trim() : null,
                 description ? description.trim() : null,
-                categories || null,
+                topics || null,
                 complexity || null,
                 companies || null,
                 id,
@@ -526,13 +526,13 @@ export async function deleteQuestion(req, res, next) {
     }
 }
 
-/** GET /categories — list all distinct category values. */
-export async function listCategories(req, res, next) {
+/** GET /topics — list all distinct topic values. */
+export async function listTopics(req, res, next) {
     try {
         const result = await pool.query(
-            "SELECT DISTINCT UNNEST(categories) AS category FROM questions ORDER BY category"
+            "SELECT DISTINCT UNNEST(topics) AS topic FROM questions ORDER BY topic"
         );
-        res.json({ success: true, data: result.rows.map(r => r.category) });
+        res.json({ success: true, data: result.rows.map(r => r.topic) });
     } catch (error) {
         next(error);
     }
@@ -761,7 +761,7 @@ export async function getCompletedQuestionsByUser(req, res, next) {
 
         const result = await pool.query(
             `SELECT qc.question_id, qc.completed_at,
-                    q.title, q.complexity, q.categories
+                    q.title, q.complexity, q.topics
              FROM question_completions qc
              JOIN questions q ON q.id = qc.question_id
              WHERE qc.user_id = $1::uuid
@@ -775,7 +775,7 @@ export async function getCompletedQuestionsByUser(req, res, next) {
                 completed_at: row.completed_at,
                 title: row.title,
                 complexity: row.complexity,
-                categories: row.categories,
+                topics: row.topics,
             }))
             : result.rows.map((row) => ({
                 question_id: row.question_id,
