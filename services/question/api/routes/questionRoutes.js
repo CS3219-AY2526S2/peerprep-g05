@@ -11,6 +11,7 @@ import {
     markQuestionCompleted,
     markQuestionCompletedByUsers,
     getQuestionCompletionStats,
+    getCompletedQuestionsByUser,
 } from "../controllers/questionController.js";
 import {
     acquireLock,
@@ -22,6 +23,7 @@ const router = express.Router();
 
 router.get("/categories", listCategories);
 router.get("/companies", listCompanies);
+router.get("/completions/users/:userId", getCompletedQuestionsByUser);
 router.get("/", getAllQuestions);
 router.get("/random", getRandomQuestion);
 router.get("/:id", getQuestionById);

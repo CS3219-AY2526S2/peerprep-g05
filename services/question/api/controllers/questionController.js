@@ -745,3 +745,55 @@ export async function getQuestionCompletionStats(req, res, next) {
         next(error);
     }
 }
+
+/**
+ * GET /completions/users/:userId — list questions completed by a user.
+ * Pass include_details=true to include question metadata.
+ */
+export async function getCompletedQuestionsByUser(req, res, next) {
+    try {
+        const userId = String(req.params.userId || "").trim();
+        if (!userId) {
+            return res.status(400).json({ success: false, error: "userId is required" });
+        }
+
+        const includeDetails = req.query.include_details === "true";
+
+        const result = await pool.query(
+            `SELECT qc.question_id, qc.completed_at,
+                    q.title, q.complexity, q.categories
+             FROM question_completions qc
+             JOIN questions q ON q.id = qc.question_id
+             WHERE qc.user_id = $1::uuid
+             ORDER BY qc.completed_at DESC`,
+            [userId]
+        );
+
+        const completedQuestions = includeDetails
+            ? result.rows.map((row) => ({
+                question_id: row.question_id,
+                completed_at: row.completed_at,
+                title: row.title,
+                complexity: row.complexity,
+                categories: row.categories,
+            }))
+            : result.rows.map((row) => ({
+                question_id: row.question_id,
+                completed_at: row.completed_at,
+            }));
+
+        res.json({
+            success: true,
+            data: {
+                user_id: userId,
+                total_completed_questions: completedQuestions.length,
+                completed_questions: completedQuestions,
+            },
+        });
+    } catch (error) {
+        if (error?.code === "22P02") {
+            return res.status(400).json({ success: false, error: "userId must be a valid UUID" });
+        }
+        next(error);
+    }
+}

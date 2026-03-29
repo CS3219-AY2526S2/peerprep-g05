@@ -138,6 +138,32 @@ Example response:
 }
 ```
 
+### GET /api/v1/questions/completions/users/:userId
+Get all questions completed by a specific user.
+
+Query Parameters:
+- `include_details=true` (optional): Include question metadata like title, complexity, categories.
+
+Example response:
+```json
+{
+  "success": true,
+  "data": {
+    "user_id": "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09",
+    "total_completed_questions": 2,
+    "completed_questions": [
+      {
+        "question_id": 200,
+        "completed_at": "2026-03-29T09:31:12.000Z",
+        "title": "Valid Anagram",
+        "complexity": "Easy",
+        "categories": ["Hash Table", "String", "Sorting"]
+      }
+    ]
+  }
+}
+```
+
 ## Setup
 
 1. Install dependencies:
