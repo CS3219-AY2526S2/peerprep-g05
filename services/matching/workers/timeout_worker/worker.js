@@ -27,7 +27,7 @@ async function startTimeoutWorker(timeout_duration) {
                 try {
                     await client.query("BEGIN");
                     // Atomically claim this match for expiry
-                    const result = await expireMatch(match.match_id);
+                    const result = await expireMatch(client,match.match_id);
                     if (!result) {
                         await client.query("ROLLBACK");
                         continue;
@@ -112,7 +112,7 @@ async function startTimeoutWorker(timeout_duration) {
                 const client = await postgres.connect();
                 try {
                     await client.query("BEGIN");
-                    const cancelled = await cancelWaitingMatch(match.match_id);
+                    const cancelled = await cancelWaitingMatch(client, match.match_id);
                     if (!cancelled) {
                         await client.query("ROLLBACK");
                         continue;

@@ -38,16 +38,16 @@ export async function createMatch(client, match_id, user_id, topic, difficulty) 
     );
 }
 
-export async function updateMatchAcceptedByA(match_id) {
-    await postgres.query(
+export async function updateMatchAcceptedByA(client, match_id) {
+    await client.query(
         `UPDATE matches SET accepted_by_a = TRUE, updated_at = NOW()
          WHERE match_id = $1 AND status = 'PROPOSED'`,
         [match_id]
     );
 }
 
-export async function updateMatchAcceptedByB(match_id) {
-    await postgres.query(
+export async function updateMatchAcceptedByB(client, match_id) {
+    await client.query(
         `UPDATE matches SET accepted_by_b = TRUE, updated_at = NOW()
          WHERE match_id = $1 AND status = 'PROPOSED'`,
         [match_id]
@@ -119,8 +119,8 @@ export async function redirectMatch(client, userB, userA) {
     return rowCount > 0;
 }
 
-export async function expireMatch(match_id) {
-    const { rowCount } = await postgres.query(
+export async function expireMatch(client, match_id) {
+    const { rowCount } = await client.query(
         `UPDATE matches SET status = 'EXPIRED', updated_at = NOW()
         WHERE match_id = $1 AND status = 'PROPOSED' RETURNING *`,
         [match_id]
@@ -128,8 +128,8 @@ export async function expireMatch(match_id) {
     return rowCount > 0;
 }
 
-export async function cancelWaitingMatch(match_id) {
-    const { rowCount } = await postgres.query(
+export async function cancelWaitingMatch(client, match_id) {
+    const { rowCount } = await client.query(
         `UPDATE matches SET status = 'CANCELLED', updated_at = NOW()
         WHERE match_id = $1 AND status = 'WAITING' RETURNING *`,
         [match_id]

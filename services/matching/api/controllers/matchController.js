@@ -93,10 +93,10 @@ export async function acceptMatch(req, res) {
 
             // Determine which side this user is on
             if (user_id === proposed.user_id_a) {
-                await updateMatchAcceptedByA(proposedMatchId);
+                await updateMatchAcceptedByA(client, proposedMatchId);
                 console.log(`${user_id} (user_a) accepted match ${proposedMatchId}`);
             } else if (user_id === proposed.user_id_b) {
-                await updateMatchAcceptedByB(proposedMatchId);
+                await updateMatchAcceptedByB(client, proposedMatchId);
                 console.log(`${user_id} (user_b) accepted match ${proposedMatchId}`);
             } else {
                 await client.query("ROLLBACK");
