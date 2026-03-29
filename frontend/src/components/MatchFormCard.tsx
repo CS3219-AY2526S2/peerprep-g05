@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { DIFFICULTIES, TOPICS, difficultyColor } from "../utils/constants";
-import { Difficulty } from "../utils/types";
+import { TOPICS, DIFFICULTIES, type Difficulty, type MatchInfo, difficultyColor } from "../utils/types";
 
 interface Props {
-  onFindMatch: (args: { userId: string; topic: string; difficulty: Difficulty }) => void;
-  error: string;
-  loading: boolean;
+  onFindMatch: (args: Omit<MatchInfo, "matchId">) => void;
+  error:       string;
+  loading:     boolean;
 }
 
 export function MatchFormCard({ onFindMatch, error, loading }: Props) {
-  const [userId, setUserId] = useState("");
-  const [topic, setTopic] = useState(TOPICS[0]);
+  const [userId,     setUserId]     = useState("");
+  const [topic,      setTopic]      = useState(TOPICS[0]);
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
 
   const handleSubmit = () => {
@@ -55,15 +54,9 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
             >
-              {TOPICS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
+              {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
-            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-              ▼
-            </span>
+            <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">▼</span>
           </div>
         </div>
 

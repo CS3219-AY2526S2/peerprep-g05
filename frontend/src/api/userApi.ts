@@ -1,7 +1,9 @@
-const BASE = import.meta.env.VITE_API_BASE_URL;
+import { GATEWAY_URL } from "../utils/types";
+
+const BASE = `${GATEWAY_URL}/api/v1`;
 
 if (!BASE) {
-    throw new Error("VITE_API_BASE_URL is not set. Define it in the frontend .env file.");
+    throw new Error("GATEWAY_URL is not set. Define it in the frontend .env file.");
 }
 
 export interface ApiError {

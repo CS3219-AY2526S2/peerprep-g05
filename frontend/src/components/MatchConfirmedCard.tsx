@@ -1,12 +1,13 @@
-import { difficultyDot } from "../utils/constants";
-import { ConfirmedMatch } from "../utils/types";
+import { type ConfirmedMatch } from "../utils/types";
+import { MatchInfoRow } from "./MatchInfoRow";
+import { DifficultyBadge } from "./DifficultyBadge";
 
 interface Props {
-  matchData: ConfirmedMatch | null;
-  onPlayAgain: () => void;
+  confirmedMatch: ConfirmedMatch;
+  onPlayAgain:    () => void;
 }
 
-export function MatchConfirmedCard({ matchData, onPlayAgain }: Props) {
+export function MatchConfirmedCard({ confirmedMatch, onPlayAgain }: Props) {
   return (
     <div className="w-full max-w-md">
       <div className="mb-6 text-center">
@@ -20,23 +21,18 @@ export function MatchConfirmedCard({ matchData, onPlayAgain }: Props) {
         </div>
 
         <div className="mb-6 divide-y divide-slate-100">
-          <div className="flex justify-between py-2.5">
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Match ID</span>
-            <span className="font-mono text-xs text-slate-500">{matchData?.matchId?.slice(0, 16)}…</span>
-          </div>
-          <div className="flex justify-between py-2.5">
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Topic</span>
-            <span className="text-sm font-medium text-slate-900">{matchData?.topic}</span>
-          </div>
-          <div className="flex justify-between py-2.5">
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Difficulty</span>
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium">
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${difficultyDot[matchData?.difficulty ?? "easy"]}`}
-              />
-              <span className="capitalize text-slate-900">{matchData?.difficulty}</span>
-            </span>
-          </div>
+          <MatchInfoRow
+            label="Match ID"
+            value={
+              <span className="font-mono text-xs text-slate-500">
+                {confirmedMatch.matchId.slice(0, 16)}…
+              </span>
+            }
+          />
+          <MatchInfoRow label="Player A"   value={confirmedMatch.userIdA} />
+          <MatchInfoRow label="Player B"   value={confirmedMatch.userIdB} />
+          <MatchInfoRow label="Topic"      value={confirmedMatch.topic} />
+          <MatchInfoRow label="Difficulty" value={<DifficultyBadge difficulty={confirmedMatch.difficulty} />} />
         </div>
 
         <button

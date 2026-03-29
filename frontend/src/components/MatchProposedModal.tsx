@@ -1,27 +1,27 @@
-import { PROPOSAL_SECS, difficultyDot } from "../utils/constants";
-import { useCountdown } from "../hooks/useTimer";
-import { Difficulty } from "../utils/types";
+import { type MatchInfo, type ProposedMatch } from "../utils/types";
+import { useCountdown } from "../hooks/useCountdown";
+import { MatchInfoRow } from "./MatchInfoRow";
+import { DifficultyBadge } from "./DifficultyBadge";
 
 interface Props {
-  matchId: string;
-  userId: string;
-  topic: string;
-  difficulty: Difficulty;
-  onAccept: () => void;
-  onDecline: () => void;
-  accepted: boolean;
+  matchInfo:     MatchInfo;
+  proposedMatch: ProposedMatch;
+  onAccept:      () => void;
+  onDecline:     () => void;
+  accepted:      boolean;
+  proposalSecs:  number;
 }
 
 export function MatchProposedModal({
-  userId,
-  topic,
-  difficulty,
+  matchInfo,
+  proposedMatch,
   onAccept,
   onDecline,
   accepted,
+  proposalSecs,
 }: Props) {
-  const { left, fmt } = useCountdown(PROPOSAL_SECS, true);
-  const ratio = left / PROPOSAL_SECS;
+  const { left, fmt } = useCountdown(proposalSecs, true);
+  const ratio = left / proposalSecs;
   const timerColor =
     ratio > 0.5 ? "text-emerald-600" : ratio > 0.2 ? "text-amber-500" : "text-red-500";
 
@@ -39,17 +39,10 @@ export function MatchProposedModal({
         </div>
 
         <div className="mb-5 divide-y divide-slate-100">
-          <div className="flex justify-between py-2.5">
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Topic</span>
-            <span className="text-sm font-medium text-slate-900">{topic}</span>
-          </div>
-          <div className="flex justify-between py-2.5">
-            <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Difficulty</span>
-            <span className="inline-flex items-center gap-1.5 text-sm font-medium">
-              <span className={`h-1.5 w-1.5 rounded-full ${difficultyDot[difficulty]}`} />
-              <span className="capitalize text-slate-900">{difficulty}</span>
-            </span>
-          </div>
+          <MatchInfoRow label="You"        value={matchInfo.userId} />
+          <MatchInfoRow label="Opponent"   value={proposedMatch.peer || "—"} />
+          <MatchInfoRow label="Topic"      value={matchInfo.topic} />
+          <MatchInfoRow label="Difficulty" value={<DifficultyBadge difficulty={matchInfo.difficulty} />} />
         </div>
 
         {accepted ? (
