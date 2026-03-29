@@ -93,8 +93,11 @@ export function getAllQuestions(filters: QuestionFilters = {}) {
     return request<PaginatedResponse>(`/questions${qs ? `?${qs}` : ""}`);
 }
 
-export function getQuestionById(id: number | string) {
-    return request<SingleResponse<Question>>(`/questions/${id}?include_private=true`);
+export function getQuestionById(id: number | string, token?: string) {
+    const headers: HeadersInit = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+    return request<SingleResponse<Question>>(`/questions/${id}?include_private=true`, { headers });
 }
 
 export interface QuestionBody {

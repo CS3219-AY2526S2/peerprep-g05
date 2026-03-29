@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext.tsx";
 import * as qApi from "../api/questionApi.ts";
 import type { Question, QuestionFilters, QuestionApiError } from "../api/questionApi.ts";
 import DeleteConfirmModal from "../components/DeleteConfirmModal.tsx";
+import { isAdminRole } from "../utils/roles.ts";
 
 const COMPLEXITY_COLORS: Record<string, string> = {
     Easy: "bg-emerald-100 text-emerald-800",
@@ -14,7 +15,7 @@ const COMPLEXITY_COLORS: Record<string, string> = {
 export default function Questions() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const isAdmin = user?.role === "ADMIN";
+    const isAdmin = isAdminRole(user?.role);
 
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(true);

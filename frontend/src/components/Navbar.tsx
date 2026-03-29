@@ -17,6 +17,7 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
                 {user ? (
                     <>
+                        <Link to="/questions" className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25">Questions</Link>
                         {isAdminRole(user.role) && (
                             <Link to="/admin/users" className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25">Admin Users</Link>
                         )}
@@ -24,7 +25,10 @@ export default function Navbar() {
                         <button className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25" onClick={handleLogout}>Logout</button>
                     </>
                 ) : (
-                    <Link to="/" className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25">Login</Link>
+                    <>
+                        <Link to="/questions" className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25">Questions</Link>
+                        <Link to="/" className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25">Login</Link>
+                    </>
                 )}
             </div>
         </nav>

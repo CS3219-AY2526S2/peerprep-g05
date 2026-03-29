@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext.tsx";
 import * as qApi from "../api/questionApi.ts";
 import type { Question, QuestionLock, QuestionApiError } from "../api/questionApi.ts";
 import DeleteConfirmModal from "../components/DeleteConfirmModal.tsx";
+import { isAdminRole } from "../utils/roles.ts";
 
 const COMPLEXITY_COLORS: Record<string, string> = {
     Easy: "bg-emerald-100 text-emerald-800",
@@ -14,8 +15,8 @@ const COMPLEXITY_COLORS: Record<string, string> = {
 export default function QuestionDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const isAdmin = user?.role === "ADMIN";
+    const { user, token } = useAuth();
+    const isAdmin = isAdminRole(user?.role);
 
     const [question, setQuestion] = useState<Question | null>(null);
     const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export default function QuestionDetail() {
         setError("");
 
         Promise.all([
-            qApi.getQuestionById(id),
+            qApi.getQuestionById(id, token || undefined),
             qApi.getLockStatus(id),
         ])
             .then(([qRes, lockRes]) => {
@@ -45,7 +46,7 @@ export default function QuestionDetail() {
                 setError(err.data?.error || "Failed to load question");
             })
             .finally(() => setLoading(false));
-    }, [id]);
+    }, [id, token]);
 
     async function handleDelete() {
         if (!id) return;
