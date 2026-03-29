@@ -1,0 +1,3992 @@
+[
+  {
+    "title": "3Sum",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Agoda",
+      "Altimetrik",
+      "Amazon",
+      "AMD",
+      "American Express",
+      "Apple"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "3Sum Closest",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Sorting"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Google",
+      "Meta",
+      "Microsoft",
+      "tcs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "4Sum",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Sorting"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Cloudflare",
+      "DE Shaw",
+      "DoorDash",
+      "Google"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Add Binary",
+    "complexity": "Easy",
+    "categories": [
+      "Math",
+      "String",
+      "Bit Manipulation",
+      "Simulation"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Google",
+      "Meta",
+      "Microsoft",
+      "SIG"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Add Two Numbers",
+    "complexity": "Medium",
+    "categories": [
+      "Linked List",
+      "Math",
+      "Recursion"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Airbnb",
+      "Amazon",
+      "Apple",
+      "Avito",
+      "Bloomberg",
+      "ByteDance"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Alien Dictionary",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "String",
+      "Depth-First Search",
+      "Breadth-First Search"
+    ],
+    "companies": [
+      "Airbnb",
+      "Citadel",
+      "NetApp",
+      "PhonePe",
+      "Pocket Gems",
+      "Rippling",
+      "Snap",
+      "Tencent"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Asteroid Collision",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Stack",
+      "Simulation"
+    ],
+    "companies": [
+      "Accolite",
+      "Citadel",
+      "Deutsche Bank",
+      "DoorDash",
+      "Dream11",
+      "EPAM Systems",
+      "Flipkart",
+      "IMC"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Backspace String Compare",
+    "complexity": "Easy",
+    "categories": [
+      "Two Pointers",
+      "String",
+      "Stack",
+      "Simulation"
+    ],
+    "companies": [
+      "Agoda",
+      "Amdocs",
+      "Booking.com",
+      "Chewy",
+      "Grammarly",
+      "IBM",
+      "Microstrategy",
+      "Roku"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Basic Calculator",
+    "complexity": "Hard",
+    "categories": [
+      "Math",
+      "String",
+      "Stack",
+      "Recursion"
+    ],
+    "companies": [
+      "Anduril",
+      "ByteDance",
+      "Citadel",
+      "Coupang",
+      "DE Shaw",
+      "DoorDash",
+      "Oracle",
+      "Palo Alto Networks"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Basic Calculator II",
+    "complexity": "Medium",
+    "categories": [
+      "Math",
+      "String",
+      "Stack"
+    ],
+    "companies": [
+      "Accenture",
+      "Airbnb",
+      "Anduril",
+      "ByteDance",
+      "Coupang",
+      "DE Shaw",
+      "DoorDash",
+      "Google"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Best Time to Buy and Sell Stock",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Accolite",
+      "Agoda",
+      "Airtel",
+      "Akamai",
+      "American Express",
+      "AQR Capital Management",
+      "Arista Networks"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Best Time to Buy and Sell Stock II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Greedy"
+    ],
+    "companies": [
+      "Agoda",
+      "Capital One",
+      "Citadel",
+      "CTC",
+      "DE Shaw",
+      "Deutsche Bank",
+      "eBay",
+      "Geico"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Best Time to Buy and Sell Stock III",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Bolt",
+      "Citadel",
+      "Groww",
+      "PhonePe",
+      "Snap",
+      "Tekion",
+      "TikTok",
+      "Uber"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Best Time to Buy and Sell Stock IV",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Arcesium",
+      "Citadel",
+      "Goldman Sachs",
+      "Google",
+      "Jump Trading",
+      "Nielsen",
+      "Nvidia",
+      "PhonePe"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Binary Tree Cameras",
+    "complexity": "Hard",
+    "categories": [
+      "Dynamic Programming",
+      "Tree",
+      "Depth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "DE Shaw",
+      "DP world",
+      "eBay",
+      "Graviton",
+      "MathWorks",
+      "PhonePe",
+      "Quora",
+      "Visa"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Binary Tree Level Order Traversal",
+    "complexity": "Medium",
+    "categories": [
+      "Tree",
+      "Breadth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Adobe",
+      "Apple",
+      "Bloomberg",
+      "Gojek",
+      "Intuit",
+      "LinkedIn",
+      "Meta",
+      "Microsoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Binary Tree Maximum Path Sum",
+    "complexity": "Hard",
+    "categories": [
+      "Dynamic Programming",
+      "Tree",
+      "Depth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Arcesium",
+      "Arista Networks",
+      "Baidu",
+      "Citadel",
+      "Datadog",
+      "Directi",
+      "DoorDash",
+      "Flipkart"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Binary Tree Right Side View",
+    "complexity": "Medium",
+    "categories": [
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Accolite",
+      "Flipkart",
+      "Google",
+      "J.P. Morgan",
+      "Oracle",
+      "ServiceNow",
+      "Walmart Labs",
+      "Wix"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Binary Tree Zigzag Level Order Traversal",
+    "complexity": "Medium",
+    "categories": [
+      "Tree",
+      "Breadth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Adobe",
+      "Bloomberg",
+      "ByteDance",
+      "Citadel",
+      "eBay",
+      "Flipkart",
+      "Intuit",
+      "LinkedIn"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Can Place Flowers",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Greedy"
+    ],
+    "companies": [
+      "Agoda",
+      "Airbnb",
+      "Atlassian",
+      "Cisco",
+      "LinkedIn",
+      "Nike",
+      "SOTI",
+      "Yandex"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Candy",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Greedy"
+    ],
+    "companies": [
+      "Accenture",
+      "ConsultAdd",
+      "Flipkart",
+      "Goldman Sachs",
+      "Komprise",
+      "Mastercard",
+      "PhonePe",
+      "Tencent"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Capacity To Ship Packages Within D Days",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Agoda",
+      "DoorDash",
+      "DP world",
+      "Expedia",
+      "Flipkart",
+      "Mindtickle",
+      "Salesforce",
+      "Zeta"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Cheapest Flights Within K Stops",
+    "complexity": "Medium",
+    "categories": [
+      "Dynamic Programming",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Graph"
+    ],
+    "companies": [
+      "Airbnb",
+      "Cloudera",
+      "Coupang",
+      "DE Shaw",
+      "MakeMyTrip",
+      "Snap",
+      "Snowflake",
+      "Stripe"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Climbing Stairs",
+    "complexity": "Easy",
+    "categories": [
+      "Math",
+      "Dynamic Programming",
+      "Memoization"
+    ],
+    "companies": [
+      "Accenture",
+      "Accolite",
+      "Adobe",
+      "Amazon",
+      "AMD",
+      "Apple",
+      "Barclays",
+      "Bloomberg"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Clone Graph",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Graph"
+    ],
+    "companies": [
+      "Docusign",
+      "Flexport",
+      "Google",
+      "Grammarly",
+      "Nutanix",
+      "Pocket Gems",
+      "ThousandEyes",
+      "TikTok"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Coin Change",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Breadth-First Search"
+    ],
+    "companies": [
+      "Accenture",
+      "Affirm",
+      "Agoda",
+      "Airbnb",
+      "Atlassian",
+      "BlackRock",
+      "Capgemini",
+      "Capital One"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Combination Sum",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Backtracking"
+    ],
+    "companies": [
+      "Adobe",
+      "Airbnb",
+      "Amazon",
+      "Apple",
+      "Autodesk",
+      "Bloomberg",
+      "ByteDance",
+      "Citadel"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Combination Sum II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Backtracking"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Bloomberg",
+      "ByteDance",
+      "Infosys",
+      "Meta",
+      "Microsoft",
+      "Oracle"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Construct Binary Tree from Preorder and Inorder Traversal",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Divide and Conquer",
+      "Tree"
+    ],
+    "companies": [
+      "Adobe",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Salesforce",
+      "Snowflake",
+      "Tesla",
+      "TikTok"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Container With Most Water",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Greedy"
+    ],
+    "companies": [
+      "Accenture",
+      "Accolite",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Atlassian",
+      "Bloomberg",
+      "ByteDance"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Contains Duplicate",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Airbnb",
+      "Arista Networks",
+      "DE Shaw",
+      "J.P. Morgan",
+      "Nagarro",
+      "Netflix",
+      "Palantir Technologies"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Copy List with Random Pointer",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "Linked List"
+    ],
+    "companies": [
+      "Docusign",
+      "eBay",
+      "Flipkart",
+      "Google",
+      "Intel",
+      "Mobileye",
+      "Morgan Stanley",
+      "Nvidia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Count and Say",
+    "complexity": "Medium",
+    "categories": [
+      "String"
+    ],
+    "companies": [
+      "Adobe",
+      "Akuna Capital",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "ConsultAdd",
+      "Meta",
+      "Microsoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Count Primes",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Math",
+      "Enumeration",
+      "Number Theory"
+    ],
+    "companies": [
+      "Accenture",
+      "Cognizant",
+      "Intel",
+      "Nokia",
+      "Salesforce",
+      "tcs",
+      "Tech Mahindra",
+      "Walmart Labs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Course Schedule",
+    "complexity": "Medium",
+    "categories": [
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Graph",
+      "Topological Sort"
+    ],
+    "companies": [
+      "Anduril",
+      "ByteDance",
+      "Citadel",
+      "Coupang",
+      "CrowdStrike",
+      "Cruise",
+      "DoorDash",
+      "eBay"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Course Schedule II",
+    "complexity": "Medium",
+    "categories": [
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Graph",
+      "Topological Sort"
+    ],
+    "companies": [
+      "Anduril",
+      "Arista Networks",
+      "ByteDance",
+      "Citadel",
+      "Databricks",
+      "DoorDash",
+      "eBay",
+      "Intuit"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Daily Temperatures",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Stack",
+      "Monotonic Stack"
+    ],
+    "companies": [
+      "Accenture",
+      "Agoda",
+      "Airwallex",
+      "Anduril",
+      "Flipkart",
+      "Grab",
+      "Huawei",
+      "Intuit"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Decode String",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Stack",
+      "Recursion"
+    ],
+    "companies": [
+      "Activision",
+      "Agoda",
+      "ByteDance",
+      "Cisco",
+      "Compass",
+      "Coupang",
+      "eBay",
+      "Flexport"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Decode Ways",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Commvault",
+      "Flipkart",
+      "Goldman Sachs",
+      "Graviton"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Degree of an Array",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Hash Table"
+    ],
+    "companies": [
+      "ByteDance",
+      "Expedia",
+      "GE Digital",
+      "IBM",
+      "J.P. Morgan",
+      "Paycom",
+      "PayPal",
+      "Rivian"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Design Circular Queue",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Linked List",
+      "Design",
+      "Queue"
+    ],
+    "companies": [
+      "Applied Intuition",
+      "Citadel",
+      "Cloudflare",
+      "Datadog",
+      "Intuit",
+      "Qualcomm",
+      "Tesla",
+      "Zoox"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Design Hit Counter",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Design",
+      "Queue"
+    ],
+    "companies": [
+      "Affirm",
+      "Atlassian",
+      "Careem",
+      "Cloudflare",
+      "Coupang",
+      "Databricks",
+      "Dropbox",
+      "MongoDB"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Design In-Memory File System",
+    "complexity": "Hard",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Design",
+      "Trie"
+    ],
+    "companies": [
+      "Baidu",
+      "Circle",
+      "Coinbase",
+      "Coupang",
+      "DoorDash",
+      "Salesforce",
+      "Shopify",
+      "Snowflake"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Design Tic-Tac-Toe",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Design",
+      "Matrix"
+    ],
+    "companies": [
+      "Airbnb",
+      "Atlassian",
+      "Chewy",
+      "Databricks",
+      "Qualcomm",
+      "Shopify",
+      "Tesla",
+      "Two Sigma"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Divide Two Integers",
+    "complexity": "Medium",
+    "categories": [
+      "Math",
+      "Bit Manipulation"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Microsoft",
+      "Nextdoor",
+      "TikTok"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Edit Distance",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arcesium",
+      "Axon",
+      "Bloomberg",
+      "Cisco"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Evaluate Division",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "String",
+      "Depth-First Search",
+      "Breadth-First Search"
+    ],
+    "companies": [
+      "BlackRock",
+      "Citadel",
+      "Coinbase",
+      "GE Healthcare",
+      "Jane Street",
+      "MakeMyTrip",
+      "Nuro",
+      "PhonePe"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Evaluate Reverse Polish Notation",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Math",
+      "Stack"
+    ],
+    "companies": [
+      "Apollo.io",
+      "Attentive",
+      "Canonical",
+      "Citadel",
+      "Grammarly",
+      "LinkedIn",
+      "Odoo",
+      "Yandex"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Fibonacci Number",
+    "complexity": "Easy",
+    "categories": [
+      "Math",
+      "Dynamic Programming",
+      "Recursion",
+      "Memoization"
+    ],
+    "companies": [
+      "Accenture",
+      "Capgemini",
+      "Cognizant",
+      "EY",
+      "Infosys",
+      "J.P. Morgan",
+      "Nvidia",
+      "SAP"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Find All Anagrams in a String",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Sliding Window"
+    ],
+    "companies": [
+      "Bolt",
+      "Databricks",
+      "Intuit",
+      "Revolut",
+      "Snowflake",
+      "Splunk",
+      "Turing",
+      "Yandex"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Find First and Last Position of Element in Sorted Array",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Airtel",
+      "Amazon",
+      "Apple",
+      "Applied Intuition",
+      "Atlassian",
+      "Attentive"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Find Median from Data Stream",
+    "complexity": "Hard",
+    "categories": [
+      "Two Pointers",
+      "Design",
+      "Sorting",
+      "Heap (Priority Queue)"
+    ],
+    "companies": [
+      "Agoda",
+      "Anduril",
+      "Citadel",
+      "Cohesity",
+      "Coupang",
+      "Docusign",
+      "Goldman Sachs",
+      "Google"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Find Minimum in Rotated Sorted Array",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Cisco",
+      "eBay",
+      "FreshWorks",
+      "Goldman Sachs",
+      "IBM",
+      "Nutanix",
+      "PayPal",
+      "Paytm"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Find Peak Element",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Accenture",
+      "Commvault",
+      "Databricks",
+      "eBay",
+      "Flipkart",
+      "Goldman Sachs",
+      "IXL",
+      "Nvidia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Find the Duplicate Number",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Binary Search",
+      "Bit Manipulation"
+    ],
+    "companies": [
+      "Anduril",
+      "Citadel",
+      "Goldman Sachs",
+      "Google",
+      "IBM",
+      "Infosys",
+      "J.P. Morgan",
+      "Niantic"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Find the Index of the First Occurrence in a String",
+    "complexity": "Easy",
+    "categories": [
+      "Two Pointers",
+      "String",
+      "String Matching"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Expedia",
+      "Google",
+      "IBM"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "First Missing Positive",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Hash Table"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "athenahealth",
+      "Bloomberg",
+      "Celigo",
+      "Databricks",
+      "eBay"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "First Unique Character in a String",
+    "complexity": "Easy",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Queue",
+      "Counting"
+    ],
+    "companies": [
+      "EPAM Systems",
+      "Goldman Sachs",
+      "Ozon",
+      "PayPal",
+      "Qualcomm",
+      "ServiceNow",
+      "tcs",
+      "Walmart Labs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Fizz Buzz",
+    "complexity": "Easy",
+    "categories": [
+      "Math",
+      "String",
+      "Simulation"
+    ],
+    "companies": [
+      "Cisco",
+      "Citadel",
+      "Cloudflare",
+      "Cognizant",
+      "IBM",
+      "J.P. Morgan",
+      "LinkedIn",
+      "Mastercard"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Flatten Binary Tree to Linked List",
+    "complexity": "Medium",
+    "categories": [
+      "Linked List",
+      "Stack",
+      "Tree",
+      "Depth-First Search"
+    ],
+    "companies": [
+      "Anduril",
+      "Apple",
+      "Google",
+      "Media.net",
+      "Myntra",
+      "PayPal",
+      "Salesforce",
+      "Uber"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Flatten Nested List Iterator",
+    "complexity": "Medium",
+    "categories": [
+      "Stack",
+      "Tree",
+      "Depth-First Search",
+      "Design"
+    ],
+    "companies": [
+      "Airbnb",
+      "LinkedIn",
+      "Mixpanel",
+      "Netflix",
+      "OpenAI",
+      "Tesla",
+      "Walmart Labs",
+      "Warnermedia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Game of Life",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Matrix",
+      "Simulation"
+    ],
+    "companies": [
+      "Anduril",
+      "BitGo",
+      "Cloudflare",
+      "Dropbox",
+      "Google",
+      "Snap",
+      "Two Sigma",
+      "Warnermedia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Gas Station",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Greedy"
+    ],
+    "companies": [
+      "BitGo",
+      "BNY Mellon",
+      "Cisco",
+      "CureFit",
+      "Dream11",
+      "Flipkart",
+      "Freecharge",
+      "Goldman Sachs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Generate Parentheses",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Dynamic Programming",
+      "Backtracking"
+    ],
+    "companies": [
+      "Adobe",
+      "Airtel",
+      "Amazon",
+      "Amdocs",
+      "Apple",
+      "Avito",
+      "BlackRock",
+      "Bloomberg"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Group Anagrams",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "String",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Affirm",
+      "Agoda",
+      "Amazon",
+      "Anduril",
+      "Apple",
+      "athenahealth"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Happy Number",
+    "complexity": "Easy",
+    "categories": [
+      "Hash Table",
+      "Math",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Accenture",
+      "Airbnb",
+      "BlackRock",
+      "Cisco",
+      "Cognizant",
+      "FactSet",
+      "IBM",
+      "J.P. Morgan"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "House Robber",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Agoda",
+      "Airbnb",
+      "Arcesium",
+      "ByteDance",
+      "CARS24",
+      "Cisco",
+      "Citadel"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "House Robber II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "ByteDance",
+      "Databricks",
+      "Datadog",
+      "Docusign",
+      "LinkedIn",
+      "Nordstrom",
+      "PhonePe",
+      "thoughtspot"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Implement Trie (Prefix Tree)",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Design",
+      "Trie"
+    ],
+    "companies": [
+      "Arista Networks",
+      "Block",
+      "Citadel",
+      "Docusign",
+      "DoorDash",
+      "Grammarly",
+      "instabase",
+      "Lyft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Insert Delete GetRandom O(1)",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Math",
+      "Design"
+    ],
+    "companies": [
+      "Affirm",
+      "Agoda",
+      "AppFolio",
+      "Axon",
+      "ByteDance",
+      "Cisco",
+      "Citadel",
+      "DE Shaw"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Insert Interval",
+    "complexity": "Medium",
+    "categories": [
+      "Array"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Google",
+      "LinkedIn",
+      "Meta",
+      "Microsoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Integer to English Words",
+    "complexity": "Hard",
+    "categories": [
+      "Math",
+      "String",
+      "Recursion"
+    ],
+    "companies": [
+      "Attentive",
+      "Avalara",
+      "Block",
+      "Delhivery",
+      "eBay",
+      "Gusto",
+      "Nordstrom",
+      "Palantir Technologies"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Integer to Roman",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "Math",
+      "String"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Agoda",
+      "Amazon",
+      "Apple",
+      "Arista Networks",
+      "Atlassian",
+      "Bloomberg"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Interleaving String",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Amazon",
+      "Apple",
+      "DE Shaw",
+      "Goldman Sachs",
+      "Microsoft",
+      "Nuro",
+      "thoughtspot",
+      "TikTok"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Intersection of Two Arrays",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Two Pointers",
+      "Binary Search"
+    ],
+    "companies": [
+      "Criteo",
+      "CVENT",
+      "IBM",
+      "J.P. Morgan",
+      "LinkedIn",
+      "MongoDB",
+      "Nvidia",
+      "PayPal"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Is Subsequence",
+    "complexity": "Easy",
+    "categories": [
+      "Two Pointers",
+      "String",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Electronic Arts",
+      "Nvidia",
+      "Pinterest",
+      "Qualcomm",
+      "Salesforce",
+      "Tekion",
+      "Tesla"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Isomorphic Strings",
+    "complexity": "Easy",
+    "categories": [
+      "Hash Table",
+      "String"
+    ],
+    "companies": [
+      "Barclays",
+      "eBay",
+      "EPAM Systems",
+      "Google",
+      "HashedIn",
+      "Infosys",
+      "LinkedIn",
+      "Oracle"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Jump Game",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Greedy"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Cisco",
+      "DoorDash",
+      "Flipkart",
+      "Goldman Sachs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Jump Game II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Greedy"
+    ],
+    "companies": [
+      "Adobe",
+      "Agoda",
+      "Amazon",
+      "Apple",
+      "Atlassian",
+      "Bloomberg",
+      "ConsultAdd",
+      "DE Shaw"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Koko Eating Bananas",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Accenture",
+      "Atlassian",
+      "Autodesk",
+      "Citadel",
+      "DE Shaw",
+      "Deutsche Bank",
+      "DoorDash",
+      "eBay"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Kth Largest Element in an Array",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Divide and Conquer",
+      "Sorting",
+      "Heap (Priority Queue)"
+    ],
+    "companies": [
+      "Accenture",
+      "AMD",
+      "Avito",
+      "ByteDance",
+      "Coupang",
+      "Deloitte",
+      "Deutsche Bank",
+      "eBay"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Largest Number",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "String",
+      "Greedy",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Goldman Sachs",
+      "Graviton",
+      "Huawei",
+      "josh technology",
+      "Myntra",
+      "Nykaa",
+      "Oracle"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Largest Rectangle in Histogram",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Stack",
+      "Monotonic Stack"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Capital One",
+      "Cisco",
+      "DE Shaw",
+      "DoorDash"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Length of Last Word",
+    "complexity": "Easy",
+    "categories": [
+      "String"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Microsoft",
+      "Qualcomm",
+      "tcs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Letter Combinations of a Phone Number",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Backtracking"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Autodesk",
+      "Bloomberg",
+      "Chime",
+      "Cisco",
+      "Citadel"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "LFU Cache",
+    "complexity": "Hard",
+    "categories": [
+      "Hash Table",
+      "Linked List",
+      "Design",
+      "Doubly-Linked List"
+    ],
+    "companies": [
+      "Citadel",
+      "Coupang",
+      "DoorDash",
+      "Gameskraft",
+      "KLA",
+      "PayPal",
+      "Rippling",
+      "Salesforce"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Linked List Cycle",
+    "complexity": "Easy",
+    "categories": [
+      "Hash Table",
+      "Linked List",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Autodesk",
+      "Cisco",
+      "DE Shaw",
+      "EPAM Systems",
+      "Goldman Sachs",
+      "Intel",
+      "Oracle",
+      "Qualcomm"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Common Prefix",
+    "complexity": "Easy",
+    "categories": [
+      "String",
+      "Trie"
+    ],
+    "companies": [
+      "Accenture",
+      "Accolite",
+      "Adobe",
+      "Airbus SE",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Capgemini"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Common Subsequence",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accolite",
+      "Arista Networks",
+      "BP",
+      "ByteDance",
+      "Citadel",
+      "DoorDash",
+      "Nutanix",
+      "Optum"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Consecutive Sequence",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Union Find"
+    ],
+    "companies": [
+      "Atlassian",
+      "ByteDance",
+      "Cisco",
+      "DE Shaw",
+      "DeltaX",
+      "EPAM Systems",
+      "Flipkart",
+      "Google"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Increasing Subsequence",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Atlassian",
+      "Autodesk",
+      "Citadel",
+      "Commvault",
+      "Druva",
+      "Expedia",
+      "Flexport"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Palindromic Substring",
+    "complexity": "Medium",
+    "categories": [
+      "Two Pointers",
+      "String",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Accolite",
+      "Adobe",
+      "Agoda",
+      "Amazon",
+      "Apple",
+      "athenahealth",
+      "Autodesk"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Repeating Character Replacement",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Sliding Window"
+    ],
+    "companies": [
+      "ByteDance",
+      "Flipkart",
+      "MathWorks",
+      "PayU",
+      "PhonePe",
+      "Pocket Gems",
+      "Turing",
+      "UiPath"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest String Chain",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Two Pointers",
+      "String"
+    ],
+    "companies": [
+      "Atlassian",
+      "Citadel",
+      "Flipkart",
+      "MathWorks",
+      "Moloco",
+      "Snap",
+      "Two Sigma",
+      "Verily"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Substring Without Repeating Characters",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Sliding Window"
+    ],
+    "companies": [
+      "Accenture",
+      "Accolite",
+      "Adobe",
+      "Agoda",
+      "Airtel",
+      "Alibaba",
+      "Amazon",
+      "AMD"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Longest Valid Parentheses",
+    "complexity": "Hard",
+    "categories": [
+      "String",
+      "Dynamic Programming",
+      "Stack"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Bloomberg",
+      "DE Shaw",
+      "eBay",
+      "InMobi",
+      "Intuit",
+      "MakeMyTrip"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Lowest Common Ancestor of a Binary Tree",
+    "complexity": "Medium",
+    "categories": [
+      "Tree",
+      "Depth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Atlassian",
+      "BitGo",
+      "Flipkart",
+      "GE Healthcare",
+      "Intuit",
+      "LinkedIn",
+      "MongoDB",
+      "Myntra"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "LRU Cache",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "Linked List",
+      "Design",
+      "Doubly-Linked List"
+    ],
+    "companies": [
+      "AppFolio",
+      "Arista Networks",
+      "Aurora",
+      "Autodesk",
+      "BitGo",
+      "Booking.com",
+      "BP",
+      "ByteDance"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Majority Element",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Divide and Conquer",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Autodesk",
+      "CVENT",
+      "DE Shaw",
+      "Deloitte",
+      "eBay",
+      "Flipkart",
+      "IBM"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Max Area of Island",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Union Find"
+    ],
+    "companies": [
+      "Disney",
+      "DoorDash",
+      "Dropbox",
+      "Grubhub",
+      "Intuit",
+      "LinkedIn",
+      "Salesforce",
+      "Smartsheet"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Max Consecutive Ones III",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Sliding Window",
+      "Prefix Sum"
+    ],
+    "companies": [
+      "Expedia",
+      "Roku",
+      "SAP",
+      "Sigmoid",
+      "Snap",
+      "tcs",
+      "Walmart Labs",
+      "Yandex"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Max Points on a Line",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Math",
+      "Geometry"
+    ],
+    "companies": [
+      "Cisco",
+      "Citadel",
+      "LinkedIn",
+      "Nvidia",
+      "Oracle",
+      "Sprinklr",
+      "Waymo",
+      "X"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Maximal Rectangle",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Stack",
+      "Matrix"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "DE Shaw",
+      "Flipkart",
+      "Google",
+      "Huawei"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Maximal Square",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Matrix"
+    ],
+    "companies": [
+      "Airbnb",
+      "BharatPe",
+      "Booking.com",
+      "ByteDance",
+      "Citadel",
+      "DE Shaw",
+      "eBay",
+      "Goldman Sachs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Maximum Depth of Binary Tree",
+    "complexity": "Easy",
+    "categories": [
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Apple",
+      "Arista Networks",
+      "Bloomberg",
+      "Infosys",
+      "LinkedIn",
+      "Meta"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Maximum Product Subarray",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Arcesium",
+      "DE Shaw",
+      "Goldman Sachs",
+      "Google",
+      "HashedIn",
+      "Hiver",
+      "LinkedIn",
+      "Nvidia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Maximum Profit in Job Scheduling",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Dynamic Programming",
+      "Sorting"
+    ],
+    "companies": [
+      "Airbnb",
+      "Akuna Capital",
+      "Databricks",
+      "DE Shaw",
+      "DoorDash",
+      "Flipkart",
+      "oyo",
+      "PayPal"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Maximum Subarray",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Divide and Conquer",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Atlassian",
+      "Autodesk",
+      "Barclays",
+      "Bloomberg"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Median of Two Sorted Arrays",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Divide and Conquer"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Akamai",
+      "Amazon",
+      "Apple",
+      "Autodesk",
+      "Bloomberg",
+      "Capgemini"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Meeting Rooms II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Greedy",
+      "Sorting"
+    ],
+    "companies": [
+      "Atlassian",
+      "Capital One",
+      "Cisco",
+      "Docusign",
+      "eBay",
+      "Hubspot",
+      "IBM",
+      "Lyft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Merge Intervals",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Agoda",
+      "Airbnb",
+      "Amazon",
+      "AMD",
+      "Anduril",
+      "Apple"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Merge k Sorted Lists",
+    "complexity": "Hard",
+    "categories": [
+      "Linked List",
+      "Divide and Conquer",
+      "Heap (Priority Queue)",
+      "Merge Sort"
+    ],
+    "companies": [
+      "Adobe",
+      "Airbnb",
+      "Amazon",
+      "Anduril",
+      "Apple",
+      "Bloomberg",
+      "ByteDance",
+      "Cisco"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Merge Sorted Array",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Agoda",
+      "Amazon",
+      "Apple",
+      "athenahealth",
+      "Atlassian",
+      "Avito"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Merge Two Sorted Lists",
+    "complexity": "Easy",
+    "categories": [
+      "Linked List",
+      "Recursion"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arista Networks",
+      "Bloomberg",
+      "Capital One",
+      "Cognizant",
+      "EPAM Systems"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Min Stack",
+    "complexity": "Medium",
+    "categories": [
+      "Stack",
+      "Design"
+    ],
+    "companies": [
+      "Cisco",
+      "Delhivery",
+      "IMC",
+      "Informatica",
+      "Intuit",
+      "LinkedIn",
+      "Lucid",
+      "Lyft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Minimum Path Sum",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Matrix"
+    ],
+    "companies": [
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Dream11",
+      "eBay",
+      "General Motors",
+      "Goldman Sachs",
+      "Google"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Minimum Size Subarray Sum",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Sliding Window",
+      "Prefix Sum"
+    ],
+    "companies": [
+      "Autodesk",
+      "Darwinbox",
+      "DE Shaw",
+      "DoorDash",
+      "Goldman Sachs",
+      "Nvidia",
+      "Oracle",
+      "Yandex"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Minimum Window Substring",
+    "complexity": "Hard",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Sliding Window"
+    ],
+    "companies": [
+      "Adobe",
+      "Agoda",
+      "Airbnb",
+      "Amazon",
+      "Apollo.io",
+      "Apple",
+      "Bloomberg",
+      "ByteDance"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Missing Number",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Math",
+      "Binary Search"
+    ],
+    "companies": [
+      "AQR Capital Management",
+      "Arista Networks",
+      "Cisco",
+      "Genpact",
+      "Goldman Sachs",
+      "Google",
+      "Infosys",
+      "Nvidia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Move Zeroes",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Agoda",
+      "Anduril",
+      "BNY Mellon",
+      "Capgemini",
+      "CEDCOSS",
+      "Cisco",
+      "Cognizant",
+      "CrowdStrike"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Multiply Strings",
+    "complexity": "Medium",
+    "categories": [
+      "Math",
+      "String",
+      "Simulation"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Microsoft",
+      "Pinterest",
+      "Roku"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "N-Queens",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Backtracking"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Citadel",
+      "Goldman Sachs",
+      "IBM",
+      "Meta"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Next Permutation",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arcesium",
+      "Bloomberg",
+      "ByteDance",
+      "DE Shaw"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Number of Islands",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Union Find"
+    ],
+    "companies": [
+      "Akuna Capital",
+      "Anduril",
+      "Axon",
+      "Barclays",
+      "BILL Holdings",
+      "BitGo",
+      "BlackRock",
+      "Booking.com"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Open the Lock",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "String",
+      "Breadth-First Search"
+    ],
+    "companies": [
+      "ByteDance",
+      "CARS24",
+      "Citadel",
+      "Coupang",
+      "DE Shaw",
+      "eBay",
+      "Flipkart",
+      "J.P. Morgan"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Palindrome Linked List",
+    "complexity": "Easy",
+    "categories": [
+      "Linked List",
+      "Two Pointers",
+      "Stack",
+      "Recursion"
+    ],
+    "companies": [
+      "Barclays",
+      "Devsinc",
+      "Intuit",
+      "IXL",
+      "Morgan Stanley",
+      "Oracle",
+      "ServiceNow",
+      "Siemens"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Palindrome Number",
+    "complexity": "Easy",
+    "categories": [
+      "Math"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Capgemini",
+      "Capital One",
+      "Cognizant"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Palindromic Substrings",
+    "complexity": "Medium",
+    "categories": [
+      "Two Pointers",
+      "String",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Arista Networks",
+      "BNY Mellon",
+      "Cisco",
+      "Citadel",
+      "Epic Systems",
+      "LinkedIn",
+      "Millennium"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Partition Equal Subset Sum",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Dream11",
+      "eBay",
+      "EPAM Systems",
+      "Flipkart",
+      "IBM",
+      "ServiceNow",
+      "Visa",
+      "Walmart Labs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Pascal's Triangle",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Dynamic Programming"
+    ],
+    "companies": [
+      "Accenture",
+      "Cisco",
+      "Deloitte",
+      "Goldman Sachs",
+      "Google",
+      "HSBC",
+      "J.P. Morgan",
+      "Mitsogo"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Permutations",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Backtracking"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "American Express",
+      "Apple",
+      "Barclays",
+      "Bloomberg",
+      "Booking.com",
+      "Cisco"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Permutations II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Backtracking",
+      "Sorting"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Citadel",
+      "LinkedIn",
+      "Meta",
+      "Microsoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Plus One",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Math"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Agoda",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Intuit",
+      "Meta"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Populating Next Right Pointers in Each Node",
+    "complexity": "Medium",
+    "categories": [
+      "Linked List",
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search"
+    ],
+    "companies": [
+      "Citadel",
+      "Flipkart",
+      "Google",
+      "Oracle",
+      "Salesforce",
+      "ServiceNow",
+      "Snowflake",
+      "Walmart Labs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Pow(x, n)",
+    "complexity": "Medium",
+    "categories": [
+      "Math",
+      "Recursion"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arcesium",
+      "Bloomberg",
+      "ByteDance",
+      "Citadel"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Product of Array Except Self",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Prefix Sum"
+    ],
+    "companies": [
+      "Accenture",
+      "Asana",
+      "Autodesk",
+      "CEDCOSS",
+      "Cisco",
+      "Disney",
+      "Docusign",
+      "eBay"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Random Pick with Weight",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Math",
+      "Binary Search",
+      "Prefix Sum"
+    ],
+    "companies": [
+      "Coinbase",
+      "Criteo",
+      "Liftoff",
+      "Netflix",
+      "PayPal",
+      "Remitly",
+      "Revolut",
+      "Rubrik"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reconstruct Itinerary",
+    "complexity": "Hard",
+    "categories": [
+      "Depth-First Search",
+      "Graph",
+      "Eulerian Circuit"
+    ],
+    "companies": [
+      "Booking.com",
+      "eBay",
+      "Flipkart",
+      "Netflix",
+      "Pinterest",
+      "Snap",
+      "Twilio",
+      "Yandex"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Regular Expression Matching",
+    "complexity": "Hard",
+    "categories": [
+      "String",
+      "Dynamic Programming",
+      "Recursion"
+    ],
+    "companies": [
+      "Airbnb",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "ByteDance",
+      "Citadel",
+      "Confluent",
+      "Coupang"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Remove Duplicates from Sorted Array",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Capgemini",
+      "Cisco",
+      "Cognizant"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Remove Duplicates from Sorted Array II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Accolite",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Microsoft",
+      "Nykaa"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Remove Duplicates from Sorted List",
+    "complexity": "Easy",
+    "categories": [
+      "Linked List"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Microsoft",
+      "Nvidia",
+      "Oracle"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Remove Element",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Microsoft",
+      "Uber"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Remove K Digits",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Stack",
+      "Greedy",
+      "Monotonic Stack"
+    ],
+    "companies": [
+      "Cisco",
+      "Coupang",
+      "DE Shaw",
+      "josh technology",
+      "PhonePe",
+      "Samsung",
+      "Snap",
+      "Snowflake"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Remove Nth Node From End of List",
+    "complexity": "Medium",
+    "categories": [
+      "Linked List",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Citrix",
+      "Meta",
+      "Microsoft",
+      "Nvidia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reorganize String",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Greedy",
+      "Sorting"
+    ],
+    "companies": [
+      "Citadel",
+      "Coupang",
+      "Druva",
+      "eBay",
+      "Intuit",
+      "PayPal",
+      "Pinterest",
+      "Roblox"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Restore IP Addresses",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Backtracking"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arista Networks",
+      "Autodesk",
+      "Cisco",
+      "Meta",
+      "Microsoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reverse Integer",
+    "complexity": "Medium",
+    "categories": [
+      "Math"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Cognizant",
+      "Deloitte",
+      "EPAM Systems"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reverse Linked List",
+    "complexity": "Easy",
+    "categories": [
+      "Linked List",
+      "Recursion"
+    ],
+    "companies": [
+      "Accenture",
+      "ByteDance",
+      "Cisco",
+      "Deloitte",
+      "Expedia",
+      "Google",
+      "J.P. Morgan",
+      "Luxoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reverse Linked List II",
+    "complexity": "Medium",
+    "categories": [
+      "Linked List"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arista Networks",
+      "Bloomberg",
+      "Disney",
+      "EPAM Systems",
+      "Meta"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reverse Nodes in k-Group",
+    "complexity": "Hard",
+    "categories": [
+      "Linked List",
+      "Recursion"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arista Networks",
+      "Autodesk",
+      "Bloomberg",
+      "Capital One",
+      "Commvault"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reverse String",
+    "complexity": "Easy",
+    "categories": [
+      "Two Pointers",
+      "String"
+    ],
+    "companies": [
+      "Deutsche Bank",
+      "EPAM Systems",
+      "Garmin",
+      "Goldman Sachs",
+      "HCL",
+      "Infosys",
+      "Morgan Stanley",
+      "Odoo"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Reverse Words in a String",
+    "complexity": "Medium",
+    "categories": [
+      "Two Pointers",
+      "String"
+    ],
+    "companies": [
+      "Accenture",
+      "Capgemini",
+      "Cisco",
+      "Deloitte",
+      "HPE",
+      "Infosys",
+      "Intel",
+      "Morgan Stanley"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Roman to Integer",
+    "complexity": "Easy",
+    "categories": [
+      "Hash Table",
+      "Math",
+      "String"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "AMD",
+      "Apple",
+      "Axon",
+      "Bloomberg",
+      "BNY Mellon"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Rotate Array",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Math",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Accenture",
+      "American Express",
+      "Capgemini",
+      "Capital One",
+      "DXC Technology",
+      "eBay",
+      "EPAM Systems",
+      "Flipkart"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Rotate Image",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Math",
+      "Matrix"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "AMD",
+      "Apple",
+      "Bloomberg",
+      "Capital One",
+      "Cisco"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Rotate List",
+    "complexity": "Medium",
+    "categories": [
+      "Linked List",
+      "Two Pointers"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "LinkedIn",
+      "Meta",
+      "Microsoft",
+      "Morgan Stanley"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Rotting Oranges",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Breadth-First Search",
+      "Matrix"
+    ],
+    "companies": [
+      "Anduril",
+      "ByteDance",
+      "Citadel",
+      "Deutsche Bank",
+      "Docusign",
+      "DP world",
+      "eBay",
+      "Expedia"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Same Tree",
+    "complexity": "Easy",
+    "categories": [
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Flipkart",
+      "Google",
+      "LinkedIn",
+      "Meta"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Search a 2D Matrix",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Matrix"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arista Networks",
+      "Bloomberg",
+      "Cisco",
+      "Coupang"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Search a 2D Matrix II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Divide and Conquer",
+      "Matrix"
+    ],
+    "companies": [
+      "ByteDance",
+      "Citadel",
+      "Coupang",
+      "MakeMyTrip",
+      "Oracle",
+      "PayPal",
+      "Snap",
+      "tcs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Search in Rotated Sorted Array",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Accolite",
+      "Adobe",
+      "Amazon",
+      "Anduril",
+      "Apple",
+      "Arcesium",
+      "Arista Networks",
+      "Autodesk"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Search in Rotated Sorted Array II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Microsoft",
+      "Uber",
+      "Yahoo"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Search Insert Position",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Cognizant",
+      "Instacart",
+      "Meta",
+      "Microsoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Search Suggestions System",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "String",
+      "Binary Search",
+      "Trie"
+    ],
+    "companies": [
+      "Anduril",
+      "Atlassian",
+      "Citadel",
+      "Coursera",
+      "Deliveroo",
+      "Docusign",
+      "DoorDash",
+      "J.P. Morgan"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Second Highest Salary",
+    "complexity": "Medium",
+    "categories": [
+      "Database"
+    ],
+    "companies": [
+      "Accenture",
+      "Amdocs",
+      "Cognizant",
+      "Deloitte",
+      "Genpact",
+      "Google",
+      "Infosys",
+      "Paytm"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Serialize and Deserialize Binary Tree",
+    "complexity": "Hard",
+    "categories": [
+      "String",
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search"
+    ],
+    "companies": [
+      "Citadel",
+      "DoorDash",
+      "Intuit",
+      "LinkedIn",
+      "Nvidia",
+      "Qualcomm",
+      "Salesforce",
+      "Sprinklr"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Set Matrix Zeroes",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Matrix"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Autodesk",
+      "Bloomberg",
+      "eBay",
+      "Expedia",
+      "Goldman Sachs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Simplify Path",
+    "complexity": "Medium",
+    "categories": [
+      "String",
+      "Stack"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Capital One",
+      "Citadel",
+      "Gojek",
+      "Grab"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Single Element in a Sorted Array",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search"
+    ],
+    "companies": [
+      "Atlassian",
+      "blinkit",
+      "Coupang",
+      "Infosys",
+      "Moloco",
+      "Nvidia",
+      "Pinterest",
+      "ServiceNow"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Single Number",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Bit Manipulation"
+    ],
+    "companies": [
+      "Airbnb",
+      "Cisco",
+      "Google",
+      "Nvidia",
+      "Palantir Technologies",
+      "Qualcomm",
+      "tcs",
+      "Yahoo"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Sliding Window Maximum",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Queue",
+      "Sliding Window",
+      "Heap (Priority Queue)"
+    ],
+    "companies": [
+      "Autodesk",
+      "Booking.com",
+      "Cisco",
+      "Citadel",
+      "Coupang",
+      "DE Shaw",
+      "DoorDash",
+      "Flipkart"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Sort Colors",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Sorting"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Arcesium",
+      "Autodesk",
+      "Bloomberg",
+      "DE Shaw",
+      "Docusign"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Spiral Matrix",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Matrix",
+      "Simulation"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "AMD",
+      "Anduril",
+      "Apple",
+      "Bloomberg",
+      "Capital One"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Spiral Matrix II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Matrix",
+      "Simulation"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Bloomberg",
+      "Google",
+      "Meta",
+      "Microsoft",
+      "Roblox",
+      "TikTok"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Split Array Largest Sum",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Dynamic Programming",
+      "Greedy"
+    ],
+    "companies": [
+      "Baidu",
+      "DE Shaw",
+      "MathWorks",
+      "PhonePe",
+      "Pinterest",
+      "PornHub",
+      "Salesforce",
+      "Tekion"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Sqrt(x)",
+    "complexity": "Easy",
+    "categories": [
+      "Math",
+      "Binary Search"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Citadel",
+      "Goldman Sachs",
+      "Grammarly"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Squares of a Sorted Array",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Sorting"
+    ],
+    "companies": [
+      "Agoda",
+      "CrowdStrike",
+      "Deutsche Bank",
+      "Instacart",
+      "Ozon",
+      "PayPal",
+      "Tinkoff",
+      "Walmart Labs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "String Compression",
+    "complexity": "Medium",
+    "categories": [
+      "Two Pointers",
+      "String"
+    ],
+    "companies": [
+      "Affirm",
+      "CrowdStrike",
+      "EPAM Systems",
+      "Expedia",
+      "Goldman Sachs",
+      "IBM",
+      "Lyft",
+      "Palo Alto Networks"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "String to Integer (atoi)",
+    "complexity": "Medium",
+    "categories": [
+      "String"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Databricks",
+      "Goldman Sachs",
+      "Google",
+      "Infosys"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Subarray Product Less Than K",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Binary Search",
+      "Sliding Window",
+      "Prefix Sum"
+    ],
+    "companies": [
+      "Agoda",
+      "Airbnb",
+      "Flexport",
+      "IBM",
+      "Nvidia",
+      "PayPal",
+      "Salesforce",
+      "Samsung"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Subarray Sum Equals K",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Prefix Sum"
+    ],
+    "companies": [
+      "AMD",
+      "Apollo.io",
+      "ByteDance",
+      "Capgemini",
+      "Cisco",
+      "Disney",
+      "Flipkart",
+      "Goldman Sachs"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Subsets",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Backtracking",
+      "Bit Manipulation"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "ByteDance",
+      "Coupang",
+      "Fiverr",
+      "IBM"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Subsets II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Backtracking",
+      "Bit Manipulation"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Google",
+      "Meta",
+      "Microsoft",
+      "Swiggy"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Substring with Concatenation of All Words",
+    "complexity": "Hard",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Sliding Window"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Media.net",
+      "Meta",
+      "Microsoft",
+      "Roku"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Sudoku Solver",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Backtracking",
+      "Matrix"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Cadence",
+      "Citadel",
+      "Confluent",
+      "DoorDash"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Swap Nodes in Pairs",
+    "complexity": "Medium",
+    "categories": [
+      "Linked List",
+      "Recursion"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Meta",
+      "Microsoft",
+      "Nutanix",
+      "Qualcomm"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Symmetric Tree",
+    "complexity": "Easy",
+    "categories": [
+      "Tree",
+      "Depth-First Search",
+      "Breadth-First Search",
+      "Binary Tree"
+    ],
+    "companies": [
+      "Adobe",
+      "Apple",
+      "Bloomberg",
+      "Comcast",
+      "Google",
+      "LinkedIn",
+      "Meta",
+      "Microsoft"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Task Scheduler",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Greedy",
+      "Sorting"
+    ],
+    "companies": [
+      "DE Shaw",
+      "DoorDash",
+      "IBM",
+      "Intuit",
+      "Remitly",
+      "Roblox",
+      "Rubrik",
+      "Salesforce"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Text Justification",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "String",
+      "Simulation"
+    ],
+    "companies": [
+      "Adobe",
+      "Airbnb",
+      "Amazon",
+      "Apple",
+      "Atlassian",
+      "Bloomberg",
+      "Capital One",
+      "Coinbase"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Time Based Key-Value Store",
+    "complexity": "Medium",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Binary Search",
+      "Design"
+    ],
+    "companies": [
+      "Airbnb",
+      "Anduril",
+      "Axon",
+      "CARS24",
+      "Coinbase",
+      "Compass",
+      "Confluent",
+      "CrowdStrike"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Top K Frequent Elements",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "Divide and Conquer",
+      "Sorting"
+    ],
+    "companies": [
+      "Arista Networks",
+      "Atlassian",
+      "Avito",
+      "ByteDance",
+      "Chewy",
+      "Cisco",
+      "Docusign",
+      "DoorDash"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Top K Frequent Words",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Hash Table",
+      "String",
+      "Trie"
+    ],
+    "companies": [
+      "Attentive",
+      "Box",
+      "Intel",
+      "Netflix",
+      "Palo Alto Networks",
+      "Pocket Gems",
+      "Robinhood",
+      "ServiceNow"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Trapping Rain Water",
+    "complexity": "Hard",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Dynamic Programming",
+      "Stack"
+    ],
+    "companies": [
+      "Accolite",
+      "Adobe",
+      "Airbnb",
+      "Amazon",
+      "American Express",
+      "Apple",
+      "Atlassian",
+      "BitGo"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Two Sum",
+    "complexity": "Easy",
+    "categories": [
+      "Array",
+      "Hash Table"
+    ],
+    "companies": [
+      "Accenture",
+      "Accolite",
+      "Adobe",
+      "Agoda",
+      "Airbnb",
+      "Airbus SE",
+      "Akamai",
+      "Altimetrik"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Two Sum II - Input Array Is Sorted",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Two Pointers",
+      "Binary Search"
+    ],
+    "companies": [
+      "eBay",
+      "EPAM Systems",
+      "Infosys",
+      "J.P. Morgan",
+      "Oracle",
+      "Qualcomm",
+      "Yandex",
+      "Zomato"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Unique Binary Search Trees",
+    "complexity": "Medium",
+    "categories": [
+      "Math",
+      "Dynamic Programming",
+      "Tree",
+      "Binary Search Tree"
+    ],
+    "companies": [
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "Clari",
+      "Microsoft",
+      "Samsung",
+      "Snap"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Unique Paths",
+    "complexity": "Medium",
+    "categories": [
+      "Math",
+      "Dynamic Programming",
+      "Combinatorics"
+    ],
+    "companies": [
+      "Accenture",
+      "Adobe",
+      "Amazon",
+      "Apple",
+      "Bloomberg",
+      "ByteDance",
+      "Cisco",
+      "Coupang"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Unique Paths II",
+    "complexity": "Medium",
+    "categories": [
+      "Array",
+      "Dynamic Programming",
+      "Matrix"
+    ],
+    "companies": [
+      "Adobe",
+      "Agoda",
+      "Amazon",
+      "Apple",
+      "athenahealth",
+      "Atlassian",
+      "Bloomberg",
+      "Cisco"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  },
+  {
+    "title": "Valid Anagram",
+    "complexity": "Easy",
+    "categories": [
+      "Hash Table",
+      "String",
+      "Sorting"
+    ],
+    "companies": [
+      "Accenture",
+      "Affirm",
+      "American Express",
+      "Atlassian",
+      "BlackRock",
+      "Capgemini",
+      "Cognizant",
+      "ConsultAdd"
+    ],
+    "source": "liquidslr/interview-company-wise-problems"
+  }
+]

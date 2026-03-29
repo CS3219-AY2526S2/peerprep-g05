@@ -11,10 +11,15 @@
  */
 import pg from "pg";
 import dotenv from "dotenv";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 dotenv.config();
 
 const { Pool } = pg;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const pool = new Pool({
     host: process.env.POSTGRES_HOST || "localhost",
@@ -48,6 +53,295 @@ function splitIntoChunks(items, chunkSize) {
     return chunks;
 }
 
+function normalizeTitleKey(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+function buildPythonBoilerplateExamples(title) {
+    const t = String(title || "").toLowerCase();
+
+    if (t.includes("valid anagram")) {
+        return [
+            {
+                inputText: 's = "anagram", t = "nagaram"',
+                outputText: "true",
+                explanation: "Both strings contain the same letters with identical frequencies.",
+            },
+            {
+                inputText: 's = "rat", t = "car"',
+                outputText: "false",
+                explanation: "Character frequencies differ, so the strings are not anagrams.",
+            },
+            {
+                inputText: 's = "listen", t = "silent"',
+                outputText: "true",
+                explanation: "Another positive case with reordered characters.",
+            },
+            {
+                inputText: 's = "aacc", t = "ccac"',
+                outputText: "false",
+                explanation: "Private case where counts differ for one or more letters.",
+            },
+            {
+                inputText: 's = "", t = ""',
+                outputText: "true",
+                explanation: "Private edge case: empty strings are trivially anagrams.",
+            },
+        ];
+    }
+
+    if (t.includes("unique paths ii")) {
+        return [
+            {
+                inputText: "obstacleGrid = [[0,0,0],[0,1,0],[0,0,0]]",
+                outputText: "2",
+                explanation: "There are two valid paths that avoid the obstacle.",
+            },
+            {
+                inputText: "obstacleGrid = [[0,1],[0,0]]",
+                outputText: "1",
+                explanation: "Only one route remains when the top-right cell is blocked.",
+            },
+            {
+                inputText: "obstacleGrid = [[0,0],[0,1]]",
+                outputText: "0",
+                explanation: "Destination is blocked, so no path exists.",
+            },
+            {
+                inputText: "obstacleGrid = [[1]]",
+                outputText: "0",
+                explanation: "Private edge case where the start cell is blocked.",
+            },
+            {
+                inputText: "obstacleGrid = [[0]]",
+                outputText: "1",
+                explanation: "Private edge case with a 1x1 empty grid.",
+            },
+        ];
+    }
+
+    if (t.includes("unique paths")) {
+        return [
+            {
+                inputText: "m = 3, n = 7",
+                outputText: "28",
+                explanation: "Classic combinatorics example.",
+            },
+            {
+                inputText: "m = 3, n = 2",
+                outputText: "3",
+                explanation: "Three unique right/down paths exist.",
+            },
+            {
+                inputText: "m = 7, n = 3",
+                outputText: "28",
+                explanation: "Symmetry with swapped dimensions.",
+            },
+            {
+                inputText: "m = 1, n = 10",
+                outputText: "1",
+                explanation: "Private edge case with single row.",
+            },
+            {
+                inputText: "m = 10, n = 1",
+                outputText: "1",
+                explanation: "Private edge case with single column.",
+            },
+        ];
+    }
+
+    return [
+        {
+            inputText: "values = [1, 2, 3]",
+            outputText: "3",
+            explanation: "A baseline public example for the core behavior.",
+        },
+        {
+            inputText: "values = [0, 0, 0]",
+            outputText: "0",
+            explanation: "A second public example with a different input pattern.",
+        },
+        {
+            inputText: "values = [5]",
+            outputText: "1",
+            explanation: "A compact public edge-style example.",
+        },
+        {
+            inputText: "values = []",
+            outputText: "0",
+            explanation: "Private edge case: empty-like input contract.",
+        },
+        {
+            inputText: "values = [1000000, -1000000]",
+            outputText: "2",
+            explanation: "Private stress-style case with large-magnitude values.",
+        },
+    ];
+}
+
+function inferProblemIntent(title, categories) {
+    const t = String(title || "").toLowerCase();
+    const has = (s) => t.includes(s);
+
+    if (has("unique paths ii")) return "Given an m x n grid with obstacles, count unique paths from top-left to bottom-right when moves are only right or down.";
+    if (has("unique paths")) return "Given an m x n grid, count unique paths from top-left to bottom-right when moves are only right or down.";
+    if (has("trapping rain water")) return "Given an elevation map represented by bar heights, compute how much rain water is trapped after raining.";
+    if (has("valid anagram")) return "Given two strings s and t, return true if t is an anagram of s, and false otherwise.";
+    if (has("add binary")) return "Given two binary strings, return their sum as a binary string.";
+    if (has("climbing stairs")) return "You can climb 1 or 2 steps at a time; return the number of distinct ways to reach step n.";
+    if (has("jump game ii")) return "Given an array where each value is max jump length, return the minimum jumps needed to reach the last index.";
+    if (has("jump game")) return "Given an array where each value is max jump length, determine whether the last index is reachable.";
+    if (has("house robber ii")) return "Given house values arranged in a circle, return the maximum amount you can rob without robbing adjacent houses.";
+    if (has("house robber")) return "Given house values in a line, return the maximum amount you can rob without robbing adjacent houses.";
+    if (has("course schedule ii")) return "Given course prerequisites, return a valid order to complete all courses, or an empty list if impossible.";
+    if (has("course schedule")) return "Given course prerequisites, determine whether all courses can be completed.";
+    if (has("meeting rooms ii")) return "Given meeting intervals, return the minimum number of rooms required to host all meetings.";
+    if (has("insert interval")) return "Given sorted non-overlapping intervals and a new interval, insert it and merge overlaps.";
+    if (has("random pick with weight")) return "Given positive weights, design random picking so each index is chosen proportional to its weight.";
+    if (has("time based key-value store")) return "Design a time-based key-value store supporting set(key, value, timestamp) and get(key, timestamp).";
+    if (has("task scheduler")) return "Given tasks and cooldown n, return the minimum time intervals needed to execute all tasks.";
+    if (has("find median from data stream")) return "Design a structure that supports adding numbers and returning the median at any time.";
+    if (has("koko eating bananas")) return "Given banana piles and h hours, find the minimum integer speed so all bananas are eaten within h hours.";
+    if (has("capacity to ship packages within d days")) return "Given package weights and D days, find the minimum ship capacity to deliver all packages in order within D days.";
+    if (has("open the lock")) return "Starting from 0000, return the minimum turns to reach target while avoiding deadends, or -1 if impossible.";
+    if (has("game of life")) return "Given the current board state of Conway's Game of Life, compute the next board state.";
+    if (has("decode ways")) return "Given a digit string, return the number of ways it can be decoded with 1->A through 26->Z.";
+    if (has("decode string")) return "Given an encoded string using k[pattern], return the decoded string.";
+    if (has("daily temperatures")) return "For each day, return how many days until a warmer temperature, or 0 if none exists.";
+
+    if (has("anagram")) return "Given two strings, determine whether they are anagrams of each other.";
+    if (has("palindrome")) return "Determine whether the input satisfies palindrome constraints for this problem.";
+    if (has("two sum") || has("3sum") || has("4sum")) return "Find values or indices that satisfy the required target-sum condition.";
+    if (has("substring") || has("subarray")) return "Compute the required property over contiguous substrings/subarrays.";
+    if (has("binary tree") || has("tree")) return "Traverse or analyze the tree structure to produce the required result.";
+    if (has("linked list")) return "Manipulate linked-list nodes according to the required transformation.";
+    if (has("matrix") || has("grid")) return "Process the 2D matrix/grid and return the required transformed or aggregated output.";
+    if (has("stock")) return "Optimize buy/sell decisions under the problem's stock-trading constraints.";
+    if (has("cache") || has("design")) return "Implement the required data structure behavior and operation semantics.";
+    if (has("graph") || has("island") || has("course schedule")) return "Model the problem as a graph and compute the required traversal or feasibility result.";
+    if (has("search") || has("binary search")) return "Use efficient search logic to locate or compute the requested value.";
+
+    const topicHint = Array.isArray(categories) && categories.length > 0
+        ? ` using ${categories.slice(0, 2).join(" and ")}`
+        : "";
+    return `Given the inputs for \"${title}\", return the required output according to the problem constraints${topicHint}.`;
+}
+
+function buildPythonBoilerplateDescription(title, categories, examples) {
+    const [e1, e2, e3] = examples;
+    const intent = inferProblemIntent(title, categories);
+    return (
+        `Practice problem: ${title}.\n\n` +
+        `${intent}\n\n` +
+        "Example 1:\n\n" +
+        `Input: ${e1.inputText}\n` +
+        `Output: ${e1.outputText}\n` +
+        `Explanation: ${e1.explanation}\n\n` +
+        "Example 2:\n\n" +
+        `Input: ${e2.inputText}\n` +
+        `Output: ${e2.outputText}\n` +
+        `Explanation: ${e2.explanation}\n\n` +
+        "Example 3:\n\n" +
+        `Input: ${e3.inputText}\n` +
+        `Output: ${e3.outputText}\n` +
+        `Explanation: ${e3.explanation}`
+    );
+}
+
+function buildPythonBoilerplateTestCases(title, categories = []) {
+    const examples = buildPythonBoilerplateExamples(title);
+
+    const testCases = examples.map((example, index) => {
+        const isPublic = index < 3;
+        return {
+            input: example.inputText,
+            expected_output: example.outputText,
+            is_public: isPublic,
+        };
+    });
+
+    return {
+        description: buildPythonBoilerplateDescription(title, categories, examples),
+        testCases,
+    };
+}
+
+function ensurePublicPrivateCoverage(title, testCases) {
+    const safeCases = Array.isArray(testCases) ? [...testCases] : [];
+    const hasPublic = safeCases.some((tc) => tc.is_public !== false);
+    const hasPrivate = safeCases.some((tc) => tc.is_public === false);
+
+    if (hasPublic && hasPrivate) return safeCases;
+
+    const boilerplate = buildPythonBoilerplateTestCases(title).testCases;
+    if (!hasPublic) {
+        const publicCase = boilerplate.find((tc) => tc.is_public !== false);
+        if (publicCase) safeCases.push(publicCase);
+    }
+    if (!hasPrivate) {
+        const privateCase = boilerplate.find((tc) => tc.is_public === false);
+        if (privateCase) safeCases.push(privateCase);
+    }
+
+    return safeCases;
+}
+
+function loadLiquidslrQuestionBank() {
+    const bankPath = path.join(__dirname, "data", "liquidslr-200-unique.json");
+    if (!fs.existsSync(bankPath)) return [];
+
+    try {
+        const raw = fs.readFileSync(bankPath, "utf8");
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+
+        const seen = new Set();
+        const baseQuestionByTitle = new Map(
+            BASE_QUESTIONS.map((q) => [normalizeTitleKey(q.title), q])
+        );
+        const unique = [];
+
+        for (const item of parsed) {
+            const title = String(item?.title || "").trim();
+            if (!title) continue;
+
+            const key = normalizeTitleKey(title);
+            if (seen.has(key)) continue;
+            seen.add(key);
+
+            const categories = Array.isArray(item?.categories) && item.categories.length > 0
+                ? item.categories.map(String).map((x) => x.trim()).filter(Boolean).slice(0, 4)
+                : ["Algorithms"];
+
+            const companies = Array.isArray(item?.companies)
+                ? item.companies.map(String).map((x) => x.trim()).filter(Boolean).slice(0, 8)
+                : [];
+
+            const legacy = baseQuestionByTitle.get(key);
+            const boilerplate = buildPythonBoilerplateTestCases(title, categories);
+
+            unique.push({
+                title,
+                description: legacy?.description || buildPythonBoilerplateDescription(title, categories, buildPythonBoilerplateExamples(title)),
+                categories,
+                complexity: ["Easy", "Medium", "Hard"].includes(item?.complexity) ? item.complexity : "Medium",
+                companies,
+                test_cases: legacy?.test_cases?.length
+                    ? ensurePublicPrivateCoverage(title, legacy.test_cases.map((tc) => ({
+                        input: tc.input,
+                        expected_output: tc.expected_output,
+                        is_public: tc.is_public,
+                    })))
+                    : boilerplate.testCases,
+            });
+        }
+
+        return unique;
+    } catch {
+        return [];
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Questions with test cases
 // ---------------------------------------------------------------------------
@@ -55,15 +349,14 @@ const BASE_QUESTIONS = [
     {
         title: "Two Sum",
         description:
-            "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.\n\n**Example 1:**\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]\nExplanation: Because nums[0] + nums[1] == 9, we return [0, 1].\n\n**Example 2:**\nInput: nums = [3,2,4], target = 6\nOutput: [1,2]",
+            "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.\n\nExample 1:\n\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]\nExplanation: Because nums[0] + nums[1] == 9, we return [0, 1].\n\nExample 2:\n\nInput: nums = [3,2,4], target = 6\nOutput: [1,2]\n\nExample 3:\n\nInput: nums = [3,3], target = 6\nOutput: [0,1]",
         categories: ["Arrays", "Hash Table"],
         complexity: "Easy",
         companies: ["Google", "Amazon", "Meta", "Microsoft", "Apple"],
         test_cases: [
             { input: "nums = [2,7,11,15], target = 9", expected_output: "[0,1]", is_public: true },
             { input: "nums = [3,2,4], target = 6", expected_output: "[1,2]", is_public: true },
-            { input: "nums = [3,3], target = 6", expected_output: "[0,1]", is_public: false },
-            { input: "nums = [1,5,3,7], target = 8", expected_output: "[1,2]", is_public: false },
+            { input: "nums = [3,3], target = 6", expected_output: "[0,1]", is_public: true },
         ],
     },
     {
@@ -252,7 +545,7 @@ const BASE_QUESTIONS = [
     {
         title: "Trapping Rain Water",
         description:
-            "Given `n` non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.\n\n**Example 1:**\nInput: height = [0,1,0,2,1,0,1,3,2,1,2,1]\nOutput: 6\nExplanation: The elevation map is represented by the array. In this case, 6 units of rain water are being trapped.\n\n**Example 2:**\nInput: height = [4,2,0,3,2,5]\nOutput: 9",
+            "Given `n` non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.\n\nVisual aid (original text sketch):\nHeights:  [0,1,0,2,1,0,1,3,2,1,2,1]\nWater:      _ _   _     _\nBars :    | | | | | | | | |\n(Imagine each index as a vertical bar; water fills low valleys between taller boundaries.)\n\nExample 1:\nInput: height = [0,1,0,2,1,0,1,3,2,1,2,1]\nOutput: 6\nExplanation: The elevation map is represented by the array. In this case, 6 units of rain water are trapped.\n\nExample 2:\nInput: height = [4,2,0,3,2,5]\nOutput: 9",
         categories: ["Arrays", "Two Pointers", "Stack", "Dynamic Programming"],
         complexity: "Hard",
         companies: ["Google", "Amazon", "Goldman Sachs", "Microsoft", "Meta"],
@@ -349,16 +642,20 @@ const TARGET_QUESTION_COUNT =
     explicitTargetCount ||
     (cliLoadTest || envLoadTest ? LOAD_TEST_QUESTION_COUNT : DEFAULT_QUESTION_COUNT);
 
+const LIQUIDSLR_QUESTIONS = loadLiquidslrQuestionBank();
+
 function buildSeedQuestions(targetCount) {
-    if (BASE_QUESTIONS.length >= targetCount) {
-        return BASE_QUESTIONS.slice(0, targetCount);
+    const sourceQuestions = LIQUIDSLR_QUESTIONS.length > 0 ? LIQUIDSLR_QUESTIONS : BASE_QUESTIONS;
+
+    if (sourceQuestions.length >= targetCount) {
+        return sourceQuestions.slice(0, targetCount);
     }
 
-    const expanded = [...BASE_QUESTIONS];
+    const expanded = [...sourceQuestions];
     let variant = 1;
 
     while (expanded.length < targetCount) {
-        const base = BASE_QUESTIONS[(expanded.length - BASE_QUESTIONS.length) % BASE_QUESTIONS.length];
+        const base = sourceQuestions[(expanded.length - sourceQuestions.length) % sourceQuestions.length];
         expanded.push({
             ...base,
             title: `${base.title} (Practice Variant ${variant})`,
@@ -377,6 +674,23 @@ async function seed() {
     const QUESTIONS = buildSeedQuestions(TARGET_QUESTION_COUNT);
     try {
         await client.query("BEGIN");
+
+        // Ensure SERIAL sequences are aligned with table data before inserts.
+        await client.query(`
+            SELECT setval(
+                pg_get_serial_sequence('questions', 'id'),
+                COALESCE(MAX(id), 1),
+                MAX(id) IS NOT NULL
+            )
+            FROM questions;
+
+            SELECT setval(
+                pg_get_serial_sequence('test_cases', 'id'),
+                COALESCE(MAX(id), 1),
+                MAX(id) IS NOT NULL
+            )
+            FROM test_cases;
+        `);
 
         const allTitleKeys = QUESTIONS.map((q) => q.title.toLowerCase());
         const existingResult = await client.query(

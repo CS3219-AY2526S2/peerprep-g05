@@ -13,6 +13,9 @@ ENV NODE_ENV=production
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Allow the non-root runtime user to create runtime artifacts (e.g., JWT keys)
+RUN chown -R node:node /app
+
 USER node
 EXPOSE 3001
 CMD ["node", "server.js"]

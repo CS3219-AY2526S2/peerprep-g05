@@ -59,6 +59,16 @@ export async function initDatabase() {
                 locked_by   VARCHAR(255) NOT NULL,
                 locked_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
+
+            CREATE TABLE IF NOT EXISTS question_completions (
+                question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+                user_id UUID NOT NULL,
+                completed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (question_id, user_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_question_completions_user_id
+                ON question_completions(user_id);
         `);
         console.log("Database schema initialized");
     } finally {

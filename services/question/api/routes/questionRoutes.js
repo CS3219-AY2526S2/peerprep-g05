@@ -8,6 +8,9 @@ import {
     deleteQuestion,
     listCategories,
     listCompanies,
+    markQuestionCompleted,
+    markQuestionCompletedByUsers,
+    getQuestionCompletionStats,
 } from "../controllers/questionController.js";
 import {
     acquireLock,
@@ -22,6 +25,9 @@ router.get("/companies", listCompanies);
 router.get("/", getAllQuestions);
 router.get("/random", getRandomQuestion);
 router.get("/:id", getQuestionById);
+router.get("/:id/completions", getQuestionCompletionStats);
+router.post("/:id/completions", markQuestionCompleted);
+router.post("/:id/completions/bulk", markQuestionCompletedByUsers);
 router.post("/", createQuestion);
 router.put("/:id", updateQuestion);
 router.delete("/:id", deleteQuestion);

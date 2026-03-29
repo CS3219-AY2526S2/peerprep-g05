@@ -12,6 +12,7 @@ Manages coding questions for the PeerPrep platform.
 - Duplicate title prevention (case-insensitive)
 - List all distinct categories
 - Get random questions for matching
+- Track unique question completions per user
 - Centralised error handling & request logging
 - Graceful shutdown (SIGINT / SIGTERM)
 
@@ -80,6 +81,62 @@ Request Body: (all fields optional)
 
 ### DELETE /api/v1/questions/:id
 Delete a question.
+
+### POST /api/v1/questions/:id/completions
+Record that a user completed a question.
+
+Uniqueness rule:
+- A user can only be counted once per question.
+- Repeating the same completion does not create duplicates.
+
+Authentication/body behavior:
+- If `Authorization: Bearer <token>` is provided, the endpoint uses the requester id from user-service.
+- Otherwise, pass `user_id` (UUID) in body.
+
+Request Body (fallback when token is not provided):
+```json
+{
+  "user_id": "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09"
+}
+```
+
+### POST /api/v1/questions/:id/completions/bulk
+Record completion for multiple users in one call (for example, the 2 users in a collaboration session).
+
+Request Body:
+```json
+{
+  "user_ids": [
+    "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09",
+    "11111111-1111-1111-1111-111111111111"
+  ]
+}
+```
+
+Behavior:
+- Duplicates in `user_ids` are de-duplicated.
+- Existing completion rows are not duplicated.
+- Response includes `inserted_user_ids`, `already_completed_user_ids`, and `unique_users_completed`.
+
+### GET /api/v1/questions/:id/completions
+Get completion stats for a question.
+
+Query Parameters:
+- `include_users=true` (optional): Include the list of distinct user ids that completed the question.
+
+Example response:
+```json
+{
+  "success": true,
+  "data": {
+    "question_id": 200,
+    "unique_users_completed": 12,
+    "completed_user_ids": [
+      "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09"
+    ]
+  }
+}
+```
 
 ## Setup
 
