@@ -11,7 +11,6 @@
 **Local Development:**
 
 - Node.js 24+
-- MongoDB instance (or use Docker Compose)
 - Redis instance (or use Docker Compose)
 
 ### Environment Variables
@@ -24,8 +23,8 @@ cp .env.example .env
 
 | Variable       | Description                     | Example                                            |
 | -------------- | ------------------------------- | -------------------------------------------------- |
-| `MONGO_URI`    | MongoDB connection string       | `mongodb://localhost:27017/peerprep-collaboration` |
 | `REDIS_URL`    | Redis connection string         | `redis://localhost:6379`                           |
+| `QUESTION_API_BASE_URL` | Base URL for the Question API | `http://localhost:3002/api/v1`          |
 | `EXPRESS_PORT` | Port the HTTP server listens on | `51392`                                            |
 
 ### Running with Docker Compose
@@ -33,9 +32,6 @@ cp .env.example .env
 ```bash
 docker compose up --build
 ```
-
-This starts both the collaboration server and a MongoDB instance. MongoDB data is persisted in `./data/mongodb`.
-
 ### Building for Production
 
 ```bash
