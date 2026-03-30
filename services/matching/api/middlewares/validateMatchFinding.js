@@ -20,6 +20,13 @@ export async function validateMatchFinding(req, res, next) {
                     status: activeMatch.status
                 });
             }
+            if (activeMatch && activeMatch.status !== "WAITING") {
+                return res.status(409).json({
+                    error: "User is already in an active match",
+                    match_id: activeMatch.match_id,
+                    status: activeMatch.status
+                });
+            }
 
             next();
         } catch (err) {

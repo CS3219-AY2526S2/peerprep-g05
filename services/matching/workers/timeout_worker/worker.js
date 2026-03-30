@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+dotenv.config();
 import { v4 as uuid } from "uuid";
 
 import { postgres } from "../../infrastructure/postgres/client.js";
@@ -12,8 +13,6 @@ import {
     insertMatchEvent
 } from "../../domain/match/matchRepository.js";
 import { insertOutboxEvent } from "../../domain/match/outboxRepository.js";
-
-dotenv.config();
 
 async function startTimeoutWorker(timeout_duration) {
     const channel = await createChannel();
@@ -102,7 +101,7 @@ async function startTimeoutWorker(timeout_duration) {
     // ── Poll: WAITING matches that have been sitting too long ─────────
     setInterval(async () => {
         try {
-            const stale = await getStaleWaitingMatches(timeout_duration);
+            const stale = await getStaleWaitingMatches(1);
 
             for (const match of stale) {
                 const client = await postgres.connect();

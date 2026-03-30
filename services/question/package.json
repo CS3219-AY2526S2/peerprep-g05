@@ -12,14 +12,14 @@
     "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles --coverage"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "pg": "^8.18.0",
-    "cors": "^2.8.5"
+    "pg": "^8.20.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
     "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
     "supertest": "^6.3.3"
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TOPICS, DIFFICULTIES, type Difficulty, type MatchInfo, difficultyColor } from "../utils/types";
+import { useAuth } from "../context/AuthContext";
 
 interface Props {
   onFindMatch: (args: Omit<MatchInfo, "matchId">) => void;
@@ -8,13 +9,13 @@ interface Props {
 }
 
 export function MatchFormCard({ onFindMatch, error, loading }: Props) {
-  const [userId,     setUserId]     = useState("");
   const [topic,      setTopic]      = useState(TOPICS[0]);
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
 
+  const { user } = useAuth();
   const handleSubmit = () => {
-    if (!userId.trim()) return;
-    onFindMatch({ userId: userId.trim(), topic, difficulty });
+    if (!user) return;
+    onFindMatch({ userId: user.id, topic, difficulty });
   };
 
   return (
@@ -31,7 +32,7 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
           </div>
         )}
 
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-slate-400">
             User ID
           </label>
@@ -42,7 +43,7 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
             onChange={(e) => setUserId(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           />
-        </div>
+        </div> */}
 
         <div className="mb-4">
           <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-slate-400">
