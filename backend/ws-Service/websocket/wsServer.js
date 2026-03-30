@@ -17,9 +17,16 @@ export function createWsServer(server, channel) {
             return;
         }
 
+        const existing = clients.get(user_id);
+        if (existing && existing.readyState === existing.OPEN) {
+            existing.close(4000, "Replaced by new connection");
+            console.log(`Replaced existing WS connection for user ${user_id}`);
+        }
+
         clients.set(user_id, socket);
 
         socket.on("close", () => {
+            if (clients.get(user_id) !== socket) return;
             const entry = clients.get(user_id);
             if (entry?.matchContext) {
                 const { match_id, topic, difficulty } = entry.matchContext;

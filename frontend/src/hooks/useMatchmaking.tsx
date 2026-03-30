@@ -85,7 +85,6 @@ export function useMatchmaking() {
     setError("");
     setLoading(true);
     try {
-      await connectWs(userId);
       const res = await fetch(`${GATEWAY_URL}/api/v1/matches`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -97,6 +96,7 @@ export function useMatchmaking() {
       }
       const data = await res.json();
       setMatchInfo({ userId, topic, difficulty, matchId: data.match_id });
+      await connectWs(userId);
       resetTimer();
       setFsm(STATE.QUEUING);
     } catch (err: any) {

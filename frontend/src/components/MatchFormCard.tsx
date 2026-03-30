@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { TOPICS, DIFFICULTIES, type Difficulty, type MatchInfo, difficultyColor } from "../utils/types";
+import { useEffect, useState } from "react";
+import {  GATEWAY_URL, TOPICS, DIFFICULTIES, type Difficulty, type MatchInfo, difficultyColor } from "../utils/types";
 import { useAuth } from "../context/AuthContext";
 
 interface Props {
@@ -9,12 +9,33 @@ interface Props {
 }
 
 export function MatchFormCard({ onFindMatch, error, loading }: Props) {
-  const [topic,      setTopic]      = useState(TOPICS[0]);
+  const [topics,      setTopics]      = useState<string[]>([]);
+  const [topic,       setTopic]       = useState<string>("");
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
 
   const { user } = useAuth();
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const res = await fetch(`${GATEWAY_URL}/api/v1/questions/categories`);
+        const json = await res.json();
+
+        const categories = Array.isArray(json.data) ? json.data : [];
+
+        setTopics(categories);
+        if (categories.length > 0) {
+          setTopic(categories[0]); // default after load
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories", err);
+      }
+    }
+
+    fetchCategories();
+  }, []);
+
   const handleSubmit = () => {
-    if (!user) return;
+    if (!user || !topic) return;
     onFindMatch({ userId: user.id, topic, difficulty });
   };
 
@@ -54,8 +75,17 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
               className="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white cursor-pointer"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
+              disabled={topics.length === 0}
             >
-              {TOPICS.map((t) => <option key={t} value={t}>{t}</option>)}
+              {topics.length === 0 ? (
+                  <option>Loading...</option>
+                ) : (
+                  topics.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))
+                )}
             </select>
             <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">▼</span>
           </div>
