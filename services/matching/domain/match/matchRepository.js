@@ -1,8 +1,8 @@
 import { postgres } from "../../infrastructure/postgres/client.js";
 import { v4 as uuid } from "uuid";
 
-export async function findActiveMatch(user_id) {
-    const { rows } = await postgres.query(
+export async function findActiveMatch(client,user_id) {
+    const { rows } = await client.query(
         `SELECT match_id, status FROM matches
          WHERE (user_id_a = $1 OR user_id_b = $1)
          AND status IN ('WAITING', 'PROPOSED', 'REDIRECTED')
@@ -13,16 +13,16 @@ export async function findActiveMatch(user_id) {
     return rows[0] || null;
 }
 
-export async function findMatchById(match_id) {
-    const { rows } = await postgres.query(
+export async function findMatchById(client, match_id) {
+    const { rows } = await client.query(
         `SELECT * FROM matches WHERE match_id = $1`,
         [match_id]
     );
     return rows[0] || null;
 }
 
-export async function findWaitingMatch(user_id, topic, difficulty) {
-    const { rows } = await postgres.query(
+export async function findWaitingMatch(client, user_id, topic, difficulty) {
+    const { rows } = await client.query(
         `SELECT * FROM matches
          WHERE user_id_a = $1 AND topic = $2 AND difficulty = $3 AND status = 'WAITING'`,
         [user_id, topic, difficulty]
@@ -54,8 +54,8 @@ export async function updateMatchAcceptedByB(client, match_id) {
     );
 }
 
-export async function confirmMatch(match_id) {
-    await postgres.query(
+export async function confirmMatch(client, match_id) {
+    await client.query(
         `UPDATE matches SET status = 'CONFIRMED', updated_at = NOW()
          WHERE match_id = $1 AND status = 'PROPOSED'`,
         [match_id]
@@ -71,8 +71,8 @@ export async function cancelMatch(client, match_id) {
     return rowCount > 0;
 }
 
-export async function getAcceptanceStatus(match_id) {
-    const { rows } = await postgres.query(
+export async function getAcceptanceStatus(client, match_id) {
+    const { rows } = await client.query(
         `SELECT accepted_by_a, accepted_by_b FROM matches WHERE match_id = $1`,
         [match_id]
     );

@@ -62,7 +62,9 @@ export async function acceptMatch(req, res) {
     const { user_id } = req.body;
 
     try {
-        const match = await findMatchById(match_id);
+        const client = await postgres.connect();
+
+        const match = await findMatchById(client, match_id);
         if (!match) return res.status(404).json({ error: "Match Not Found" });
 
         let proposedMatchId = match_id;
@@ -74,11 +76,10 @@ export async function acceptMatch(req, res) {
         const lock = await acquireLock(redis, lockKey, 5);
         if (!lock) return res.status(409).json({ error: "Locked" });
 
-        const client = await postgres.connect();
         try {
             await client.query("BEGIN");
 
-            const proposed = await findMatchById(proposedMatchId);
+            const proposed = await findMatchById(client, proposedMatchId);
             if (!proposed) {
                 await client.query("ROLLBACK");
                 return res.status(404).json({ error: "Proposed match not found" });
@@ -105,11 +106,11 @@ export async function acceptMatch(req, res) {
                 return res.status(403).json({ error: "Not a participant" });
             }
 
-            const acceptance = await getAcceptanceStatus(proposedMatchId);
+            const acceptance = await getAcceptanceStatus(client, proposedMatchId);
             const bothAccepted = acceptance.accepted_by_a && acceptance.accepted_by_b;
-
+            console.log(bothAccepted);
             if (bothAccepted) {
-                await confirmMatch(proposedMatchId);
+                await confirmMatch(client, proposedMatchId);
                 console.log(`Match ${proposedMatchId} CONFIRMED`);
             }
 
@@ -155,7 +156,7 @@ export async function declineMatch(req, res) {
     try {
         await client.query("BEGIN");
 
-        const match = await findMatchById(match_id);
+        const match = await findMatchById(client, match_id);
         if (!match) {
             await client.query("ROLLBACK");
             return res.status(404).json({ error: "Match Not Found" });
@@ -214,12 +215,12 @@ export async function leaveMatch(req, res) {
     }
 
     try {
-        const match = await findWaitingMatch(user_id, topic, difficulty);
+        const client = await postgres.connect();
+        const match = await findWaitingMatch(client, user_id, topic, difficulty);
         if (!match) {
             return res.status(404).json({ error: "No Waiting match found for user" });
         }
 
-        const client = await postgres.connect();
         try {
             await client.query("BEGIN");
 
@@ -256,6 +257,20 @@ export async function leaveMatch(req, res) {
 
 export async function getMatchStatus(req, res) {
     const { match_id } = req.params;
-    const match = await findMatchById(match_id);
-    res.json(match);
+
+    try {
+        const client = await postgres.connect();
+        try {
+            const match = await findMatchById(client, match_id);
+            return res.json(match);
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Internal Server Error" });
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
 }
