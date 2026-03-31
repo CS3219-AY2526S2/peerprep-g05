@@ -1,41 +1,53 @@
 import { v4 as uuid } from "uuid";
 import { postgres } from "../../infrastructure/postgres/client.js";
+import { publishEvent } from "../../infrastructure/rabbitmq/client.js";
+import { releaseLock, acquireLock } from "../../infrastructure/redis/lock.js";
+import { redis } from "../../infrastructure/redis/client.js";
+import {
+    findMatchById,
+    findWaitingMatch,
+    createMatch,
+    updateMatchAcceptedByA,
+    updateMatchAcceptedByB,
+    confirmMatch,
+    cancelMatch,
+    getAcceptanceStatus,
+    insertMatchEvent
+} from "../../domain/match/matchRepository.js";
+import { insertOutboxEvent } from "../../domain/match/outboxRepository.js";
 
 export async function enterMatchmaking(req, res) {
-
     try {
-
         const { user_id, topic, difficulty } = req.body;
-
         const match_id = uuid();
 
-        await postgres.query(
-            `
-            INSERT INTO matches
-            (match_id, user_id_a, topic, difficulty, status)
-            VALUES ($1,$2,$3,$4,$5)
-            `,
-            [
-                match_id,
-                user_id,
-                topic,
-                difficulty,
-                "WAITING"
-            ]
-        );
+        const client = await postgres.connect();
+        try {
+            await client.query("BEGIN");
 
-        global.rabbitChannel.publish(
-            process.env.MATCH_EXCHANGE,
-            "match.enter",
-            Buffer.from(JSON.stringify({
+            await createMatch(client, match_id, user_id, topic, difficulty);
+
+            // Enqueue match.enter and notify user they are waiting — atomically
+            await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.enter", {
                 event_id: uuid(),
                 match_id,
                 user_id,
                 topic,
-                difficulty
-            })),
-            { persistent: true }
-        );
+                difficulty,
+            });
+
+            await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.waiting", {
+                user_id,
+                match_id,
+            });
+
+            await client.query("COMMIT");
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
 
         res.json({ match_id });
 
@@ -45,51 +57,220 @@ export async function enterMatchmaking(req, res) {
     }
 }
 
-//Update the state of the match to CONFIRMED when a user accepts the match (for now)
 export async function acceptMatch(req, res) {
-
     const { match_id } = req.params;
+    const { user_id } = req.body;
 
-    await postgres.query(
-        `
-        UPDATE matches
-        SET status='CONFIRMED',
-            updated_at=NOW()
-        WHERE match_id=$1
-        `,
-        [match_id]
-    );
+    try {
+        const client = await postgres.connect();
 
-    res.sendStatus(200);
+        const match = await findMatchById(client, match_id);
+        if (!match) return res.status(404).json({ error: "Match Not Found" });
+
+        let proposedMatchId = match_id;
+        if (match.status === "REDIRECTED") {
+            proposedMatchId = match.redirected_to;
+        }
+
+        const lockKey = `match_lock:${proposedMatchId}`;
+        const lock = await acquireLock(redis, lockKey, 5);
+        if (!lock) return res.status(409).json({ error: "Locked" });
+
+        try {
+            await client.query("BEGIN");
+
+            const proposed = await findMatchById(client, proposedMatchId);
+            if (!proposed) {
+                await client.query("ROLLBACK");
+                return res.status(404).json({ error: "Proposed match not found" });
+            }
+
+            if (proposed.status !== "PROPOSED") {
+                await client.query("ROLLBACK");
+                return res.status(400).json({ error: "Match is no longer open for acceptance" });
+            }
+
+            if (new Date(proposed.proposal_expiry) < new Date()) {
+                await client.query("ROLLBACK");
+                return res.status(400).json({ error: "Proposal has expired" });
+            }
+
+            if (user_id === proposed.user_id_a) {
+                await updateMatchAcceptedByA(client, proposedMatchId);
+                console.log(`${user_id} (user_a) accepted match ${proposedMatchId}`);
+            } else if (user_id === proposed.user_id_b) {
+                await updateMatchAcceptedByB(client, proposedMatchId);
+                console.log(`${user_id} (user_b) accepted match ${proposedMatchId}`);
+            } else {
+                await client.query("ROLLBACK");
+                return res.status(403).json({ error: "Not a participant" });
+            }
+
+            const acceptance = await getAcceptanceStatus(client, proposedMatchId);
+            const bothAccepted = acceptance.accepted_by_a && acceptance.accepted_by_b;
+            console.log(bothAccepted);
+            if (bothAccepted) {
+                await confirmMatch(client, proposedMatchId);
+                console.log(`Match ${proposedMatchId} CONFIRMED`);
+            }
+
+            // Always notify the accepting user
+            await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.accepted", {
+                user_id,
+                match_id: proposedMatchId,
+            });
+
+            // If both accepted, notify both users to proceed to session
+            if (bothAccepted) {
+                await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.confirmed", {
+                    match_id: proposedMatchId,
+                    user_id_a: proposed.user_id_a,
+                    user_id_b: proposed.user_id_b,
+                    topic: proposed.topic,
+                    difficulty: proposed.difficulty,
+                });
+            }
+
+            await client.query("COMMIT");
+            res.json({ success: true, match_id: proposedMatchId });
+
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+            await releaseLock(redis, lockKey);
+        }
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Internal Error");
+    }
 }
 
-//Update the state of the match to REJECTED when a user rejects the match (for now)
 export async function declineMatch(req, res) {
-
     const { match_id } = req.params;
+    const { user_id } = req.body;
 
-    await postgres.query(
-        `
-        UPDATE matches
-        SET status='CANCELLED',
-            updated_at=NOW()
-        WHERE match_id=$1
-        `,
-        [match_id]
-    );
+    const client = await postgres.connect();
+    try {
+        await client.query("BEGIN");
 
-    res.sendStatus(200);
+        const match = await findMatchById(client, match_id);
+        if (!match) {
+            await client.query("ROLLBACK");
+            return res.status(404).json({ error: "Match Not Found" });
+        }
+
+        if (![match.user_id_a, match.user_id_b].includes(user_id)) {
+            await client.query("ROLLBACK");
+            return res.status(403).json({ error: "Not a participant" });
+        }
+
+        if (match.status !== "PROPOSED") {
+            await client.query("ROLLBACK");
+            return res.status(400).json({ error: "Match is not declinable" });
+        }
+
+        await cancelMatch(client, match_id);
+        await insertMatchEvent(client, uuid(), match_id, "MATCH_DECLINED", { declined_by: user_id });
+
+        const otherUserId = match.user_id_a === user_id ? match.user_id_b : match.user_id_a;
+
+        // Notify decliner — frontend sends them home
+        await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.declined", {
+            match_id,
+            declined_by: user_id,
+            other_user: otherUserId,
+        });
+
+        // Requeue the other user via match worker
+        if (otherUserId) {
+            await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.requeue", {
+                event_id: uuid(),
+                match_id,
+                user_id: otherUserId,
+                topic: match.topic,
+                difficulty: match.difficulty,
+            });
+        }
+
+        await client.query("COMMIT");
+        res.json({ success: true, message: "Match Declined" });
+
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error(err);
+        res.status(500).json({ error: "Internal Server Error" });
+    } finally {
+        client.release();
+    }
 }
 
-//Get the status of the match (WAITING, CONFIRMED, CANCELLED)
-export async function getMatchStatus(req, res) {
+export async function leaveMatch(req, res) {
+    const { user_id, topic, difficulty } = req.body;
 
+    if (!user_id || !topic || !difficulty) {
+        return res.status(400).json({ error: "user_id, topic and difficulty are required" });
+    }
+
+    try {
+        const client = await postgres.connect();
+        const match = await findWaitingMatch(client, user_id, topic, difficulty);
+        if (!match) {
+            return res.status(404).json({ error: "No Waiting match found for user" });
+        }
+
+        try {
+            await client.query("BEGIN");
+
+            // Drive match worker to remove user from Redis queue and cancel DB row
+            await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.leave", {
+                event_id: uuid(),
+                match_id: match.match_id,
+                user_id,
+                topic,
+                difficulty,
+            });
+
+            // Notify WS gateway that user cancelled
+            await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.cancelled", {
+                match_id: match.match_id,
+                user_id,
+            });
+
+            await client.query("COMMIT");
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
+
+        return res.status(200).json({ message: "Left matchmaking queue successfully" });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
+export async function getMatchStatus(req, res) {
     const { match_id } = req.params;
 
-    const result = await postgres.query(
-        `SELECT * FROM matches WHERE match_id=$1`,
-        [match_id]
-    );
-
-    res.json(result.rows[0]);
+    try {
+        const client = await postgres.connect();
+        try {
+            const match = await findMatchById(client, match_id);
+            return res.json(match);
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Internal Server Error" });
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
 }

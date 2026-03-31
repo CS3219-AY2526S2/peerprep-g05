@@ -9,16 +9,26 @@ import Questions from "./pages/Questions.tsx";
 import QuestionDetail from "./pages/QuestionDetail.tsx";
 import QuestionEditor from "./pages/QuestionEditor.tsx";
 import AdminOnlyRoute from "./components/AdminOnlyRoute.tsx";
+import Matching from "./pages/Matching.tsx";
+import ProtectedRoute from "./components/Protectedroute.tsx";
 
 export default function App() {
     return (
         <>
             <Navbar />
             <Routes>
+                {/* Public routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+
+                {/* Protected routes */}
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/matching" element={<Matching />} />
+                </Route>
+
+                {/* Admin-only routes */}
                 <Route
                     path="/admin/users"
                     element={(
@@ -27,6 +37,7 @@ export default function App() {
                         </AdminOnlyRoute>
                     )}
                 />
+                <Route element={<ProtectedRoute />}>
                 <Route path="/questions" element={<Questions />} />
                 <Route
                     path="/questions/new"
@@ -45,6 +56,7 @@ export default function App() {
                         </AdminOnlyRoute>
                     )}
                 />
+                </Route>
             </Routes>
         </>
     );
