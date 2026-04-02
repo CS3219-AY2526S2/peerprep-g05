@@ -92,12 +92,16 @@ export async function startWsWorker() {
                     sendToUser(event.user_id_a, { 
                         type: "MATCH_CONFIRMED", 
                         match_id: event.match_id,
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
                         topic: event.topic,
                         difficulty: event.difficulty 
                     });
                     sendToUser(event.user_id_b, { 
                         type: "MATCH_CONFIRMED", 
                         match_id: event.match_id,
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
                         topic: event.topic,
                         difficulty: event.difficulty
                     });
