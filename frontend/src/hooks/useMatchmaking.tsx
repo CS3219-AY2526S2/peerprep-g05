@@ -46,8 +46,8 @@ export function useMatchmaking() {
           matchId:    msg.match_id,
           userIdA:    msg.user_id_a,
           userIdB:    msg.user_id_b,
-          topic:      matchInfo?.topic      ?? "",
-          difficulty: matchInfo?.difficulty ?? "easy",
+          topic:      msg.topic,
+          difficulty: msg.difficulty,
         });
         setFsm(STATE.CONFIRMED);
         break;
