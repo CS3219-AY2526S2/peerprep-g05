@@ -22,7 +22,7 @@ services:
   redis:
     image: redis:8.2.1-alpine
     ports:
-      - 6379:6379
+      - 63791:6379
     restart: always
     networks:
       - collaboration-network

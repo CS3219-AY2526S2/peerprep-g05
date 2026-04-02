@@ -25,6 +25,28 @@ const room_docs = new Map<RoomKey, YDocWithAwareness>();
 const MESSAGE_SYNC = 0;
 const MESSAGE_AWARENESS = 1;
 
+/**
+ * Broadcast to all ws in the room, excluding the `exclude` ws.
+ * @param roomName Room Name to broadcast to
+ * @param message Message to broadcast
+ * @param exclude WS to exclude the broadcast to
+ */
+const broadcastToRoom = (
+  roomName: RoomKey,
+  message: Uint8Array,
+  exclude?: CustomWebSocket,
+) => {
+  wss.clients.forEach((client: CustomWebSocket) => {
+    if (
+      client.readyState === WebSocket.OPEN &&
+      client.room === roomName &&
+      client !== exclude
+    ) {
+      client.send(message);
+    }
+  });
+};
+
 // Websocket Event Handlers
 // Handle new message
 const handleMessage = (
@@ -81,11 +103,25 @@ const handleDocUpdate: (update: Uint8Array, roomName: RoomKey) => void = (
   const message = encoding.toUint8Array(encoder);
 
   // Broadcast to all clients in the room
-  wss.clients.forEach((client: CustomWebSocket) => {
-    if (client.readyState === WebSocket.OPEN && client.room === roomName) {
-      client.send(message);
-    }
-  });
+  broadcastToRoom(roomName, message);
+};
+
+const handleAwarenessUpdate = (
+  roomName: RoomKey,
+  doc: YDocWithAwareness,
+  clients: Array<number>,
+  origin: unknown,
+) => {
+  const encodedUpdate = awareness.encodeAwarenessUpdate(doc.awareness, clients);
+  const encoder = encoding.createEncoder();
+  // Convert and write the message
+  encoding.writeVarUint(encoder, MESSAGE_AWARENESS);
+  encoding.writeVarUint8Array(encoder, encodedUpdate);
+
+  awareness.applyAwarenessUpdate(doc.awareness, encodedUpdate, origin);
+
+  const message = encoding.toUint8Array(encoder);
+  broadcastToRoom(roomName, message);
 };
 
 // Initialize a Y.Doc for the room if it doesn't exist
@@ -97,6 +133,20 @@ const initDocForRoom = (roomName: RoomKey) => {
 
     // Update listener when document change, broadcast the update to all clients in the same room
     doc.on("update", (update: Uint8Array) => handleDocUpdate(update, roomName));
+    doc.awareness.on(
+      "update",
+      (
+        {
+          added,
+          updated,
+          removed,
+        }: { added: number[]; updated: number[]; removed: number[] },
+        origin: unknown,
+      ) => {
+        const changedClients = added.concat(updated, removed);
+        handleAwarenessUpdate(roomName, doc, changedClients, origin);
+      },
+    );
 
     room_docs.set(roomName, doc);
   }
@@ -108,7 +158,8 @@ const initSyncForClient = (conn: CustomWebSocket, doc: YDocWithAwareness) => {
   encoding.writeVarUint(encoder, MESSAGE_SYNC);
   syncProtocol.writeSyncStep1(encoder, doc);
   conn.send(encoding.toUint8Array(encoder));
-}
+};
+
 // Connection Logic
 wss.on("connection", (conn: CustomWebSocket, req: IncomingMessage) => {
   const roomName = req.url?.split("/").pop()!;
@@ -125,6 +176,8 @@ wss.on("connection", (conn: CustomWebSocket, req: IncomingMessage) => {
     handleMessage(conn, doc, new Uint8Array(data));
   });
 
-  conn.on("close", () => handleClose(roomName));
+  conn.on("close", () => {
+    handleClose(roomName);
+  });
 });
 export default wss;

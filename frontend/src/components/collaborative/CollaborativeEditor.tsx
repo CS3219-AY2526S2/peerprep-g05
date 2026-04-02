@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { yCollab } from "y-codemirror.next";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
+import { useAuth } from "../../context/AuthContext.tsx";
 
 const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
 if (!WEBSOCKET_URL) {
@@ -21,6 +22,10 @@ const editorTheme = EditorView.theme({
 
 export function CollaborativeEditor({ roomId }: { roomId: string }) {
   const editorContainerRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+
+  const displayName = user?.display_name || user?.username || "Anonymous";
+  const userColor = "#0fa0ff";
 
   useEffect(() => {
     const ydoc = new Y.Doc();
@@ -28,8 +33,8 @@ export function CollaborativeEditor({ roomId }: { roomId: string }) {
 
     const ytext = ydoc.getText();
     provider.awareness.setLocalStateField("user", {
-      name: "User1",
-      color: "#ccc",
+      name: displayName,
+      color: userColor,
     });
 
     const state = EditorState.create({
@@ -46,7 +51,7 @@ export function CollaborativeEditor({ roomId }: { roomId: string }) {
       view.destroy();
       ydoc.destroy();
     };
-  }, [roomId]);
+  }, [roomId, userColor, displayName]);
 
   return (
     <div
