@@ -4,20 +4,25 @@ import { v4 as uuid, v5 as uuidv5 } from "uuid";
 import { createChannel } from "../../infrastructure/rabbitmq/client.js";
 import { acquireLock, releaseLock } from "../../infrastructure/redis/lock.js";
 import { postgres } from "../../infrastructure/postgres/client.js";
-import { publishEvent } from "../../infrastructure/rabbitmq/client.js";
 import { redis } from "../../infrastructure/redis/client.js";
 import {
     createMatch,
     cancelMatch,
     insertMatchEvent,
     proposeMatch,
-    redirectMatch
+    redirectMatch,
 } from "../../domain/match/matchRepository.js";
 import { insertOutboxEvent } from "../../domain/match/outboxRepository.js";
 
 dotenv.config();
 
 const REQUEUE_NAMESPACE = "b7e2d4a1-1234-5678-abcd-000000000001";
+
+function isCompatible(diffA, diffB) {
+    return diffA === "ANY" || diffB === "ANY" || diffA === diffB;
+}
+
+// ─── Worker bootstrap ────────────────────────────────────────────────────────
 
 async function startWorker() {
     const channel = await createChannel();
@@ -39,94 +44,129 @@ async function startWorker() {
         console.log("Received event:", event);
 
         try {
-            if (routingKey === "match.enter")   await handleMatchEnter(event, channel);
-            if (routingKey === "match.requeue") await handleMatchRequeue(event, channel);
-            if (routingKey === "match.leave")   await handleMatchLeave(event, channel);
+            if (routingKey === "match.enter")   await handleMatchEnter(event);
+            if (routingKey === "match.requeue") await handleMatchRequeue(event);
+            if (routingKey === "match.leave")   await handleMatchLeave(event);
             channel.ack(msg);
         } catch (err) {
+            console.error(`Error handling ${routingKey}:`, err);
             if (err.message === "LOCK_BUSY") {
-                channel.nack(msg, false, true);  // requeue
+                channel.nack(msg, false, true);  // requeue — lock contention, retry
             } else {
-                channel.nack(msg, false, false); // dead-letter
+                channel.nack(msg, false, false); // dead-letter — unrecoverable
             }
         }
     });
+
+    console.log("Match worker started.");
 }
 
-async function handleMatchEnter(event, channel) {
+// ─── match.enter ─────────────────────────────────────────────────────────────
+
+async function handleMatchEnter(event) {
     const { match_id, user_id, topic, difficulty } = event;
 
     const processedKey = `processed_event:${event.event_id}`;
-    if (await redis.get(processedKey)) return;
+    if (await redis.get(processedKey)) {
+        console.log(`Skipping duplicate event ${event.event_id}`);
+        return;
+    }
 
-    const queueKey = `match_queue:${topic}:${difficulty}`;
-    const lockKey  = `match_lock:${topic}:${difficulty}`;
+    const queueKey = `match_queue:${topic}`;
+    const lockKey  = `match_lock:${topic}`;
 
     const lock = await acquireLock(redis, lockKey, 30);
     if (!lock) throw new Error("LOCK_BUSY");
 
     try {
-        if (await redis.get(processedKey)) return;
+        // Double-check inside the lock to guard against concurrent workers
+        if (await redis.get(processedKey)) {
+            console.log(`Event ${event.event_id} already processed by another worker`);
+            return;
+        }
 
-        await redis.rpush(queueKey, JSON.stringify({ user_id, match_id }));
+        // Evict any stale entries for this user (e.g. old difficulty before relaxation)
+        const existing = await redis.lrange(queueKey, 0, -1);
+        for (const entry of existing) {
+            if (JSON.parse(entry).user_id === user_id) {
+                await redis.lrem(queueKey, 0, entry);
+                console.log(`Evicted stale queue entry for ${user_id}`);
+            }
+        }
 
+        // Push the fresh entry
+        await redis.rpush(queueKey, JSON.stringify({ user_id, match_id, difficulty }));
+
+        // Drain as many compatible pairs as possible
         while (true) {
-            const users = await redis.lrange(queueKey, 0, -1);
-            if (users.length < 2) break;
+            const raw = await redis.lrange(queueKey, 0, -1);
+            if (raw.length < 2) break;
 
-            const userA = JSON.parse(users[0]);
-            const userB = JSON.parse(users[1]);
+            const users = raw.map(u => JSON.parse(u));
+            const head  = users[0];
 
-            if (userA.user_id === userB.user_id) {
-                await redis.lpop(queueKey);
-                console.log(`Removed duplicate entry for ${userA.user_id}`);
-                continue;
+            const partnerIdx = users.findIndex(
+                (u, i) => i > 0 && isCompatible(head.difficulty, u.difficulty)
+            );
+
+            if (partnerIdx === -1) {
+                console.log(`No compatible partner for ${head.user_id} (${head.difficulty})`);
+                break;
             }
 
-            await redis.ltrim(queueKey, 2, -1);
+            const userA = head;
+            const userB = users[partnerIdx];
+
+            // Remove both from Redis before any DB work
+            await redis.lrem(queueKey, 1, raw[0]);
+            await redis.lrem(queueKey, 1, raw[partnerIdx]);
 
             const client = await postgres.connect();
             try {
                 await client.query("BEGIN");
 
-                const proposed = await proposeMatch(client, userA, userB, 0.5);
+                // proposeMatch: transitions userA's match WAITING → PROPOSED
+                const proposed = await proposeMatch(client, userA, userB, 0.45);
                 if (!proposed) {
+                    // userA's match_id is stale (already cancelled/expired)
                     await client.query("ROLLBACK");
-                    await redis.lpush(queueKey, JSON.stringify(userB));
-                    await redis.lpush(queueKey, JSON.stringify(userA));
-                    console.log("Stale match for userA, requeuing both");
+                    await redis.rpush(queueKey, raw[partnerIdx]); // userB is still valid
+
+                    console.log(`Stale userA ${userA.user_id} — requeueing via outbox`);
                     continue;
                 }
 
+                // redirectMatch: transitions userB's match WAITING → REDIRECTED
                 const redirected = await redirectMatch(client, userB, userA);
                 if (!redirected) {
+                    // userB's match_id is stale
                     await client.query("ROLLBACK");
-                    await redis.lpush(queueKey, JSON.stringify(userB));
-                    await redis.lpush(queueKey, JSON.stringify(userA));
-                    console.log("Stale match for userB, requeuing both");
+                    await redis.rpush(queueKey, raw[0]); // userA is still valid
+
+                    console.log(`Stale userB ${userB.user_id} — requeueing via outbox`);
                     continue;
                 }
 
-                // Write notifications inside the transaction
                 await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.proposed", {
-                    match_id: userA.match_id,
-                    user_id_a: userA.user_id,
-                    user_id_b: userB.user_id,
+                    match_id:   userA.match_id,
+                    user_id_a:  userA.user_id,
+                    user_id_b:  userB.user_id,
                 });
 
                 await insertOutboxEvent(client, process.env.MATCH_EVENTS_EXCHANGE, "match.redirected", {
-                    match_id: userB.match_id,
-                    user_id_b: userB.user_id,
+                    match_id:      userB.match_id,
+                    user_id_b:     userB.user_id,
                     redirected_to: userA.match_id,
                 });
 
                 await client.query("COMMIT");
-                console.log(`Matched ${userA.user_id} ↔ ${userB.user_id}`);
+                console.log(`Matched ${userA.user_id} (${userA.difficulty}) ↔ ${userB.user_id} (${userB.difficulty})`);
 
             } catch (err) {
                 await client.query("ROLLBACK");
-                await redis.lpush(queueKey, JSON.stringify(userB));
-                await redis.lpush(queueKey, JSON.stringify(userA));
+                // Restore both users to the front of the queue so they aren't lost
+                await redis.lpush(queueKey, raw[partnerIdx]);
+                await redis.lpush(queueKey, raw[0]);
                 throw err;
             } finally {
                 client.release();
@@ -140,21 +180,23 @@ async function handleMatchEnter(event, channel) {
     }
 }
 
-async function handleMatchLeave(event, channel) {
+// ─── match.leave ─────────────────────────────────────────────────────────────
+
+async function handleMatchLeave(event) {
     const { user_id, topic, difficulty, match_id } = event;
 
-    const queueKey = `match_queue:${topic}:${difficulty}`;
-    const lockKey  = `match_lock:${topic}:${difficulty}`;
+    const queueKey = `match_queue:${topic}`;
+    const lockKey  = `match_lock:${topic}`;
 
     const lock = await acquireLock(redis, lockKey, 10);
     if (!lock) throw new Error("LOCK_BUSY");
 
     try {
-        const usersInQueue = await redis.lrange(queueKey, 0, -1);
-        for (const u of usersInQueue) {
-            const parsed = JSON.parse(u);
-            if (parsed.user_id === user_id) {
-                await redis.lrem(queueKey, 0, u);
+        // Remove any Redis queue entries for this user
+        const raw = await redis.lrange(queueKey, 0, -1);
+        for (const entry of raw) {
+            if (JSON.parse(entry).user_id === user_id) {
+                await redis.lrem(queueKey, 0, entry);
                 console.log(`Removed ${user_id} from queue ${queueKey}`);
             }
         }
@@ -166,15 +208,13 @@ async function handleMatchLeave(event, channel) {
             const cancelled = await cancelMatch(client, match_id);
             if (!cancelled) {
                 await client.query("ROLLBACK");
-                console.log(`No WAITING match to cancel for user ${user_id}`);
+                console.log(`No WAITING match to cancel for ${user_id} (match ${match_id})`);
                 return;
             }
 
             await insertMatchEvent(client, uuid(), match_id, "MATCH_CANCELLED", { user_id });
-
-            // No WS notification needed for leave — user initiated it
             await client.query("COMMIT");
-            console.log(`User ${user_id} left matchmaking for topic ${topic}, difficulty ${difficulty}`);
+            console.log(`User ${user_id} left matchmaking (topic=${topic}, difficulty=${difficulty})`);
 
         } catch (err) {
             await client.query("ROLLBACK");
@@ -188,14 +228,20 @@ async function handleMatchLeave(event, channel) {
     }
 }
 
-async function handleMatchRequeue(event, channel) {
+// ─── match.requeue ───────────────────────────────────────────────────────────
+
+async function handleMatchRequeue(event) {
     const { event_id, user_id, topic, difficulty } = event;
 
     const processedKey = `processed_event:${event_id}`;
-    if (await redis.get(processedKey)) return;
+    if (await redis.get(processedKey)) {
+        console.log(`Skipping duplicate requeue event ${event_id}`);
+        return;
+    }
 
-    // Deterministic ID — same event_id always produces same newMatchId
-    const newMatchId = uuidv5(event_id, REQUEUE_NAMESPACE);
+    // Deterministic IDs ensure exactly-once semantics on retry
+    const newMatchId    = uuidv5(event_id, REQUEUE_NAMESPACE);
+    const enterEventId  = uuidv5(`enter:${event_id}`, REQUEUE_NAMESPACE);
 
     const client = await postgres.connect();
     try {
@@ -203,10 +249,9 @@ async function handleMatchRequeue(event, channel) {
 
         await createMatch(client, newMatchId, user_id, topic, difficulty);
 
-        // Write both outbox events inside the transaction
         await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.enter", {
-            event_id: uuidv5(`enter:${event_id}`, REQUEUE_NAMESPACE), // deterministic
-            match_id: newMatchId,
+            event_id:   enterEventId,
+            match_id:   newMatchId,
             user_id,
             topic,
             difficulty,
@@ -218,9 +263,8 @@ async function handleMatchRequeue(event, channel) {
         });
 
         await client.query("COMMIT");
-
         await redis.set(processedKey, "1", "EX", 3600);
-        console.log(`User ${user_id} requeued with new match_id ${newMatchId}`);
+        console.log(`User ${user_id} requeued with new match_id ${newMatchId} (difficulty=${difficulty})`);
 
     } catch (err) {
         await client.query("ROLLBACK");
@@ -229,5 +273,6 @@ async function handleMatchRequeue(event, channel) {
         client.release();
     }
 }
+
 
 startWorker();
