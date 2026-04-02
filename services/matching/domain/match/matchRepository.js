@@ -54,11 +54,11 @@ export async function updateMatchAcceptedByB(client, match_id) {
     );
 }
 
-export async function confirmMatch(client, match_id, difficulty) {
+export async function confirmMatch(client, match_id) {
     await client.query(
-        `UPDATE matches SET status = 'CONFIRMED', difficulty = $2, updated_at = NOW()
+        `UPDATE matches SET status = 'CONFIRMED', updated_at = NOW()
          WHERE match_id = $1 AND status = 'PROPOSED'`,
-        [match_id, difficulty]
+        [match_id]
     );
 }
 
