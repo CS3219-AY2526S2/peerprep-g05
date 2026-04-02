@@ -12,7 +12,7 @@ export function MatchConfirmedCard({ confirmedMatch, onPlayAgain }: Props) {
     <div className="w-full max-w-md">
       <div className="mb-6 text-center">
         <h1 className="text-3xl font-semibold text-slate-900">Match Confirmed</h1>
-        <p className="mt-1 text-slate-500">Both players accepted — your session is ready</p>
+        <p className="mt-1 text-slate-500">Both peers accepted — your session is ready</p>
       </div>
 
       <div className="rounded-xl bg-white px-8 py-7 shadow-sm border border-slate-200">
@@ -29,8 +29,8 @@ export function MatchConfirmedCard({ confirmedMatch, onPlayAgain }: Props) {
               </span>
             }
           />
-          <MatchInfoRow label="Player A"   value={confirmedMatch.userIdA} />
-          <MatchInfoRow label="Player B"   value={confirmedMatch.userIdB} />
+          <MatchInfoRow label="Peer A"   value={confirmedMatch.userIdA} />
+          <MatchInfoRow label="Peer B"   value={confirmedMatch.userIdB} />
           <MatchInfoRow label="Topic"      value={confirmedMatch.topic} />
           <MatchInfoRow label="Difficulty" value={<DifficultyBadge difficulty={confirmedMatch.difficulty} />} />
         </div>

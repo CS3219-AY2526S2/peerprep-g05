@@ -151,3 +151,14 @@ export async function getStaleWaitingMatches(timeout_mins) {
     );
     return rows;
 }
+
+export async function getMatchesNeedingRelaxation(relax_mins) {
+    const { rows } = await postgres.query(
+        `SELECT * FROM matches
+         WHERE status = 'WAITING'
+           AND difficulty != 'ANY'
+           AND created_at < NOW() - ($1 * INTERVAL '1 minute')`,
+        [relax_mins]
+    );
+    return rows;
+}
