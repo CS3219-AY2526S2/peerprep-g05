@@ -10,7 +10,7 @@ services:
     depends_on:
       - redis
     environment:
-      QUESTON_API_BASE_URL: ${QUESTION_API_BASE_URL}
+      QUESTION_API_BASE_URL: ${QUESTION_API_BASE_URL}
       REDIS_URL: "redis://redis:6379"
       EXPRESS_PORT: ${EXPRESS_PORT}
       NODE_ENV: production

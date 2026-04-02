@@ -50,6 +50,7 @@ export function CollaborativeEditor({ roomId }: { roomId: string }) {
     return () => {
       view.destroy();
       ydoc.destroy();
+      provider.destroy();
     };
   }, [roomId, userColor, displayName]);
 

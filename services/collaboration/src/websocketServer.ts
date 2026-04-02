@@ -17,6 +17,8 @@ type YDocWithAwareness = Y.Doc & { awareness: awareness.Awareness };
 // Define custom interface to track room on the socket
 interface CustomWebSocket extends WebSocket {
   room?: RoomKey;
+  clientId?: number;
+  awarenessClientIds?: Set<number>;
 }
 const wss = new WebSocketServer({ noServer: true });
 
@@ -71,22 +73,10 @@ const handleMessage = (
       }
       break;
     case MESSAGE_AWARENESS:
-      awareness.applyAwarenessUpdate(
-        doc.awareness,
-        decoding.readVarUint8Array(decoder),
-        conn,
-      );
-      break;
-  }
-};
+      const awarenessUpdate = decoding.readVarUint8Array(decoder);
 
-// Handle close connection
-const handleClose = (roomName: RoomKey) => {
-  const roomClients = Array.from(wss.clients as Set<CustomWebSocket>).filter(
-    (c) => c.room === roomName,
-  );
-  if (roomClients.length === 0) {
-    console.log(`Room ${roomName} is empty. Cleaning up...`);
+      awareness.applyAwarenessUpdate(doc.awareness, awarenessUpdate, conn);
+      break;
   }
 };
 
@@ -110,7 +100,7 @@ const handleAwarenessUpdate = (
   roomName: RoomKey,
   doc: YDocWithAwareness,
   clients: Array<number>,
-  origin: unknown,
+  origin: CustomWebSocket,
 ) => {
   const encodedUpdate = awareness.encodeAwarenessUpdate(doc.awareness, clients);
   const encoder = encoding.createEncoder();
@@ -118,10 +108,8 @@ const handleAwarenessUpdate = (
   encoding.writeVarUint(encoder, MESSAGE_AWARENESS);
   encoding.writeVarUint8Array(encoder, encodedUpdate);
 
-  awareness.applyAwarenessUpdate(doc.awareness, encodedUpdate, origin);
-
   const message = encoding.toUint8Array(encoder);
-  broadcastToRoom(roomName, message);
+  broadcastToRoom(roomName, message, origin);
 };
 
 // Initialize a Y.Doc for the room if it doesn't exist
@@ -141,9 +129,16 @@ const initDocForRoom = (roomName: RoomKey) => {
           updated,
           removed,
         }: { added: number[]; updated: number[]; removed: number[] },
-        origin: unknown,
+        origin: CustomWebSocket,
       ) => {
         const changedClients = added.concat(updated, removed);
+        if (origin instanceof WebSocket) {
+          const socket = origin as CustomWebSocket;
+          if (!socket.awarenessClientIds) {
+            socket.awarenessClientIds = new Set<number>();
+          }
+          changedClients.forEach((id) => socket.awarenessClientIds!.add(id));
+        }
         handleAwarenessUpdate(roomName, doc, changedClients, origin);
       },
     );
@@ -158,6 +153,18 @@ const initSyncForClient = (conn: CustomWebSocket, doc: YDocWithAwareness) => {
   encoding.writeVarUint(encoder, MESSAGE_SYNC);
   syncProtocol.writeSyncStep1(encoder, doc);
   conn.send(encoding.toUint8Array(encoder));
+
+  const awarenessStates = doc.awareness.getStates();
+  if (awarenessStates.size > 0) {
+    const awarenessUpdate = awareness.encodeAwarenessUpdate(
+      doc.awareness,
+      Array.from(awarenessStates.keys()),
+    );
+    const awarenessEncoder = encoding.createEncoder();
+    encoding.writeVarUint(awarenessEncoder, MESSAGE_AWARENESS);
+    encoding.writeVarUint8Array(awarenessEncoder, awarenessUpdate);
+    conn.send(encoding.toUint8Array(awarenessEncoder));
+  }
 };
 
 // Connection Logic
@@ -171,13 +178,22 @@ wss.on("connection", (conn: CustomWebSocket, req: IncomingMessage) => {
 
   // Initial Sync when user joins
   initSyncForClient(conn, doc);
+  if (!conn.awarenessClientIds) {
+    conn.awarenessClientIds = new Set<number>();
+  }
 
   conn.on("message", (data: Buffer) => {
     handleMessage(conn, doc, new Uint8Array(data));
   });
 
   conn.on("close", () => {
-    handleClose(roomName);
+    if (conn.awarenessClientIds && conn.awarenessClientIds.size > 0) {
+      awareness.removeAwarenessStates(
+        doc.awareness,
+        Array.from(conn.awarenessClientIds),
+        conn,
+      );
+    }
   });
 });
 export default wss;

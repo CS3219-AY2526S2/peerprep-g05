@@ -61,39 +61,6 @@ export default function Home() {
             </table>
           </div>
         )}
-        <div
-          className="hover:cursor-pointer"
-          onClick={() =>
-            fetch(
-              `${import.meta.env.VITE_COLLABORATIVE_API_BASE_URL}/collaboration`,
-              {
-                method: "POST",
-                body: JSON.stringify({
-                  // alice, abc
-                  users: [
-                    "0dcb3a6e-8038-4be0-802b-3401b397303a",
-                    "282dbeb3-6e73-42d8-9a74-c5dc6de13604",
-                  ],
-                  // users: ["", "2a"],
-                  questionId: Math.floor(Math.random() * 7).toString(),
-                }),
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              },
-            )
-              .then(async (res) => {
-                const r = await res.json();
-                console.log(r);
-                return r.sessionId;
-              })
-              .then((sessionId) => {
-                navigate(`/editor/${sessionId}`);
-              })
-          }
-        >
-          Create Editor
-        </div>
       </div>
     </div>
   );
