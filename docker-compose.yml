@@ -2,6 +2,132 @@ include:
   - ./services/collaboration/compose.yml
 
 services:
+  # ---------------- MATCHING SERVICE ----------------
+  postgres:
+    image: postgres:16
+    # container_name: matchmaking-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: matchdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./services/matching/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d matchdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - peerprep-network
+
+  redis:
+    image: redis
+    # container_name: matchmaking-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - peerprep-network
+
+  matchmaking-server:
+    build:
+      context: ./services/matching
+      dockerfile: Dockerfile
+    command: node server.js
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
+    ports:
+      - "3000:3000"
+    networks:
+      - peerprep-network
+
+
+  matching-worker:
+    build:
+      context: ./services/matching
+      dockerfile: Dockerfile
+    command: node workers/match_worker/worker.js
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
+    networks:
+      - peerprep-network
+
+
+  timeout-worker:
+    build:
+      context: ./services/matching
+      dockerfile: Dockerfile
+    command: node workers/timeout_worker/worker.js
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
+    networks:
+      - peerprep-network
+
+
+  outbox-worker:
+    build:
+      context: ./services/matching
+      dockerfile: Dockerfile
+    command: node workers/outbox/worker.js
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgresql://admin:admin@postgres:5432/matchdb
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MATCH_EXCHANGE: matchmaking.exchange
+      MATCH_EVENTS_EXCHANGE: match.events
+    networks:
+      - peerprep-network
+
   # ── Question Service ────────────────────────────────────────
   question-db:
     image: postgres:16-alpine
@@ -128,11 +254,11 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "status"]
-      interval: 10s
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 20s
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -161,10 +287,12 @@ services:
   # ---------------- WEBSOCKET SERVICE ----------------
   ws-service:
     build: ./backend/ws-Service
-    container_name: ws-service
+    # container_name: ws-service
     command: node server.js
+    restart: unless-stopped
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     environment:
       MATCH_EXCHANGE: matchmaking.exchange
       RABBITMQ_URL: amqp://rabbitmq:5672
@@ -179,6 +307,7 @@ services:
 
 
 volumes:
+  postgres_data:
   question_pgdata:
   user_pgdata:
 
