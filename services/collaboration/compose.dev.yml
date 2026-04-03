@@ -17,5 +17,5 @@ services:
         - path: compose.yml
           action: rebuild
 
-  redis:
+  collaboration-redis:
     restart: no

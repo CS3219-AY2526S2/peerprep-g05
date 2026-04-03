@@ -15,3 +15,16 @@ export async function getSessionInformation(
   }
   return await res.json();
 }
+
+export async function endSession(
+  roomId: string,
+  token: string,
+): Promise<boolean> {
+  const res = await fetch(
+    `${SESSION_API_BASE_URL}/collaboration/${roomId}?token=${token}`,
+    {
+      method: "DELETE",
+    },
+  );
+  return res.status === 200;
+}

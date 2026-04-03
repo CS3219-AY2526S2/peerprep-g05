@@ -21,7 +21,13 @@ const editorTheme = EditorView.theme({
   },
 });
 
-export function CollaborativeEditor({ roomId }: { roomId: string }) {
+export function CollaborativeEditor({
+  roomId,
+  onSessionEnded,
+}: {
+  roomId: string;
+  onSessionEnded?: () => void;
+}) {
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const { user, token } = useAuth();
 
@@ -33,6 +39,15 @@ export function CollaborativeEditor({ roomId }: { roomId: string }) {
     const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc, {
       params: { token: token || "" },
     });
+
+    const socket = provider.ws;
+    if (socket) {
+      socket.onclose = (event) => {
+        if (event.code === 4000) {
+          onSessionEnded?.();
+        }
+      };
+    }
 
     const ytext = ydoc.getText();
     provider.awareness.setLocalStateField("user", {
@@ -60,7 +75,7 @@ export function CollaborativeEditor({ roomId }: { roomId: string }) {
       ydoc.destroy();
       provider.destroy();
     };
-  }, [roomId, userColor, displayName]);
+  }, [roomId, userColor, displayName, onSessionEnded, token]);
 
   return (
     <div

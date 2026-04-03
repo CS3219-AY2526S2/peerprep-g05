@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getSessionInformation } from "../api/collaborationApi";
+import { useNavigate, useParams } from "react-router-dom";
+import { endSession, getSessionInformation } from "../api/collaborationApi";
 import { CollaborativeEditor } from "../components/collaborative/CollaborativeEditor";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
@@ -16,6 +16,7 @@ export default function CollaborativeEditorPage() {
   if (!roomId) {
     return <div>Room ID is required</div>;
   }
+  const navigate = useNavigate();
 
   useEffect(() => {
     getSessionInformation(roomId, token || "")
@@ -44,14 +45,31 @@ export default function CollaborativeEditorPage() {
   return (
     <div className="h-full">
       <div>
-        <div className="bg-red-500">End Session</div>
+        <div
+          className="red-button-class hover:cursor-pointer"
+          onClick={() => {
+            endSession(roomId, token || "").then((success) => {
+              if (!success) {
+                alert("Failed to end session.");
+              }
+              navigate("/");
+            });
+          }}
+        >
+          End Session
+        </div>
       </div>
 
       <div className="h-full grid grid-cols-2">
         <QuestionDescriptionPreview
           description={sessionInfo.descriptionContent}
         />
-        <CollaborativeEditor roomId={roomId} />
+        <CollaborativeEditor
+          roomId={roomId}
+          onSessionEnded={() => {
+            navigate("/");
+          }}
+        />
       </div>
     </div>
   );

@@ -51,6 +51,18 @@ const broadcastToRoom = (
   });
 };
 
+export const closeRoomConnections = (
+  roomName: RoomKey,
+  code = 4000,
+  reason = "SESSION_ENDED",
+) => {
+  wss.clients.forEach((client: CustomWebSocket) => {
+    if (client.readyState === WebSocket.OPEN && client.room === roomName) {
+      client.close(code, reason);
+    }
+  });
+};
+
 // Websocket Event Handlers
 // Handle new message
 const handleMessage = (

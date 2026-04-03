@@ -86,7 +86,7 @@ const markUserActiveSession = async (users: string[], sessionId: string) => {
   }
 
   // ensure that sessions are properly released in case of failure.
-  releaseUsersFromSession(users, sessionId);
+  await releaseUsersFromSession(users, sessionId);
   return false;
 };
 

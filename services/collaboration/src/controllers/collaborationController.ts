@@ -5,6 +5,7 @@ import {
   getSessions,
   type SessionStatus,
 } from "@/services/collaborationService.js";
+import { closeRoomConnections } from "@/websocketServer.js";
 import type { RequestHandler } from "express";
 import { jwtDecode } from "jwt-decode";
 import z from "zod";
@@ -84,5 +85,6 @@ export const getCollaborationSession: RequestHandler = async (_, res) => {
 export const endCollaborationSession: RequestHandler = async (_, res) => {
   const session = res.locals["session"] as CollaborationSessionType;
   await endSession(session.id);
+  closeRoomConnections(session.id);
   res.json({ message: "Session ended successfully" });
 };

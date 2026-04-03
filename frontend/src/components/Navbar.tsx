@@ -7,38 +7,48 @@ export default function Navbar() {
     const navigate = useNavigate();
 
     function handleLogout() {
-        logout();
-        navigate("/");
+      logout();
+      navigate("/");
     }
-    const navBtn = "rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white no-underline transition hover:bg-white/20";
 
     return (
-        <nav className="flex items-center justify-between bg-slate-900 px-6 py-3 text-slate-200">
-            <div className="flex items-center gap-6">
-                <Link to="/" className="text-xl font-bold text-white no-underline">PeerPrep</Link>
-                <div className="flex items-center gap-2">
-                    <Link to="/matching" className={navBtn}>
-                        Match
-                    </Link>
-                    <Link to="/questions" className={navBtn}>
-                        Questions
-                    </Link>
-                </div>
-            </div>
+      <nav className="flex items-center justify-between bg-slate-900 px-6 py-3 text-slate-200">
+        <div className="flex items-center gap-6">
+          <Link to="/" className="text-xl font-bold text-white no-underline">
+            PeerPrep
+          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/matching" className="nav-button">
+              Match
+            </Link>
+            <Link to="/questions" className="nav-button">
+              Questions
+            </Link>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-3">
-                {user ? (
-                    <>
-                        {isAdminRole(user.role) && (
-                            <Link to="/admin/users" className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25">Admin Users</Link>
-                        )}
-                        <span className="text-sm">Logged in as: <strong>{user.display_name || user.username}</strong></span>
-                        <button className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25" onClick={handleLogout}>Logout</button>
-                    </>
-                ) : (
-                    <Link to="/" className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25">Login</Link>
-                )}
-            </div>
-        </nav>
+        <div className="flex items-center gap-3">
+          {user ? (
+            <>
+              {isAdminRole(user.role) && (
+                <Link to="/admin/users" className="button-class">
+                  Admin Users
+                </Link>
+              )}
+              <span className="text-sm">
+                Logged in as:{" "}
+                <strong>{user.display_name || user.username}</strong>
+              </span>
+              <button className="button-class" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/" className="button-class">
+              Login
+            </Link>
+          )}
+        </div>
+      </nav>
     );
 }

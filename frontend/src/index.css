@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+.nav-button {
+  @apply rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white no-underline transition hover:bg-white/20;
+}
+
+.button-class {
+  @apply rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25;
+}
+
+.red-button-class {
+  @apply rounded border border-red-800 bg-red-400 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600;
+}
