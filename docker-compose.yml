@@ -108,7 +108,6 @@ services:
     networks:
       - peerprep-network
 
-
   outbox-worker:
     build:
       context: ./services/matching
