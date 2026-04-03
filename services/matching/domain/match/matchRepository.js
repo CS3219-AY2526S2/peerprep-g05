@@ -92,10 +92,11 @@ export async function proposeMatch(client, userA, userB, interval) {
         `UPDATE matches
          SET user_id_b = $1,
              status = 'PROPOSED',
+             difficulty = CASE WHEN difficulty != 'ANY' THEN difficulty ELSE $3 END,
              proposal_expiry = NOW() + INTERVAL '${interval} minutes',
              updated_at = NOW()
          WHERE match_id = $2 AND status = 'WAITING'`,
-        [userB.user_id, userA.match_id]
+        [userB.user_id, userA.match_id, userB.difficulty]
     );
     if (rowCount === 0) return false;
 

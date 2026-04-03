@@ -165,6 +165,8 @@ services:
       MATCH_EXCHANGE: matchmaking.exchange
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
+      QUESTION_SERVICE_URL: http://question-service:3002
+
     ports:
       - "4001:4001"
     networks:

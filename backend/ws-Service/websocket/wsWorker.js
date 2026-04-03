@@ -21,6 +21,7 @@ export async function startWsWorker() {
     await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.cancelled");
     await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.timeout");
     await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.confirmed");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "question.assigned");
 
     channel.consume(queue.queue, async (msg) => {
         if (!msg) return;
@@ -88,7 +89,8 @@ export async function startWsWorker() {
                     break;
                 //Both users accepted
                 case "match.confirmed":
-                    clearUserMatchContext(event.user_id);
+                    clearUserMatchContext(event.user_id_a);
+                    clearUserMatchContext(event.user_id_b);
                     sendToUser(event.user_id_a, { 
                         type: "MATCH_CONFIRMED", 
                         match_id: event.match_id,
@@ -104,6 +106,22 @@ export async function startWsWorker() {
                         user_id_b: event.user_id_b,
                         topic: event.topic,
                         difficulty: event.difficulty
+                    });
+                    break;
+                case "question.assigned":
+                    sendToUser(event.user_id_a, {
+                        type: "QUESTION_ASSIGNED",
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
+                        match_id: event.match_id,
+                        question_id: event.question_id
+                    });
+                    sendToUser(event.user_id_b, {
+                        type: "QUESTION_ASSIGNED",
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
+                        match_id: event.match_id,
+                        question_id: event.question_id
                     });
                     break;
             }

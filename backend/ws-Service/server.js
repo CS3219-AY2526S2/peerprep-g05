@@ -3,6 +3,7 @@ import http from "http";
 import { createChannel } from "./websocket/rabbitmq/client.js";
 import { createWsServer } from "./websocket/wsServer.js";
 import { startWsWorker } from "./websocket/wsWorker.js";
+import { startQuestionWorker } from "./websocket/fetchQuestionWorker.js";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ createWsServer(server, channel);
 
 // RabbitMQ consumer
 await startWsWorker();
+await startQuestionWorker();
 
 const PORT = process.env.PORT || 4001;
 

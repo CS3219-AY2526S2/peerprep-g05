@@ -4,6 +4,7 @@ import {
   STATE, type FSMState,
   type Difficulty,
   type MatchInfo, type ProposedMatch, type ConfirmedMatch,
+  QuestionMatchInfo,
 } from "../utils/types";
 import { useTimer } from "./useTimer";
 
@@ -14,6 +15,7 @@ export function useMatchmaking() {
   const [matchInfo,      setMatchInfo]      = useState<MatchInfo | null>(null);
   const [proposedMatch,  setProposedMatch]  = useState<ProposedMatch | null>(null);
   const [confirmedMatch, setConfirmedMatch] = useState<ConfirmedMatch | null>(null);
+  const [questionMatch, setQuestionMatch] = useState<QuestionMatchInfo | null>(null);
   const [accepted,       setAccepted]       = useState(false);
 
   const ws = useRef<WebSocket | null>(null);
@@ -62,6 +64,15 @@ export function useMatchmaking() {
         setAccepted(false);
         setError("Match proposal timed out.");
         setFsm(STATE.IDLE);
+        break;
+      case "QUESTION_ASSIGNED":
+        setQuestionMatch({
+          matchId: msg.match_id,
+          userIdA: msg.user_id_a,
+          userIdB: msg.user_id_b,
+          questionId: msg.question_id,
+        });
+        console.log("Received question assignment", msg);
         break;
     }
   }, [matchInfo, resetTimer, disconnectWs]);
@@ -163,7 +174,7 @@ export function useMatchmaking() {
 
   return {
     fsm, error, loading, elapsedFmt,
-    matchInfo, proposedMatch, confirmedMatch, accepted,
+    matchInfo, proposedMatch, confirmedMatch, accepted, questionMatch,
     findMatch, cancel, accept, decline, reset,
   };
 }

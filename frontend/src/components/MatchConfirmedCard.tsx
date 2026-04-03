@@ -1,13 +1,15 @@
-import { type ConfirmedMatch } from "../utils/types";
+import { type ConfirmedMatch, QuestionMatchInfo } from "../utils/types";
 import { MatchInfoRow } from "./MatchInfoRow";
 import { DifficultyBadge } from "./DifficultyBadge";
 
 interface Props {
   confirmedMatch: ConfirmedMatch;
+  questionMatch: QuestionMatchInfo | null;
   onPlayAgain:    () => void;
 }
 
-export function MatchConfirmedCard({ confirmedMatch, onPlayAgain }: Props) {
+export function MatchConfirmedCard({ confirmedMatch, questionMatch, onPlayAgain }: Props) {
+
   return (
     <div className="w-full max-w-md">
       <div className="mb-6 text-center">
@@ -33,6 +35,14 @@ export function MatchConfirmedCard({ confirmedMatch, onPlayAgain }: Props) {
           <MatchInfoRow label="Peer B"   value={confirmedMatch.userIdB} />
           <MatchInfoRow label="Topic"      value={confirmedMatch.topic} />
           <MatchInfoRow label="Difficulty" value={<DifficultyBadge difficulty={confirmedMatch.difficulty} />} />
+          <MatchInfoRow
+            label="Question ID"
+            value={
+              questionMatch?.questionId
+                ? <span className="font-mono text-xs text-slate-500">{questionMatch.questionId}</span>
+                : <span className="text-sm italic text-slate-400">Waiting for question assignment...</span>
+            }
+          />
         </div>
 
         <button

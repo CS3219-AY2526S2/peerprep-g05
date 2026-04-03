@@ -8,7 +8,7 @@ import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
 export default function Matching() {
   const {
     fsm, error, loading, elapsedFmt,
-    matchInfo, proposedMatch, confirmedMatch, accepted,
+    matchInfo, proposedMatch, confirmedMatch, accepted, questionMatch,
     findMatch, cancel, accept, decline, reset,
   } = useMatchmaking();
 
@@ -25,7 +25,7 @@ export default function Matching() {
       )}
 
       {fsm === STATE.CONFIRMED && confirmedMatch && (
-        <MatchConfirmedCard confirmedMatch={confirmedMatch} onPlayAgain={reset} />
+        <MatchConfirmedCard confirmedMatch={confirmedMatch} questionMatch={questionMatch} onPlayAgain={reset}/>
       )}
 
       {showModal && proposedMatch && matchInfo && (

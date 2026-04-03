@@ -17,6 +17,7 @@ export const STATE = {
   QUEUING:   "queuing",
   PROPOSED:  "proposed",
   CONFIRMED: "confirmed",
+  FOUND:    "found",
 } as const;
 export type FSMState = typeof STATE[keyof typeof STATE];
 
@@ -38,6 +39,13 @@ export interface ConfirmedMatch {
   userIdB:    string;
   topic:      string;
   difficulty: Difficulty;
+}
+
+export interface QuestionMatchInfo {
+  matchId:    string;
+  userIdA:    string;
+  userIdB:    string;
+  questionId: string;
 }
 
 export const difficultyColor: Record<Difficulty, string> = {
