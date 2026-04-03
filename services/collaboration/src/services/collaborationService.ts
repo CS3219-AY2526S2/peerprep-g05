@@ -35,6 +35,17 @@ const getSessionKey = (sessionId: string) =>
 const getUserActiveSessionKey = (userId: string) =>
   `${USER_ACTIVE_SESSION_KEY_PREFIX}${userId}`;
 
+const getActiveSessionIdsForUsers = async (userIds: string[]) => {
+  const sessionIds = await Promise.all(
+    userIds.map((userId) => redisClient.get(getUserActiveSessionKey(userId))),
+  );
+  return [
+    ...new Set(
+      sessionIds.filter((sessionId): sessionId is string => sessionId !== null),
+    ),
+  ];
+};
+
 /**
  * Atomically mark all users as active. Fails after 3 retries or if any user has an active session.
  *
@@ -42,62 +53,57 @@ const getUserActiveSessionKey = (userId: string) =>
  * @param sessionId sessionId for the session they are active in
  * @return boolean indicating if the operation was successful.
  */
-const markUserActiveSession = async (users: string[], sessionId: string) => {
-  if (users.length === 0) {
-    return true;
-  }
+// const markUserActiveSession = async (users: string[], sessionId: string) => {
+//   if (users.length === 0) {
+//     return true;
+//   }
 
-  // retry 3 times only,
-  for (let i = 0; i < 3; i++) {
-    const userSessionKeys = users.map((userId) =>
-      getUserActiveSessionKey(userId),
-    );
-    // watch all the affected key for changes
-    redisClient.watch(userSessionKeys);
-    const redisClientMulti = redisClient.multi();
+//   // retry 3 times only,
+//   for (let i = 0; i < 3; i++) {
+//     const userSessionKeys = users.map((userId) =>
+//       getUserActiveSessionKey(userId),
+//     );
+//     // watch all the affected key for changes
+//     redisClient.watch(userSessionKeys);
+//     const redisClientMulti = redisClient.multi();
 
-    // check if any user has an active session
-    userSessionKeys.forEach((key) => redisClientMulti.exists(key));
-    const result = redisClientMulti.exec().then((results) => {
-      const hasActiveSession = !results.every(
-        (result) => (result as unknown as number) === 0,
-      );
-      if (hasActiveSession) {
-        return false;
-      }
-      // mark all active session
-      const result = redisClient
-        .multi()
-        .mSet(
-          Object.fromEntries(userSessionKeys.map((key) => [key, sessionId])),
-        )
-        .exec();
-      if (result !== null) {
-        return true;
-      } else {
-        return false;
-      }
-    });
+//     // check if any user has an active session
+//     userSessionKeys.forEach((key) => redisClientMulti.exists(key));
+//     const result = redisClientMulti.exec().then((results) => {
+//       const hasActiveSession = !results.every(
+//         (result) => (result as unknown as number) === 0,
+//       );
+//       if (hasActiveSession) {
+//         return false;
+//       }
+//       // mark all active session
+//       const result = redisClient
+//         .multi()
+//         .mSet(
+//           Object.fromEntries(userSessionKeys.map((key) => [key, sessionId])),
+//         )
+//         .exec();
+//       if (result !== null) {
+//         return true;
+//       } else {
+//         return false;
+//       }
+//     });
 
-    redisClient.unwatch();
-    if (await result) {
-      return true;
-    }
-  }
+//     redisClient.unwatch();
+//     if (await result) {
+//       return true;
+//     }
+//   }
 
-  // ensure that sessions are properly released in case of failure.
-  await releaseUsersFromSession(users, sessionId);
-  return false;
-};
+//   // ensure that sessions are properly released in case of failure.
+//   await releaseUsersFromSession(users, sessionId);
+//   return false;
+// };
 
 const filterUserWithActiveSession = async (userIds: string[]) => {
-  const results = await Promise.all(
-    userIds.map((_id) => redisClient.exists(getUserActiveSessionKey(_id))),
-  );
-  const a = userIds.filter(
-    (_, index) => (results[index] as unknown as number) === 1,
-  );
-  return a;
+  const activeSessionIds = await getActiveSessionIdsForUsers(userIds);
+  return activeSessionIds;
 };
 
 const releaseUsersFromSession = async (users: string[], sessionId: string) => {
@@ -121,16 +127,12 @@ const releaseUsersFromSession = async (users: string[], sessionId: string) => {
       const activeSessions = results.map(
         (result) => (result as unknown as string) === sessionId,
       );
-      const delResults = await redisClient
-        .multi()
-        .del(
-          activeSessions
-            .map((isActive, index) =>
-              isActive ? userSessionKeys[index] : null,
-            )
-            .filter((key): key is string => key !== null),
-        )
-        .exec();
+      const delMulti = redisClient.multi();
+      activeSessions
+        .map((isActive, index) => (isActive ? userSessionKeys[index] : null))
+        .filter((key): key is string => key !== null)
+        .forEach((key) => delMulti.del(key));
+      const delResults = await delMulti.exec();
       if (delResults === null) {
         // watched key changed, retry
         continue;
@@ -188,15 +190,24 @@ export const createSession = async (users: string[], questionId: string) => {
   }
   // check if there are active session for any user, if yes, return conflict error
   if ((await filterUserWithActiveSession(users)).length > 0) {
-    throw new Error("One or more users already have an active session");
+    // TODO: proper error message for the user session
+    // For now, just release all sessions.
+    const activeSessionIds = await filterUserWithActiveSession(users);
+    await Promise.all(
+      activeSessionIds.map(async (sessionId) => {
+        await releaseUsersFromSession(users, sessionId);
+      }),
+    );
+    // throw new Error("One or more users already have an active session");
   }
 
+  // TODO: proper check for active session
   const newSessionId = randomUUID();
-  if (!(await markUserActiveSession(users, newSessionId))) {
-    throw new Error(
-      "Failed to mark users as active for the session. Please try again.",
-    );
-  }
+  // if (!(await markUserActiveSession(users, newSessionId))) {
+  //   throw new Error(
+  //     "Failed to mark users as active for the session. Please try again.",
+  //   );
+  // }
 
   try {
     // fetch question

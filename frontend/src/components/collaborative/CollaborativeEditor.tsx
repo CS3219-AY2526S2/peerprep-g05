@@ -8,7 +8,7 @@ import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { useAuth } from "../../context/AuthContext.tsx";
 
-const WEBSOCKET_URL = import.meta.env.VITE_WEBSOCKET_URL;
+const WEBSOCKET_URL = import.meta.env.VITE_COLLAB_WEBSOCKET_URL;
 if (!WEBSOCKET_URL) {
   throw new Error(
     "VITE_WEBSOCKET_URL is not set. Define it in the frontend .env file.",
