@@ -1,6 +1,7 @@
 import { CollaborationSession } from "../types/EditorSession";
+import { GATEWAY_URL } from "../utils/types";
 
-const SESSION_API_BASE_URL = import.meta.env.VITE_COLLABORATIVE_API_BASE_URL;
+const SESSION_API_BASE_URL = `${GATEWAY_URL}/api/v1`;
 
 export async function getSessionInformation(
   roomId: string,

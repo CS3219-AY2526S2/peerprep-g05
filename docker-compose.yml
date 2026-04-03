@@ -150,6 +150,7 @@ services:
       MATCHING_SERVICE_URL: http://matchmaking-server:3000
       QUESTION_SERVICE_URL: http://question-service:3002
       USER_SERVICE_URL: http://user-service:3001
+      COLLAB_SERVICE_URL: http://collaboration-server:3003
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
@@ -168,6 +169,9 @@ services:
       MATCH_EXCHANGE: matchmaking.exchange
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
+      COLLAB_SERVICE_URL: http://collaboration-server:3003
+      QUESTION_SERVICE_URL: http://question-service:3002
+
     ports:
       - "4001:4001"
     networks:

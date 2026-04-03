@@ -86,9 +86,31 @@ function initProxyRoutes() {
             return `/api/v1/questions${path}`;
         },
         on: {
+            proxyReq: (proxyReq, req, res) => {
+                console.log("➡️ Incoming:", req.method, req.originalUrl);
+                console.log("➡️ Forwarding to:", proxyReq.path);
+            },
             error: (err, req, res) => {
                 console.error("[Proxy] questions:", err.message);
                 res.status(502).json({ error: "Question service unavailable" });
+            }
+        }
+    }));
+
+    app.use("/api/v1/collaboration", createProxyMiddleware({
+        target: process.env.COLLAB_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite: (path, req) => {
+            return `/api/v1/collaboration${path}`;
+        },
+        on: {
+            proxyReq: (proxyReq, req, res) => {
+                console.log("➡️ Incoming:", req.method, req.originalUrl);
+                console.log("➡️ Forwarding to:", proxyReq.path);
+            },
+            error: (err, req, res) => {
+                console.error("[Proxy] collaboration:", err.message);
+                res.status(502).json({ error: "Collaboration service unavailable" });
             }
         }
     }));
