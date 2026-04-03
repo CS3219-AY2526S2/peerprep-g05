@@ -6,6 +6,7 @@ import {
   type SessionStatus,
 } from "@/services/collaborationService.js";
 import type { RequestHandler } from "express";
+import { jwtDecode } from "jwt-decode";
 import z from "zod";
 
 export const getCollaborationSessions: RequestHandler = async (req, res) => {
@@ -52,7 +53,6 @@ export const createCollaborationSession: RequestHandler = async (req, res) => {
     });
     return;
   }
-    
 };
 
 type CollaborationSessionType = NonNullable<
@@ -64,6 +64,15 @@ export const checkSessionIdExists: RequestHandler = async (req, res, next) => {
   if (!session) {
     res.status(404).json({ error: "Session not found" });
     return;
+  }
+  // check if user is part of the session
+  const token = req.query["token"] as string | undefined;
+  if (token) {
+    const decodedToken = jwtDecode(token);
+    if (decodedToken.sub && !session.users.includes(decodedToken.sub)) {
+      res.status(403).json({ error: "User is not part of the session" });
+      return;
+    }
   }
   res.locals["session"] = session;
   next();

@@ -5,12 +5,14 @@
  * The MIT License (MIT) https://github.com/yjs/y-websocket-server/blob/main/LICENSE
  */
 import type { IncomingMessage } from "http";
+import { jwtDecode } from "jwt-decode";
 import * as decoding from "lib0/decoding";
 import * as encoding from "lib0/encoding";
 import { WebSocket, WebSocketServer } from "ws";
 import * as awareness from "y-protocols/awareness";
 import * as syncProtocol from "y-protocols/sync";
 import * as Y from "yjs";
+import { getSessionById } from "./services/collaborationService.js";
 
 type RoomKey = string;
 type YDocWithAwareness = Y.Doc & { awareness: awareness.Awareness };
@@ -169,8 +171,31 @@ const initSyncForClient = (conn: CustomWebSocket, doc: YDocWithAwareness) => {
 
 // Connection Logic
 wss.on("connection", (conn: CustomWebSocket, req: IncomingMessage) => {
-  const roomName = req.url?.split("/").pop()!;
+  const roomName = req.url?.split("/").pop()!.split("?")[0]!;
   conn.room = roomName;
+  // parse jwt token
+  const token = new URLSearchParams(req.url?.split("?")[1]).get("token");
+  const decodedToken = jwtDecode(token || "");
+  if (decodedToken.sub) {
+    console.log(`User ${decodedToken.sub} connected to room ${roomName}`);
+  }
+  getSessionById(roomName).then((session) => {
+    if (!session) {
+      console.log(`Session ${roomName} not found, closing connection`);
+      conn.close();
+      return;
+    }
+
+    // if every user isn't in the session, close the connection
+    // if (session.users.every((userId) => userId !== decodedToken.sub)) {
+    if (!session.users.includes(decodedToken.sub || "")) {
+      console.log(
+        `User ${decodedToken.sub} is not part of the session ${roomName}, closing connection`,
+      );
+      conn.close();
+      return;
+    }
+  });
 
   // Initialize Doc for the room if it doesn't exist
   initDocForRoom(roomName);

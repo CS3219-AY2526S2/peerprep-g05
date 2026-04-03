@@ -23,14 +23,16 @@ const editorTheme = EditorView.theme({
 
 export function CollaborativeEditor({ roomId }: { roomId: string }) {
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const displayName = user?.display_name || user?.username || "Anonymous";
   const userColor = "#0fa0ff";
 
   useEffect(() => {
     const ydoc = new Y.Doc();
-    const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc);
+    const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc, {
+      params: { token: token || "" },
+    });
 
     const ytext = ydoc.getText();
     provider.awareness.setLocalStateField("user", {
