@@ -1,6 +1,5 @@
 import { useAuth } from "../context/AuthContext.tsx";
 import AuthOverlay from "../components/AuthOverlay.tsx";
-import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -12,7 +11,6 @@ export default function Home() {
       </div>
     );
   }
-  const navigate = useNavigate();
 
   return (
     <div className="relative flex min-h-[calc(100vh-52px)] items-center justify-center">

@@ -86,6 +86,16 @@ const markUserActiveSession = async (users: string[], sessionId: string) => {
   return false;
 };
 
+const filterUserWithActiveSession = async (userIds: string[]) => {
+  const results = await Promise.all(
+    userIds.map((_id) => redisClient.exists(getUserActiveSessionKey(_id))),
+  );
+  const a = userIds.filter(
+    (_, index) => (results[index] as unknown as number) === 1,
+  );
+  return a;
+};
+
 const releaseUsersFromSession = async (users: string[], sessionId: string) => {
   if (users.length === 0) {
     return true;
@@ -157,10 +167,16 @@ export const createSession = async (users: string[], questionId: string) => {
   if (uniqueUsers.length !== users.length) {
     throw new Error("Users in a collaboration session must be unique");
   }
+  // check if there are active session for any user, if yes, return conflict error
+  if ((await filterUserWithActiveSession(users)).length > 0) {
+    throw new Error("One or more users already have an active session");
+  }
 
   const newSessionId = randomUUID();
-  if (await markUserActiveSession(users, newSessionId)) {
-    return null;
+  if (!(await markUserActiveSession(users, newSessionId))) {
+    throw new Error(
+      "Failed to mark users as active for the session. Please try again.",
+    );
   }
 
   try {

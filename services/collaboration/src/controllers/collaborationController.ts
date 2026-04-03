@@ -35,16 +35,24 @@ export const createCollaborationSession: RequestHandler = async (req, res) => {
     res.status(400).json({ errors: errorMessage });
     return;
   }
-  const { users, questionId } = parsedBody.data;
+  try {
+    const { users, questionId } = parsedBody.data;
     const session = await createSession(users, questionId);
     if (session == null) {
-      res
-        .status(409)
-        .json({ error: "One or more users are already in an active session" });
-      return;
+      throw new Error("Error creating session.");
     }
-
     res.json({ sessionId: session.id });
+  } catch (error) {
+    console.error(
+      "Error creating session: ",
+      error instanceof Error ? error.message : error,
+    );
+    res.status(409).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    return;
+  }
+    
 };
 
 type CollaborationSessionType = NonNullable<
