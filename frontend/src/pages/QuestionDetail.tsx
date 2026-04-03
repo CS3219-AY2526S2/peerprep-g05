@@ -52,7 +52,7 @@ export default function QuestionDetail() {
         if (!id) return;
         setDeleting(true);
         try {
-            await qApi.deleteQuestion(id);
+            await qApi.deleteQuestion(id, token || undefined);
             navigate("/questions");
         } catch (err) {
             setError((err as QuestionApiError).data?.error || "Failed to delete question");

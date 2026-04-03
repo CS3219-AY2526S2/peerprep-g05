@@ -77,6 +77,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     return data as T;
 }
 
+function authHeader(token?: string): HeadersInit {
+    return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 function asStringArray(value: unknown): string[] {
     if (!Array.isArray(value)) return [];
     return value.filter((v): v is string => typeof v === "string");
@@ -140,9 +144,10 @@ export interface QuestionBody {
     test_cases?: Omit<TestCase, "id" | "question_id" | "order_index">[];
 }
 
-export function createQuestion(body: QuestionBody) {
+export function createQuestion(body: QuestionBody, token?: string) {
     return request<SingleResponse<RawQuestion>>("/questions", {
         method: "POST",
+        headers: authHeader(token),
         body: JSON.stringify({
             ...body,
             topics: body.topics,
@@ -153,10 +158,16 @@ export function createQuestion(body: QuestionBody) {
     }));
 }
 
-export function updateQuestion(id: number | string, body: Partial<QuestionBody>, lockHolder?: string) {
-    const headers: HeadersInit = lockHolder
-        ? { "x-lock-holder": lockHolder }
-        : {};
+export function updateQuestion(
+    id: number | string,
+    body: Partial<QuestionBody>,
+    lockHolder?: string,
+    token?: string
+) {
+    const headers: HeadersInit = {
+        ...authHeader(token),
+        ...(lockHolder ? { "x-lock-holder": lockHolder } : {}),
+    };
 
     return request<SingleResponse<RawQuestion>>(`/questions/${id}`, {
         method: "PUT",
@@ -171,9 +182,10 @@ export function updateQuestion(id: number | string, body: Partial<QuestionBody>,
     }));
 }
 
-export function deleteQuestion(id: number | string) {
+export function deleteQuestion(id: number | string, token?: string) {
     return request<{ success: boolean; message: string }>(`/questions/${id}`, {
         method: "DELETE",
+        headers: authHeader(token),
     });
 }
 
@@ -191,16 +203,18 @@ export function getCompanies() {
 
 // ── Locks ─────────────────────────────────────────────
 
-export function acquireLock(id: number | string, lockedBy: string) {
+export function acquireLock(id: number | string, lockedBy: string, token?: string) {
     return request<SingleResponse<QuestionLock>>(`/questions/${id}/lock`, {
         method: "POST",
+        headers: authHeader(token),
         body: JSON.stringify({ locked_by: lockedBy }),
     });
 }
 
-export function releaseLock(id: number | string, lockedBy: string) {
+export function releaseLock(id: number | string, lockedBy: string, token?: string) {
     return request<{ success: boolean; message: string }>(`/questions/${id}/lock`, {
         method: "DELETE",
+        headers: authHeader(token),
         body: JSON.stringify({ locked_by: lockedBy }),
     });
 }

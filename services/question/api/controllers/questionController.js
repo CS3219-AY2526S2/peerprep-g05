@@ -1,12 +1,14 @@
 import { pool } from "../../infrastructure/postgres/client.js";
+import {
+    fetchRequesterProfile,
+    isPrivilegedRequester,
+} from "../utils/requesterAuth.js";
 
 const VALID_COMPLEXITIES = ["Easy", "Medium", "Hard"];
 const TITLE_MAX_LENGTH = 255;
 const DESCRIPTION_MAX_LENGTH = 10000;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
-const PRIVILEGED_ROLES = new Set(["ADMIN", "MASTER_ADMIN"]);
-const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL || "http://localhost:3001/api/v1";
 
 /**
  * Build an absolute pagination URL while preserving existing query filters.
@@ -142,40 +144,6 @@ async function fetchTestCases(questionIds, includePrivate = false) {
         (map[row.question_id] ||= []).push(row);
     }
     return map;
-}
-
-function getBearerToken(req) {
-    const authHeader = req.get("authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) return null;
-    const token = authHeader.slice(7).trim();
-    return token || null;
-}
-
-async function fetchRequesterProfile(req) {
-    const token = getBearerToken(req);
-    if (!token) return null;
-
-    try {
-        const res = await fetch(`${USER_SERVICE_BASE_URL}/users/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) return null;
-        const user = await res.json().catch(() => null);
-        if (!user?.id) return null;
-
-        return {
-            id: String(user.id),
-            role: String(user.role || "").toUpperCase(),
-        };
-    } catch {
-        return null;
-    }
-}
-
-async function isPrivilegedRequester(req) {
-    const requester = await fetchRequesterProfile(req);
-    return requester ? PRIVILEGED_ROLES.has(requester.role) : false;
 }
 
 async function questionExists(questionId) {

@@ -59,7 +59,7 @@ export default function QuestionEditor() {
             setError("");
             try {
                 // Acquire lock first
-                await qApi.acquireLock(id!, lockHolder);
+                await qApi.acquireLock(id!, lockHolder, token || undefined);
                 lockAcquired.current = true;
 
                 const res = await qApi.getQuestionById(id!, token || undefined);
@@ -95,10 +95,10 @@ export default function QuestionEditor() {
     const releaseLockRef = useCallback(() => {
         if (isEdit && id && lockAcquired.current) {
             // Fire-and-forget release
-            qApi.releaseLock(id, lockHolder).catch(() => {});
+            qApi.releaseLock(id, lockHolder, token || undefined).catch(() => {});
             lockAcquired.current = false;
         }
-    }, [id, isEdit, lockHolder]);
+    }, [id, isEdit, lockHolder, token]);
 
     useEffect(() => {
         // On unmount, release lock
@@ -165,13 +165,13 @@ export default function QuestionEditor() {
                     return;
                 }
 
-                await qApi.updateQuestion(id, body, lockHolder);
+                await qApi.updateQuestion(id, body, lockHolder, token || undefined);
                 // Release lock after successful save
-                await qApi.releaseLock(id, lockHolder).catch(() => {});
+                await qApi.releaseLock(id, lockHolder, token || undefined).catch(() => {});
                 lockAcquired.current = false;
                 navigate(`/questions/${id}`);
             } else {
-                const res = await qApi.createQuestion(body);
+                const res = await qApi.createQuestion(body, token || undefined);
                 navigate(`/questions/${res.data.id}`);
             }
         } catch (err) {
