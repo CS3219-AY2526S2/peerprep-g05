@@ -114,6 +114,7 @@ export async function startWsWorker() {
                         user_id_a: event.user_id_a,
                         user_id_b: event.user_id_b,
                         match_id: event.match_id,
+                        session_id: event.session_id,
                         question_id: event.question_id
                     });
                     sendToUser(event.user_id_b, {
@@ -121,6 +122,7 @@ export async function startWsWorker() {
                         user_id_a: event.user_id_a,
                         user_id_b: event.user_id_b,
                         match_id: event.match_id,
+                        session_id: event.session_id,
                         question_id: event.question_id
                     });
                     break;

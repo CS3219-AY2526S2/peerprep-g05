@@ -4,13 +4,24 @@ import { MatchFormCard } from "../components/MatchFormCard";
 import { QueuingCard } from "../components/QueuingCard";
 import { MatchProposedModal } from "../components/MatchProposedModal";
 import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Matching() {
+  const navigate = useNavigate();
+
   const {
     fsm, error, loading, elapsedFmt,
     matchInfo, proposedMatch, confirmedMatch, accepted, questionMatch,
-    findMatch, cancel, accept, decline, reset,
+    findMatch, cancel, accept, decline, reset, disconnectWs
   } = useMatchmaking();
+
+  useEffect(() => {
+    if (questionMatch?.sessionId) {
+      disconnectWs?.();
+      navigate(`/editor/${questionMatch.sessionId}`);
+    }
+  }, [questionMatch, navigate]);
 
   const showModal = fsm !== STATE.CONFIRMED && proposedMatch != null;
 

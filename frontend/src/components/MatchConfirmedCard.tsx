@@ -49,6 +49,14 @@ export function MatchConfirmedCard({ confirmedMatch, questionMatch, onPlayAgain 
                 : <span className="text-sm italic text-slate-400">Waiting for question assignment...</span>
             }
           />
+          <MatchInfoRow
+            label="Session ID"
+            value={
+              questionMatch?.sessionId
+                ? <span className="font-mono text-xs text-slate-500">{questionMatch.sessionId}</span>
+                : <span className="text-sm italic text-slate-400">Waiting for session assignment...</span>
+            }
+          />
         </div>
 
         <button

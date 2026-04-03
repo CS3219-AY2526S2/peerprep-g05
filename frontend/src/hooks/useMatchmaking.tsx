@@ -70,9 +70,9 @@ export function useMatchmaking() {
           matchId: msg.match_id,
           userIdA: msg.user_id_a,
           userIdB: msg.user_id_b,
+          sessionId: msg.session_id,
           questionId: msg.question_id,
         });
-        console.log("Received question assignment", msg);
         break;
     }
   }, [matchInfo, resetTimer, disconnectWs]);
@@ -175,6 +175,6 @@ export function useMatchmaking() {
   return {
     fsm, error, loading, elapsedFmt,
     matchInfo, proposedMatch, confirmedMatch, accepted, questionMatch,
-    findMatch, cancel, accept, decline, reset,
+    findMatch, cancel, accept, decline, reset, disconnectWs
   };
 }

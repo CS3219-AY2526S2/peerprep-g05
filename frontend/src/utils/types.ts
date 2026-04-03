@@ -45,6 +45,7 @@ export interface QuestionMatchInfo {
   matchId:    string;
   userIdA:    string;
   userIdB:    string;
+  sessionId: string;
   questionId: string;
 }
 

@@ -19,6 +19,32 @@ export async function startQuestionWorker() {
 
     try {
       const question = await fetchSingleQuestion(event.topic, event.difficulty);
+      let sessionId = null;
+
+      if (question?.id) {
+        try {
+          console.log(question.id);
+          const url = `${process.env.COLLAB_SERVICE_URL}/api/v1/collaboration/`;
+          const session = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              users: [event.user_id_a, event.user_id_b],
+              questionId: question.id.toString(),
+            }),
+          });
+          if (!session.ok) {
+            console.warn(`Collaboration service returned status ${session.status}`);
+          } else {
+            const data = await session.json();
+            sessionId = data.sessionId;
+            console.log("sessionId:", sessionId);
+          }
+        } catch (err) {
+          sessionId = null;
+          console.error("Error creating collaboration session:", err);
+        }
+      } 
 
       channel.publish(
         process.env.MATCH_EVENTS_EXCHANGE,
@@ -27,6 +53,7 @@ export async function startQuestionWorker() {
           match_id: event.match_id,
           user_id_a: event.user_id_a,
           user_id_b: event.user_id_b,
+          session_id: sessionId ?? null,
           question_id: question?.id ?? null,
         }))
       );
@@ -52,6 +79,7 @@ async function fetchSingleQuestion(topic, difficulty) {
     } else {
         url = `${process.env.QUESTION_SERVICE_URL}/api/v1/questions?category=${encodeURIComponent(topic)}&complexity=${encodeURIComponent(difficulty)}&limit=1`;
     }
+    console.log(url);
   
   try {
     const res = await fetch(url);
