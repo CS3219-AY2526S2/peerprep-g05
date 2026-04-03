@@ -1,3 +1,6 @@
+include:
+  - ./services/collaboration/compose.yml
+
 services:
   # ── Question Service ────────────────────────────────────────
   question-db:
