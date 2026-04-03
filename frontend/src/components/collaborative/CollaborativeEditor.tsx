@@ -3,6 +3,7 @@ import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { useEffect, useRef } from "react";
 import { yCollab } from "y-codemirror.next";
+import { python } from "@codemirror/lang-python";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { useAuth } from "../../context/AuthContext.tsx";
@@ -39,7 +40,12 @@ export function CollaborativeEditor({ roomId }: { roomId: string }) {
 
     const state = EditorState.create({
       doc: ytext.toString(),
-      extensions: [basicSetup, editorTheme, yCollab(ytext, provider.awareness)],
+      extensions: [
+        basicSetup,
+        editorTheme,
+        yCollab(ytext, provider.awareness),
+        python(),
+      ],
     });
 
     const view = new EditorView({
