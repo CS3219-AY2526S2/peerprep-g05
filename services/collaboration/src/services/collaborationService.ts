@@ -75,14 +75,18 @@ const markUserActiveSession = async (users: string[], sessionId: string) => {
       if (result !== null) {
         return true;
       } else {
-        // if result is null, it means watched keys are changed, retry
         return false;
       }
     });
+
+    redisClient.unwatch();
     if (await result) {
       return true;
     }
   }
+
+  // ensure that sessions are properly released in case of failure.
+  releaseUsersFromSession(users, sessionId);
   return false;
 };
 
@@ -142,6 +146,21 @@ const _getSessionById = async (sessionId: string) => {
   if (!session) return null;
 
   return JSON.parse(session) as CollaborationSession;
+};
+
+export const getActiveSessionsByUserId = async (userId: string) => {
+  return filterUserWithActiveSession([userId]).then((result) => {
+    if (result.length === 0) {
+      return [];
+    }
+    return Promise.all(
+      result.map((sessionId) => _getSessionById(sessionId)),
+    ).then((sessions) =>
+      sessions.filter(
+        (session): session is CollaborationSession => session !== null,
+      ),
+    );
+  });
 };
 
 export const getSessions = async (status?: SessionStatus) => {
