@@ -11,7 +11,7 @@ services:
     depends_on:
       - redis
     environment:
-      QUESTION_API_BASE_URL: http://question-service:3002
+      QUESTION_API_BASE_URL: http://question-service:3002 #share same network so can driectly call the service name
       REDIS_URL: "redis://redis:6379"
       EXPRESS_PORT: 3003
       NODE_ENV: production
