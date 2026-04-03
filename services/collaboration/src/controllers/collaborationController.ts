@@ -36,8 +36,15 @@ export const createCollaborationSession: RequestHandler = async (req, res) => {
     return;
   }
   const { users, questionId } = parsedBody.data;
-  const session = await createSession(users, questionId);
-  res.json({ sessionId: session.id });
+    const session = await createSession(users, questionId);
+    if (session == null) {
+      res
+        .status(409)
+        .json({ error: "One or more users are already in an active session" });
+      return;
+    }
+
+    res.json({ sessionId: session.id });
 };
 
 type CollaborationSessionType = NonNullable<
