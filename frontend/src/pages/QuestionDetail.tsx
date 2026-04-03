@@ -157,11 +157,11 @@ export default function QuestionDetail() {
                         </div>
                     </div>
 
-                    {/* Categories */}
+                    {/* Topics */}
                     <div className="mb-6">
-                        <h3 className="mb-2 text-sm font-semibold text-slate-700">Categories</h3>
+                        <h3 className="mb-2 text-sm font-semibold text-slate-700">Topics</h3>
                         <div className="flex flex-wrap gap-2">
-                            {question.categories.map((c) => (
+                            {question.topics.map((c) => (
                                 <span
                                     key={c}
                                     className="inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700"
