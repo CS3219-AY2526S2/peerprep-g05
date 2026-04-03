@@ -14,3 +14,12 @@ export async function createChannel() {
     );
     return channel;
 }
+
+export async function publishEvent(channel, routingKey, payload, exchange = process.env.MATCH_EXCHANGE) {
+    channel.publish(
+        exchange,
+        routingKey,
+        Buffer.from(JSON.stringify(payload)),
+        { persistent: true }
+    );
+}

@@ -1,4 +1,6 @@
-const QUESTION_BASE = import.meta.env.VITE_QUESTION_API_BASE_URL || "http://localhost:3002/api/v1";
+import { GATEWAY_URL } from "../utils/types";
+
+const QUESTION_BASE = `${GATEWAY_URL}/api/v1`;
 
 // ── Types ─────────────────────────────────────────────
 
