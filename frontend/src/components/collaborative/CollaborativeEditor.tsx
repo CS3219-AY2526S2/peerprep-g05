@@ -1,9 +1,9 @@
+import { python } from "@codemirror/lang-python";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { useEffect, useRef } from "react";
 import { yCollab } from "y-codemirror.next";
-import { python } from "@codemirror/lang-python";
 import { WebsocketProvider } from "y-websocket";
 import * as Y from "yjs";
 import { useAuth } from "../../context/AuthContext.tsx";
