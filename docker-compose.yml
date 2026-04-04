@@ -12,7 +12,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: matchdb
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./services/matching/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -199,7 +199,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: peerprep_users
     ports:
-      - "5434:5432"
+      - "5435:5432"
     volumes:
       - user_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -305,6 +305,20 @@ services:
       - peerprep-network
 
 
+# ---------------- FRONTEND SERVICE ----------------
+  frontend:
+    build: 
+      context: ./frontend
+      args:
+        VITE_COLLAB_WEBSOCKET_URL: ws://localhost:3003
+    ports:
+      - "5173:80"
+
+    depends_on:
+      - ws-service
+    networks:
+      - peerprep-network
+
 volumes:
   postgres_data:
   question_pgdata:
@@ -312,4 +326,4 @@ volumes:
 
 networks:
   peerprep-network:
-    external: true
+    driver: bridge

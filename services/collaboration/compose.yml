@@ -26,7 +26,3 @@ services:
     restart: always
     networks:
       - peerprep-network
-
-networks:
-  peerprep-network:
-    external: true
