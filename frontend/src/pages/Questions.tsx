@@ -103,8 +103,10 @@ export default function Questions() {
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <h2 className="m-0 text-2xl font-semibold text-slate-900">Questions</h2>
-                        <p className="mt-1 text-slate-600">
+                        <h2 className="m-0 text-2xl font-semibold" style={{ color: "var(--app-text)" }}>
+                            Questions
+                        </h2>
+                        <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>
                             {total} question{total !== 1 ? "s" : ""} total
                         </p>
                     </div>
@@ -126,12 +128,12 @@ export default function Questions() {
                             placeholder="Search questions…"
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
-                            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 sm:w-64"
+                            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 sm:w-64"
                         />
                         <select
                             value={complexity}
                             onChange={(e) => { setComplexity(e.target.value); setPage(1); }}
-                            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         >
                             <option value="">All Difficulties</option>
                             <option value="Easy">Easy</option>
@@ -141,7 +143,7 @@ export default function Questions() {
                         <select
                             value={topic}
                             onChange={(e) => { setTopic(e.target.value); setPage(1); }}
-                            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         >
                             <option value="">All Topics</option>
                             {topics.map((c) => (
@@ -151,7 +153,7 @@ export default function Questions() {
                         <select
                             value={company}
                             onChange={(e) => { setCompany(e.target.value); setPage(1); }}
-                            className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         >
                             <option value="">All Companies</option>
                             {companies.map((c) => (

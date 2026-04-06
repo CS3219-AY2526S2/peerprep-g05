@@ -4,12 +4,14 @@
 	color-scheme: light;
 	--app-bg: #f8fafc;
 	--app-text: #0f172a;
+	--app-text-muted: #475569;
 }
 
 :root[data-theme="dark"] {
 	color-scheme: dark;
 	--app-bg: #020617;
 	--app-text: #e2e8f0;
+	--app-text-muted: #94a3b8;
 }
 
 html,
