@@ -104,6 +104,14 @@ const userRepository = {
         return rows[0] || null;
     },
 
+    async updateTokenValidAfter(id, tokenValidAfter = new Date()) {
+        const { rows } = await postgres.query(
+            "UPDATE users SET token_valid_after = $1 WHERE id = $2 RETURNING *",
+            [tokenValidAfter, id],
+        );
+        return rows[0] || null;
+    },
+
     /**
      * Hard-delete a user from the database.
      * ONLY use for edge cases like erasure requests or cleaning up test data.

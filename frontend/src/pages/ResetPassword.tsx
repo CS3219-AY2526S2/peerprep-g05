@@ -1,18 +1,36 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import * as api from "../api/userApi.ts";
 import type { ApiError } from "../api/userApi.ts";
 
+function readFragmentToken() {
+    if (typeof window === "undefined") {
+        return "";
+    }
+
+    return new URLSearchParams(window.location.hash.replace(/^#/, "")).get("token") || "";
+}
+
 export default function ResetPassword() {
     const [searchParams] = useSearchParams();
-    const tokenFromUrl = searchParams.get("token") || "";
+    const fragmentToken = readFragmentToken();
+    const tokenFromUrl = fragmentToken || searchParams.get("token") || "";
 
-    const [token, setToken] = useState(tokenFromUrl);
+    const [token] = useState(tokenFromUrl);
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
     const [error, setError] = useState("");
     const [done, setDone] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!token || typeof window === "undefined") {
+            return;
+        }
+
+        const sanitizedUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, sanitizedUrl);
+    }, [token]);
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
@@ -23,6 +41,10 @@ export default function ResetPassword() {
         }
         setLoading(true);
         try {
+            if (!token) {
+                throw { data: { error: "Reset link is invalid or incomplete. Please request a new password reset email." } } as ApiError;
+            }
+
             await api.resetPassword(token, password);
             setDone(true);
         } catch (err) {
@@ -49,19 +71,12 @@ export default function ResetPassword() {
                 ) : (
                     <>
                         {error && <div className="mb-3 rounded-md bg-red-100 px-3 py-2 text-center text-sm text-red-700">{error}</div>}
+                        {!token && (
+                            <div className="mb-3 rounded-md bg-amber-100 px-3 py-2 text-center text-sm text-amber-800">
+                                This reset link is missing a token. Please request a new password reset email.
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit} className="space-y-3">
-                            {!tokenFromUrl && (
-                                <>
-                                    <label className="mb-1 block text-sm font-semibold text-slate-700">Reset Token</label>
-                                    <input
-                                        type="text"
-                                        value={token}
-                                        onChange={(e) => setToken(e.target.value)}
-                                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                                        required
-                                    />
-                                </>
-                            )}
                             <label className="mb-1 block text-sm font-semibold text-slate-700">New Password</label>
                             <input
                                 type="password"
@@ -80,7 +95,7 @@ export default function ResetPassword() {
                                 required
                                 minLength={8}
                             />
-                            <button className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300" disabled={loading}>
+                            <button className="mt-3 w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300" disabled={loading || !token}>
                                 {loading ? "Resetting…" : "Reset Password"}
                             </button>
                         </form>

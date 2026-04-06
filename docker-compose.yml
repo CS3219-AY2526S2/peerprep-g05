@@ -238,7 +238,7 @@ services:
       - ./services/user/.env
     environment:
       PORT: 3001
-      NODE_ENV: production
+      NODE_ENV: development
       DATABASE_URL: postgresql://postgres:postgres@user-db:5432/peerprep_users
     depends_on:
       user-db:

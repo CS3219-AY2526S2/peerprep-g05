@@ -23,6 +23,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setLoading(false);
             return;
         }
+
+        setLoading(true);
         api
             .getMe(token)
             .then((res) => setUser(res))
