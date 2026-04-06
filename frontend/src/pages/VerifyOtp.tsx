@@ -7,7 +7,7 @@ import { useAuth } from "../context/AuthContext.tsx";
 export default function VerifyOtp() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { saveToken } = useAuth();
+    const { setAuthenticatedUser } = useAuth();
     const userId = (location.state as { userId?: string } | null)?.userId || "";
 
     const [code, setCode] = useState("");
@@ -33,7 +33,7 @@ export default function VerifyOtp() {
         setLoading(true);
         try {
             const res = await api.verifyOtp(userId, code);
-            saveToken(res.accessToken);
+            setAuthenticatedUser(res.user);
             navigate("/");
         } catch (err) {
             setError((err as ApiError).data?.error || "Verification failed");

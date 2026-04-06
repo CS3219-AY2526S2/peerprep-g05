@@ -29,6 +29,8 @@ export async function sendOtpEmail({ to, otp }) {
             ``,
             `Your verification code is: ${otp}`,
             ``,
+            `Do NOT share this OTP code with anyone.`,
+            ``,
             `This code expires in ${config.otp.expiryMinutes} minutes.`,
             `If you did not create an account, you can safely ignore this email.`,
         ].join("\n"),
@@ -36,6 +38,7 @@ export async function sendOtpEmail({ to, otp }) {
             <p>Welcome to <strong>PeerPrep</strong>!</p>
             <p>Your verification code is:</p>
             <h2 style="letter-spacing: 4px;">${otp}</h2>
+            <p style="color:#b91c1c;font-weight:600;">Do NOT share this OTP code with anyone.</p>
             <p>This code expires in <strong>${config.otp.expiryMinutes} minutes</strong>.</p>
             <p style="color: #888; font-size: 12px;">
                 If you did not create an account, you can safely ignore this email.
@@ -60,6 +63,8 @@ export async function sendPasswordResetEmail({ to, resetLink, expiryMinutes }) {
             `Click the link below to reset your password:`,
             `${resetLink}`,
             ``,
+            `Do NOT share this link with anyone.`,
+            ``,
             `This link expires in ${expiryMinutes} minutes.`,
             `If you did not request this, you can safely ignore this email.`,
         ].join("\n"),
@@ -74,6 +79,7 @@ export async function sendPasswordResetEmail({ to, resetLink, expiryMinutes }) {
             </p>
             <p>Or copy and paste this link into your browser:</p>
             <p style="word-break:break-all;color:#4f46e5;">${resetLink}</p>
+            <p style="color:#b91c1c;font-weight:600;">Do NOT share this link with anyone.</p>
             <p>This link expires in <strong>${expiryMinutes} minutes</strong>.</p>
             <p style="color:#888;font-size:12px;">
                 If you did not request a password reset, you can safely ignore this email.

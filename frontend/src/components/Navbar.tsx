@@ -6,8 +6,8 @@ export default function Navbar() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    function handleLogout() {
-        logout();
+    async function handleLogout() {
+        await logout();
         navigate("/");
     }
     const navBtn = "rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white no-underline transition hover:bg-white/20";
