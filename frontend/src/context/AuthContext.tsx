@@ -3,52 +3,60 @@ import * as api from "../api/userApi.ts";
 import type { User } from "../api/userApi.ts";
 
 interface AuthContextValue {
-    token: string | null;
     user: User | null;
     loading: boolean;
-    saveToken: (t: string) => void;
-    logout: () => void;
+    setAuthenticatedUser: (nextUser: User | null) => void;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
     const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(!!localStorage.getItem("token"));
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!token) {
-            setUser(null);
-            setLoading(false);
-            return;
-        }
+        let cancelled = false;
 
         setLoading(true);
         api
-            .getMe(token)
-            .then((res) => setUser(res))
-            .catch(() => {
-                localStorage.removeItem("token");
-                setToken(null);
-                setUser(null);
+            .getMe()
+            .then((res) => {
+                if (!cancelled) {
+                    setUser(res);
+                }
             })
-            .finally(() => setLoading(false));
-    }, [token]);
+            .catch(() => {
+                if (!cancelled) {
+                    setUser(null);
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
 
-    function saveToken(t: string) {
-        localStorage.setItem("token", t);
-        setToken(t);
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    function setAuthenticatedUser(nextUser: User | null) {
+        setUser(nextUser);
     }
 
-    function logout() {
-        localStorage.removeItem("token");
-        setToken(null);
+    async function logout() {
+        try {
+            await api.logout();
+        } catch {
+            // Clear local auth state even if the network request fails.
+        }
         setUser(null);
     }
 
     return (
-        <AuthContext.Provider value={{ token, user, loading, saveToken, logout }}>
+        <AuthContext.Provider value={{ user, loading, setAuthenticatedUser, logout }}>
             {children}
         </AuthContext.Provider>
     );

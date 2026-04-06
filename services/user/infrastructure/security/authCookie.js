@@ -54,8 +54,5 @@ export function setAuthCookie(res, token) {
 }
 
 export function clearAuthCookie(res) {
-    res.clearCookie(getAuthCookieName(), {
-        ...getAuthCookieOptions(),
-        maxAge: undefined,
-    });
+    res.clearCookie(getAuthCookieName(), getAuthCookieOptions());
 }

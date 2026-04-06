@@ -1,6 +1,6 @@
 import authService from "../../domain/services/authService.js";
 import { getPublicKey } from "../../infrastructure/security/jwt.js";
-import { setAuthCookie } from "../../infrastructure/security/authCookie.js";
+import { clearAuthCookie, setAuthCookie } from "../../infrastructure/security/authCookie.js";
 import config from "../../config/index.js";
 
 /**
@@ -126,8 +126,18 @@ export async function resetPassword(req, res, next) {
     try {
         const { token, password } = req.body;
         const result = await authService.resetPassword({ token, password });
+        clearAuthCookie(res);
         return res.status(200).json(result);
     } catch (err) {
         next(err);
     }
+}
+
+/**
+ * POST /auth/logout
+ * Clears the browser auth cookie.
+ */
+export function logout(_req, res) {
+    clearAuthCookie(res);
+    return res.status(200).json({ message: "Logged out successfully." });
 }

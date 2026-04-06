@@ -8,7 +8,7 @@ export default function AuthOverlay() {
     const [mode, setMode] = useState<"login" | "register">("login");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const { saveToken } = useAuth();
+    const { setAuthenticatedUser } = useAuth();
     const navigate = useNavigate();
 
     // ── Login ──
@@ -27,7 +27,7 @@ export default function AuthOverlay() {
         setLoading(true);
         try {
             const res = await api.login(identifier, loginPassword);
-            saveToken(res.accessToken);
+            setAuthenticatedUser(res.user);
         } catch (err) {
             setError((err as ApiError).data?.error || "Login failed");
         } finally {
