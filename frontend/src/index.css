@@ -1,1 +1,26 @@
 @import "tailwindcss";
+
+:root {
+	color-scheme: light;
+	--app-bg: #f8fafc;
+	--app-text: #0f172a;
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--app-bg: #020617;
+	--app-text: #e2e8f0;
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	background-color: var(--app-bg);
+	color: var(--app-text);
+	transition: background-color 200ms ease, color 200ms ease;
+}
