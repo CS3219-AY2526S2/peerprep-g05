@@ -20,8 +20,8 @@ export default function Navbar() {
         localStorage.setItem("theme", isDarkMode ? "dark" : "light");
     }, [isDarkMode]);
 
-    function handleLogout() {
-        logout();
+    async function handleLogout() {
+        await logout();
         navigate("/");
     }
 

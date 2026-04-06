@@ -5,7 +5,7 @@ ARG EXPRESS_PORT
 WORKDIR /server
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 EXPOSE ${EXPRESS_PORT}

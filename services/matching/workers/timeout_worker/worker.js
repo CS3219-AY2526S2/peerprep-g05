@@ -187,7 +187,7 @@ async function startTimeoutWorker(timeout_duration, relax_mins) {
         } catch (err) {
             console.error("Relaxation poll error:", err);
         }
-    }, 30000);
+    }, 10000);
 
     console.log("Timeout worker started.");
 }

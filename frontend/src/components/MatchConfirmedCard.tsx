@@ -1,4 +1,4 @@
-import { type ConfirmedMatch } from "../utils/types";
+import { type ConfirmedMatch, QuestionMatchInfo } from "../utils/types";
 import { MatchInfoRow } from "./MatchInfoRow";
 import { DifficultyBadge } from "./DifficultyBadge";
 import { useEffect } from "react";
@@ -6,40 +6,11 @@ import { useNavigate } from "react-router-dom";
 
 interface Props {
   confirmedMatch: ConfirmedMatch;
-  onPlayAgain: () => void;
+  questionMatch: QuestionMatchInfo | null;
+  onPlayAgain:    () => void;
 }
 
-export function MatchConfirmedCard({ confirmedMatch, onPlayAgain }: Props) {
-  const navigate = useNavigate();
-  useEffect(() => {
-    fetch(`${import.meta.env.VITE_COLLABORATIVE_API_BASE_URL}/collaboration`, {
-      method: "POST",
-      body: JSON.stringify({
-        users: [confirmedMatch.userIdA, confirmedMatch.userIdB],
-        // TODO: Get real question ID from backend when match is created
-        questionId: "1",
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then(async (res) => {
-        const r = await res.json();
-        if (r.sessionId == null) {
-          console.log("Create session response:", r.json());
-          throw new Error("Invalid session ID in response");
-        }
-        return r.sessionId;
-      })
-      .then((sessionId) => {
-        navigate(`/editor/${sessionId}`);
-      })
-      .catch((error) => {
-        // TODO: Proper error handling
-        alert("Error creating collaboration session.");
-        console.error("Failed to create session:", error);
-      });
-  }, []);
+export function MatchConfirmedCard({ confirmedMatch, questionMatch, onPlayAgain }: Props) {
 
   return (
     <div className="w-full max-w-md">
@@ -66,12 +37,25 @@ export function MatchConfirmedCard({ confirmedMatch, onPlayAgain }: Props) {
               </span>
             }
           />
-          <MatchInfoRow label="Peer A" value={confirmedMatch.userIdA} />
-          <MatchInfoRow label="Peer B" value={confirmedMatch.userIdB} />
-          <MatchInfoRow label="Topic" value={confirmedMatch.topic} />
+          <MatchInfoRow label="Peer A"   value={confirmedMatch.userIdA} />
+          <MatchInfoRow label="Peer B"   value={confirmedMatch.userIdB} />
+          <MatchInfoRow label="Topic"      value={confirmedMatch.topic} />
+          <MatchInfoRow label="Difficulty" value={<DifficultyBadge difficulty={confirmedMatch.difficulty} />} />
           <MatchInfoRow
-            label="Difficulty"
-            value={<DifficultyBadge difficulty={confirmedMatch.difficulty} />}
+            label="Question ID"
+            value={
+              questionMatch?.questionId
+                ? <span className="font-mono text-xs text-slate-500">{questionMatch.questionId}</span>
+                : <span className="text-sm italic text-slate-400">Waiting for question assignment...</span>
+            }
+          />
+          <MatchInfoRow
+            label="Session ID"
+            value={
+              questionMatch?.sessionId
+                ? <span className="font-mono text-xs text-slate-500">{questionMatch.sessionId}</span>
+                : <span className="text-sm italic text-slate-400">Waiting for session assignment...</span>
+            }
           />
         </div>
 

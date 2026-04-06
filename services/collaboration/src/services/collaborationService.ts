@@ -58,7 +58,7 @@ export const getSessions = async (status?: SessionStatus) => {
 
 export const createSession = async (users: string[], questionId: string) => {
   // fetch question
-  const url = config.QUESTION_API_BASE_URL + `/questions/${questionId}`;
+  const url = config.QUESTION_API_BASE_URL + `/api/v1/questions/${questionId}`;
 
   const response = (await fetch(url)
     .then((res) => {
