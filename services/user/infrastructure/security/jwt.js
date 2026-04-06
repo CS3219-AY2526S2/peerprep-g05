@@ -1,40 +1,46 @@
 import jwt from "jsonwebtoken";
-import fs from "fs";
-import path from "path";
 import crypto from "crypto";
-import { fileURLToPath } from "url";
 import config from "../../config/index.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const keysDir = path.join(__dirname, "keys");
-const privateKeyPath = path.join(keysDir, "private.pem");
-const publicKeyPath = path.join(keysDir, "public.pem");
+const isDevRuntime = ["development", "test"].includes(config.nodeEnv);
 
-function ensureKeys() {
-    if (fs.existsSync(privateKeyPath) && fs.existsSync(publicKeyPath)) {
-        return;
-    }
+let runtimeKeys = null;
 
-    console.log("[jwt] Generating RSA-2048 key pair …");
-    if (!fs.existsSync(keysDir)) {
-        fs.mkdirSync(keysDir, { recursive: true });
-    }
-
-    const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
-        modulusLength: 2048,
-        publicKeyEncoding: { type: "spki", format: "pem" },
-        privateKeyEncoding: { type: "pkcs8", format: "pem" },
-    });
-
-    fs.writeFileSync(privateKeyPath, privateKey);
-    fs.writeFileSync(publicKeyPath, publicKey);
-    console.log("[jwt] Keys written to infrastructure/security/keys/");
+function normalizeKey(value) {
+    return value ? value.replace(/\\n/g, "\n") : "";
 }
 
-ensureKeys();
+function getKeys() {
+    const privateKey = normalizeKey(process.env.JWT_PRIVATE_KEY);
+    const publicKey = normalizeKey(process.env.JWT_PUBLIC_KEY);
 
-const PRIVATE_KEY = fs.readFileSync(privateKeyPath, "utf-8");
-const PUBLIC_KEY = fs.readFileSync(publicKeyPath, "utf-8");
+    if (privateKey && publicKey) {
+        return { privateKey, publicKey };
+    }
+
+    if (!isDevRuntime) {
+        throw new Error("JWT_PRIVATE_KEY and JWT_PUBLIC_KEY must be set outside development/test environments");
+    }
+
+    if (!runtimeKeys) {
+        console.warn("[jwt] JWT keys not configured; generating an ephemeral in-memory RSA-2048 key pair for development/test");
+
+        const { publicKey: generatedPublicKey, privateKey: generatedPrivateKey } = crypto.generateKeyPairSync("rsa", {
+            modulusLength: 2048,
+            publicKeyEncoding: { type: "spki", format: "pem" },
+            privateKeyEncoding: { type: "pkcs8", format: "pem" },
+        });
+
+        runtimeKeys = {
+            privateKey: generatedPrivateKey,
+            publicKey: generatedPublicKey,
+        };
+    }
+
+    return runtimeKeys;
+}
+
+const { privateKey: PRIVATE_KEY, publicKey: PUBLIC_KEY } = getKeys();
 
 export function signToken(payload) {
     return jwt.sign(payload, PRIVATE_KEY, {
@@ -45,6 +51,19 @@ export function signToken(payload) {
 
 export function verifyToken(token) {
     return jwt.verify(token, PUBLIC_KEY, { algorithms: ["RS256"] });
+}
+
+export function isTokenFresh(decoded, tokenValidAfter) {
+    if (!tokenValidAfter) {
+        return true;
+    }
+
+    if (!decoded?.iat) {
+        return false;
+    }
+
+    const validAfterSeconds = Math.floor(new Date(tokenValidAfter).getTime() / 1000);
+    return decoded.iat >= validAfterSeconds;
 }
 
 export function getPublicKey() {

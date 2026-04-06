@@ -1,5 +1,6 @@
-import { verifyToken } from "../../infrastructure/security/jwt.js";
+import { isTokenFresh, verifyToken } from "../../infrastructure/security/jwt.js";
 import userRepository from "../../infrastructure/database/repositories/userRepository.js";
+import { readAuthCookie } from "../../infrastructure/security/authCookie.js";
 
 /**
  * JWT authentication middleware.
@@ -8,11 +9,15 @@ import userRepository from "../../infrastructure/database/repositories/userRepos
  */
 export function authenticateStrict(req, res, next) {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ error: "Missing or malformed Authorization header" });
-    }
+    const bearerToken = authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null;
+    const cookieToken = readAuthCookie(req);
+    const token = bearerToken || cookieToken;
 
-    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({ error: "Missing authentication token" });
+    }
 
     try {
         const decoded = verifyToken(token);
@@ -24,6 +29,9 @@ export function authenticateStrict(req, res, next) {
             }
             if (!row.is_active) {
                 return res.status(403).json({ error: "Account is deactivated" });
+            }
+            if (!isTokenFresh(decoded, row.token_valid_after)) {
+                return res.status(401).json({ error: "Token is no longer valid" });
             }
 
             req.user = {

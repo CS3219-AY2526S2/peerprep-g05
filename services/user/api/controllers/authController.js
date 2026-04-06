@@ -1,5 +1,6 @@
 import authService from "../../domain/services/authService.js";
 import { getPublicKey } from "../../infrastructure/security/jwt.js";
+import { setAuthCookie } from "../../infrastructure/security/authCookie.js";
 import config from "../../config/index.js";
 
 /**
@@ -30,6 +31,7 @@ export async function verifyOtp(req, res, next) {
     try {
         const { userId, code } = req.body;
         const { user, accessToken } = await authService.verifyOtp({ userId, code });
+        setAuthCookie(res, accessToken);
 
         return res.status(200).json({
             accessToken,
@@ -63,6 +65,7 @@ export async function login(req, res, next) {
     try {
         const { identifier, password } = req.body;
         const { user, accessToken } = await authService.login({ identifier, password });
+        setAuthCookie(res, accessToken);
 
         return res.status(200).json({
             accessToken,
