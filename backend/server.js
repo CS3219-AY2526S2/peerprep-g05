@@ -116,6 +116,24 @@ function initProxyRoutes() {
         }
     }));
 
+    app.use("/api/v1/ai", createProxyMiddleware({
+        target: process.env.AI_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite: (path, req) => {
+            return `/api/v1/ai${path}`;
+        },
+        on: {
+            proxyReq: (proxyReq, req, res) => {
+                console.log("➡️ Incoming:", req.method, req.originalUrl);
+                console.log("➡️ Forwarding to:", proxyReq.path);
+            },
+            error: (err, req, res) => {
+                console.error("[Proxy] ai:", err.message);
+                res.status(502).json({ error: "AI service unavailable" });
+            }
+        }
+    }));
+
     console.log("[Gateway] Proxy routes ready");
 }
 
