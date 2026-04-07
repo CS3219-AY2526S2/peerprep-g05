@@ -20,6 +20,7 @@ export type GenerateTextOutput = {
   text: string;
   model: string;
   fallbackUsed: boolean;
+};
 
 const openRouter = new OpenRouter({
   apiKey: config.OPENROUTER_API_KEY,
