@@ -10,11 +10,19 @@ interface TestCaseInput {
     is_public: boolean;
 }
 
+function buildDefaultTestCase(caseNumber: number): TestCaseInput {
+    return {
+        input: `values = [${caseNumber}]`,
+        expected_output: String(caseNumber),
+        is_public: true,
+    };
+}
+
 export default function QuestionEditor() {
     const { id } = useParams<{ id: string }>();
     const isEdit = Boolean(id);
     const navigate = useNavigate();
-    const { user, loading: authLoading } = useAuth();
+    const { user, token, loading: authLoading } = useAuth();
 
     const lockHolder = user?.username || user?.id || "unknown";
 
@@ -22,9 +30,11 @@ export default function QuestionEditor() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [complexity, setComplexity] = useState("Easy");
-    const [categoriesStr, setCategoriesStr] = useState("");
+    const [topicsStr, setTopicsStr] = useState("");
     const [companiesStr, setCompaniesStr] = useState("");
-    const [testCases, setTestCases] = useState<TestCaseInput[]>([]);
+    const [testCases, setTestCases] = useState<TestCaseInput[]>(
+        isEdit ? [] : [buildDefaultTestCase(1)]
+    );
 
     const [loading, setLoading] = useState(isEdit);
     const [saving, setSaving] = useState(false);
@@ -52,12 +62,12 @@ export default function QuestionEditor() {
                 await qApi.acquireLock(id!, lockHolder);
                 lockAcquired.current = true;
 
-                const res = await qApi.getQuestionById(id!);
+                const res = await qApi.getQuestionById(id!, token || undefined);
                 const q = res.data;
                 setTitle(q.title);
                 setDescription(q.description);
                 setComplexity(q.complexity);
-                setCategoriesStr(q.categories.join(", "));
+                setTopicsStr(q.topics.join(", "));
                 setCompaniesStr(q.companies.join(", "));
                 setTestCases(
                     (q.test_cases || []).map((tc: TestCase) => ({
@@ -79,7 +89,7 @@ export default function QuestionEditor() {
         }
 
         load();
-    }, [id, isEdit, lockHolder, authLoading, user]);
+    }, [id, isEdit, lockHolder, authLoading, user, token]);
 
     // Release lock on unmount
     const releaseLockRef = useCallback(() => {
@@ -104,7 +114,7 @@ export default function QuestionEditor() {
 
     // Test case management
     function addTestCase() {
-        setTestCases((prev) => [...prev, { input: "", expected_output: "", is_public: true }]);
+        setTestCases((prev) => [...prev, buildDefaultTestCase(prev.length + 1)]);
     }
 
     function removeTestCase(index: number) {
@@ -123,7 +133,7 @@ export default function QuestionEditor() {
         setError("");
         setSaving(true);
 
-        const categories = categoriesStr
+        const topics = topicsStr
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean);
@@ -132,8 +142,8 @@ export default function QuestionEditor() {
             .map((s) => s.trim())
             .filter(Boolean);
 
-        if (categories.length === 0) {
-            setError("At least one category is required");
+        if (topics.length === 0) {
+            setError("At least one topic is required");
             setSaving(false);
             return;
         }
@@ -141,7 +151,7 @@ export default function QuestionEditor() {
         const body: qApi.QuestionBody = {
             title: title.trim(),
             description: description.trim(),
-            categories,
+            topics,
             complexity,
             companies,
             test_cases: testCases.length > 0 ? testCases : undefined,
@@ -270,20 +280,20 @@ export default function QuestionEditor() {
                             </select>
                         </div>
 
-                        {/* Categories */}
+                        {/* Topics */}
                         <div>
                             <label className="mb-1 block text-sm font-semibold text-slate-700">
-                                Categories <span className="text-red-500">*</span>
+                                Topics <span className="text-red-500">*</span>
                             </label>
                             <input
                                 type="text"
-                                value={categoriesStr}
-                                onChange={(e) => setCategoriesStr(e.target.value)}
+                                value={topicsStr}
+                                onChange={(e) => setTopicsStr(e.target.value)}
                                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                                 required
                                 placeholder="e.g. Arrays, Hash Table (comma-separated)"
                             />
-                            <p className="mt-1 text-xs text-slate-400">Separate multiple categories with commas</p>
+                            <p className="mt-1 text-xs text-slate-400">Separate multiple topics with commas</p>
                         </div>
 
                         {/* Companies */}
