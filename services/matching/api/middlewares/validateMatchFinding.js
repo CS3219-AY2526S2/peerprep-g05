@@ -2,7 +2,7 @@ import { findActiveMatch } from "../../domain/match/matchRepository.js";
 import { postgres } from "../../infrastructure/postgres/client.js";
 
 export async function validateMatchFinding(req, res, next) {
-    const { user_id } = req.body;
+    const user_id = req.user?.userId;
 
     if (!user_id) {
         return res.status(400).json({ error: "user_id is requied" });
@@ -12,6 +12,7 @@ export async function validateMatchFinding(req, res, next) {
         const client = await postgres.connect();
         try {
             const activeMatch = await findActiveMatch(client, user_id);
+            console.log(user_id);
 
             if (activeMatch) {
                 return res.status(409).json({

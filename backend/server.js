@@ -6,138 +6,81 @@ import cors from "cors";
 
 dotenv.config();
 
-const app = express();
+export class GatewayServer {
+    constructor(config = {}) {
+        this.port = config.port || process.env.GATEWAY_PORT || 5000;
 
-//CORS
-app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-}));
+        this.serviceUrls = {
+            user: config.userServiceUrl || process.env.USER_SERVICE_URL,
+            match: config.matchingServiceUrl || process.env.MATCHING_SERVICE_URL,
+            question: config.questionServiceUrl || process.env.QUESTION_SERVICE_URL,
+            collaboration: config.collabServiceUrl || process.env.COLLAB_SERVICE_URL,
+        };
 
-const server = http.createServer(app);
+        this.frontendUrl = config.frontendUrl || process.env.FRONTEND_URL || "http://localhost:5173";
 
-// ─── HTTP Proxy Routes ────────────────────────────────────────────────────────
+        this.app = express();
+        this.server = http.createServer(this.app);
 
-function initProxyRoutes() {
+        this._initMiddleware();
+        this._initRoutes();
+    }
 
-    app.use("/api/v1/auth", createProxyMiddleware({
-        target: process.env.USER_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: (path, req) => {
-            return `/api/v1/auth${path}`;
-        },
-        on: {
-            proxyReq: (proxyReq, req, res) => {
-            console.log("➡️ Incoming:", req.method, req.originalUrl);
-            console.log("➡️ Forwarding to:", proxyReq.path);
-            },
-            error: (err, req, res) => {
-                console.error("[Proxy] auth:", err.message);
-                res.status(502).json({ error: "User service unavailable" });
-            }
-        }
-    }));
+    _initMiddleware() {
+        this.app.use(cors({
+            origin: this.frontendUrl,
+            credentials: true,
+            methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            allowedHeaders: ["Content-Type", "Authorization"],
+        }));
+    }
 
-    app.use("/api/v1/admin", createProxyMiddleware({
-        target: process.env.USER_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: (path, req) => {
-            return `/api/v1/admin${path}`;
-        },
-        on: {
-            error: (err, req, res) => {
-                console.error("[Proxy] admin:", err.message);
-                res.status(502).json({ error: "User service unavailable" });
-            }
-        }
-    }));
+    _initRoutes() {
+        this.app.get("/health", (req, res) => res.json({ status: "ok" }));
+        this._initProxyRoutes();
+    }
 
-    app.use("/api/v1/matches", createProxyMiddleware({
-        target: process.env.MATCHING_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite : (path) => `/api/v1/matches${path}`,
-        on: {
-            error: (err, req, res) => {
-                console.error("[Proxy] matching:", err.message);
-                res.status(502).json({ error: "Matching service unavailable" });
-            }
-        }
-    }));
+    _initProxyRoutes() {
+        const createProxy = (basePath, target, label) => {
+            this.app.use(basePath, createProxyMiddleware({
+                target,
+                changeOrigin: true,
+                pathRewrite: (path) => path, // keep original path
+                on: {
+                    proxyReq: (proxyReq, req, res) => {
+                        console.log(`➡️ [${label}] ${req.method} ${req.originalUrl} -> ${target}${req.url}`);
+                    },
+                    error: (err, req, res) => {
+                        console.error(`[Proxy] ${label}:`, err.message);
+                        res.status(502).json({ error: `${label} service unavailable` });
+                    }
+                }
+            }));
+        };
 
-    app.use("/api/v1/users", createProxyMiddleware({
-        target: process.env.USER_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: (path, req) => {
-            return `/api/v1/users${path}`;
-        },
-        on: {
-            error: (err, req, res) => {
-                console.error("[Proxy] user:", err.message);
-                res.status(502).json({ error: "User service unavailable" });
-            }
-        }
-    }));
+        createProxy("/api/v1/auth", this.serviceUrls.user, "auth");
+        createProxy("/api/v1/admin", this.serviceUrls.user, "admin");
+        createProxy("/api/v1/users", this.serviceUrls.user, "user");
+        createProxy("/api/v1/matches", this.serviceUrls.match, "matching");
+        createProxy("/api/v1/questions", this.serviceUrls.question, "questions");
+        createProxy("/api/v1/collaboration", this.serviceUrls.collaboration, "collaboration");
 
-    app.use("/api/v1/questions", createProxyMiddleware({
-        target: process.env.QUESTION_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: (path, req) => {
-            return `/api/v1/questions${path}`;
-        },
-        on: {
-            proxyReq: (proxyReq, req, res) => {
-                console.log("➡️ Incoming:", req.method, req.originalUrl);
-                console.log("➡️ Forwarding to:", proxyReq.path);
-            },
-            error: (err, req, res) => {
-                console.error("[Proxy] questions:", err.message);
-                res.status(502).json({ error: "Question service unavailable" });
-            }
-        }
-    }));
+        console.log("[Gateway] Proxy routes ready");
+    }
 
-    app.use("/api/v1/collaboration", createProxyMiddleware({
-        target: process.env.COLLAB_SERVICE_URL,
-        changeOrigin: true,
-        pathRewrite: (path, req) => {
-            return `/api/v1/collaboration${path}`;
-        },
-        on: {
-            proxyReq: (proxyReq, req, res) => {
-                console.log("➡️ Incoming:", req.method, req.originalUrl);
-                console.log("➡️ Forwarding to:", proxyReq.path);
-            },
-            error: (err, req, res) => {
-                console.error("[Proxy] collaboration:", err.message);
-                res.status(502).json({ error: "Collaboration service unavailable" });
-            }
-        }
-    }));
-
-    console.log("[Gateway] Proxy routes ready");
-}
-
-// ─── Health Check ─────────────────────────────────────────────────────────────
-
-app.get("/health", (req, res) => res.json({ status: "ok" }));
-
-// ─── Boot ─────────────────────────────────────────────────────────────────────
-
-async function init() {
-    try {
-        initProxyRoutes();
-
-        const PORT = process.env.GATEWAY_PORT || 4000;
-        server.listen(PORT, () => {
-            console.log(`[Gateway] Running on :${PORT}`);
+    start() {
+        return new Promise((resolve, reject) => {
+            this.server.listen(this.port, () => {
+                console.log(`[Gateway] Running on :${this.port}`);
+                resolve();
+            });
+            this.server.on("error", reject);
         });
+    }
 
-    } catch (err) {
-        console.error("[Gateway] Startup failed:", err);
-        process.exit(1);
+    stop() {
+        return new Promise((resolve, reject) => {
+            this.server.close(err => err ? reject(err) : resolve());
+        });
     }
 }
-
-init();

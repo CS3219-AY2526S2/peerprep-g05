@@ -115,4 +115,3 @@ volumes:
 
 networks: 
   peerprep-network:
-    external: true
