@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext.tsx";
 import * as qApi from "../api/questionApi.ts";
 import type { Question, QuestionFilters, QuestionApiError } from "../api/questionApi.ts";
 import DeleteConfirmModal from "../components/DeleteConfirmModal.tsx";
+import { isAdminRole } from "../utils/roles.ts";
 
 const COMPLEXITY_COLORS: Record<string, string> = {
     Easy: "bg-emerald-100 text-emerald-800",
@@ -14,7 +15,7 @@ const COMPLEXITY_COLORS: Record<string, string> = {
 export default function Questions() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const isAdmin = user?.role === "ADMIN";
+    const isAdmin = isAdminRole(user?.role);
 
     const [questions, setQuestions] = useState<Question[]>([]);
     const [loading, setLoading] = useState(true);
@@ -28,11 +29,11 @@ export default function Questions() {
     // Filters
     const [search, setSearch] = useState("");
     const [complexity, setComplexity] = useState("");
-    const [category, setCategory] = useState("");
+    const [topic, setTopic] = useState("");
     const [company, setCompany] = useState("");
 
     // Filter options
-    const [categories, setCategories] = useState<string[]>([]);
+    const [topics, setTopics] = useState<string[]>([]);
     const [companies, setCompanies] = useState<string[]>([]);
 
     // Delete modal
@@ -41,7 +42,7 @@ export default function Questions() {
 
     // Load filter options
     useEffect(() => {
-        qApi.getCategories().then((r) => setCategories(r.data)).catch(() => {});
+        qApi.getTopics().then((r) => setTopics(r.data)).catch(() => {});
         qApi.getCompanies().then((r) => setCompanies(r.data)).catch(() => {});
     }, []);
 
@@ -53,7 +54,7 @@ export default function Questions() {
             const filters: QuestionFilters = { page, limit: 20 };
             if (search) filters.search = search;
             if (complexity) filters.complexity = complexity;
-            if (category) filters.category = category;
+            if (topic) filters.topic = topic;
             if (company) filters.company = company;
 
             const res = await qApi.getAllQuestions(filters);
@@ -65,7 +66,7 @@ export default function Questions() {
         } finally {
             setLoading(false);
         }
-    }, [page, search, complexity, category, company]);
+    }, [page, search, complexity, topic, company]);
 
     useEffect(() => {
         loadQuestions();
@@ -138,12 +139,12 @@ export default function Questions() {
                             <option value="Hard">Hard</option>
                         </select>
                         <select
-                            value={category}
-                            onChange={(e) => { setCategory(e.target.value); setPage(1); }}
+                            value={topic}
+                            onChange={(e) => { setTopic(e.target.value); setPage(1); }}
                             className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                         >
-                            <option value="">All Categories</option>
-                            {categories.map((c) => (
+                            <option value="">All Topics</option>
+                            {topics.map((c) => (
                                 <option key={c} value={c}>{c}</option>
                             ))}
                         </select>
@@ -186,7 +187,7 @@ export default function Questions() {
                                         Difficulty
                                     </th>
                                     <th className="border-b border-slate-200 px-4 py-3 text-left text-sm font-semibold text-slate-700">
-                                        Categories
+                                        Topics
                                     </th>
                                     <th className="border-b border-slate-200 px-4 py-3 text-left text-sm font-semibold text-slate-700">
                                         Companies
@@ -199,7 +200,11 @@ export default function Questions() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {questions.map((q) => (
+                                {questions.map((q) => {
+                                    const topics = Array.isArray(q.topics) ? q.topics : [];
+                                    const companies = Array.isArray(q.companies) ? q.companies : [];
+
+                                    return (
                                     <tr
                                         key={q.id}
                                         className="cursor-pointer hover:bg-slate-50 transition-colors"
@@ -220,7 +225,7 @@ export default function Questions() {
                                         </td>
                                         <td className="border-b border-slate-100 px-4 py-3 align-middle">
                                             <div className="flex flex-wrap gap-1">
-                                                {q.categories.slice(0, 3).map((c) => (
+                                                {topics.slice(0, 3).map((c) => (
                                                     <span
                                                         key={c}
                                                         className="inline-block rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600"
@@ -228,17 +233,17 @@ export default function Questions() {
                                                         {c}
                                                     </span>
                                                 ))}
-                                                {q.categories.length > 3 && (
+                                                {topics.length > 3 && (
                                                     <span className="text-xs text-slate-400">
-                                                        +{q.categories.length - 3}
+                                                        +{topics.length - 3}
                                                     </span>
                                                 )}
                                             </div>
                                         </td>
                                         <td className="border-b border-slate-100 px-4 py-3 align-middle text-sm text-slate-600">
-                                            {q.companies.length > 0
-                                                ? q.companies.slice(0, 2).join(", ") +
-                                                  (q.companies.length > 2 ? ` +${q.companies.length - 2}` : "")
+                                            {companies.length > 0
+                                                ? companies.slice(0, 2).join(", ") +
+                                                  (companies.length > 2 ? ` +${companies.length - 2}` : "")
                                                 : "—"}
                                         </td>
                                         {isAdmin && (
@@ -260,7 +265,8 @@ export default function Questions() {
                                             </td>
                                         )}
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     )}

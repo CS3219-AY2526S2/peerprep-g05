@@ -6,8 +6,12 @@ import {
     createQuestion,
     updateQuestion,
     deleteQuestion,
-    listCategories,
+    listTopics,
     listCompanies,
+    markQuestionCompleted,
+    markQuestionCompletedByUsers,
+    getQuestionCompletionStats,
+    getCompletedQuestionsByUser,
 } from "../controllers/questionController.js";
 import {
     acquireLock,
@@ -17,11 +21,15 @@ import {
 
 const router = express.Router();
 
-router.get("/categories", listCategories);
+router.get("/topics", listTopics);
 router.get("/companies", listCompanies);
+router.get("/completions/users/:userId", getCompletedQuestionsByUser);
 router.get("/", getAllQuestions);
 router.get("/random", getRandomQuestion);
 router.get("/:id", getQuestionById);
+router.get("/:id/completions", getQuestionCompletionStats);
+router.post("/:id/completions", markQuestionCompleted);
+router.post("/:id/completions/bulk", markQuestionCompletedByUsers);
 router.post("/", createQuestion);
 router.put("/:id", updateQuestion);
 router.delete("/:id", deleteQuestion);

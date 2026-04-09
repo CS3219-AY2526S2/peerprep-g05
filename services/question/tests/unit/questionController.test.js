@@ -23,7 +23,7 @@ const {
     createQuestion,
     updateQuestion,
     deleteQuestion,
-    listCategories,
+    listTopics,
     listCompanies,
 } = await import("../../api/controllers/questionController.js");
 
@@ -175,7 +175,7 @@ describe("createQuestion", () => {
     const validBody = {
         title: "Two Sum",
         description: "Given an array...",
-        categories: ["Array", "Hash Table"],
+        topics: ["Array", "Hash Table"],
         complexity: "Easy",
     };
 
@@ -323,17 +323,17 @@ describe("deleteQuestion", () => {
 });
 
 // ============================================================
-// listCategories
+// listTopics
 // ============================================================
-describe("listCategories", () => {
-    it("returns distinct categories", async () => {
+describe("listTopics", () => {
+    it("returns distinct topics", async () => {
         const req = mockReq();
         const res = mockRes();
         mockQuery.mockResolvedValueOnce({
-            rows: [{ category: "Array" }, { category: "DP" }, { category: "Graph" }],
+            rows: [{ topic: "Array" }, { topic: "DP" }, { topic: "Graph" }],
         });
 
-        await listCategories(req, res, next);
+        await listTopics(req, res, next);
 
         expect(res.json).toHaveBeenCalledWith({
             success: true,
