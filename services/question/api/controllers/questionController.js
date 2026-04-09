@@ -5,6 +5,8 @@ const TITLE_MAX_LENGTH = 255;
 const DESCRIPTION_MAX_LENGTH = 10000;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+const PRIVILEGED_ROLES = new Set(["ADMIN", "MASTER_ADMIN"]);
+const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL || "http://localhost:3001/api/v1";
 
 /**
  * Build an absolute pagination URL while preserving existing query filters.
@@ -24,10 +26,10 @@ function buildPageLink(req, page, limit) {
 
 /**
  * @param {Array} params - Query parameter array (mutated in-place).
- * @param {{ complexity?: string, category?: string, company?: string, search?: string }} filters
+ * @param {{ complexity?: string, topic?: string, company?: string, search?: string }} filters
  * @returns {string} SQL WHERE clause or empty string.
  */
-function buildFilterClause(params, { complexity, category, company, search }) {
+function buildFilterClause(params, { complexity, topic, company, search }) {
     const conditions = [];
 
     if (complexity) {
@@ -35,9 +37,9 @@ function buildFilterClause(params, { complexity, category, company, search }) {
         conditions.push(`complexity = $${params.length}`);
     }
 
-    if (category) {
-        params.push(category);
-        conditions.push(`$${params.length} = ANY(categories)`);
+    if (topic) {
+        params.push(topic);
+        conditions.push(`$${params.length} = ANY(topics)`);
     }
 
     if (company) {
@@ -54,15 +56,15 @@ function buildFilterClause(params, { complexity, category, company, search }) {
 }
 
 /**
- * @param {{ title?: string, description?: string, categories?: string[], complexity?: string, companies?: string[] }} body
+ * @param {{ title?: string, description?: string, topics?: string[], complexity?: string, companies?: string[] }} body
  * @param {boolean} requireAll - If true, all core fields are mandatory.
  * @returns {string[]} Validation error messages.
  */
-function validateQuestionBody({ title, description, categories, complexity, companies }, requireAll = true) {
+function validateQuestionBody({ title, description, topics, complexity, companies }, requireAll = true) {
     const errors = [];
 
-    if (requireAll && (!title || !description || !categories || !complexity)) {
-        return ["Missing required fields: title, description, categories, complexity"];
+    if (requireAll && (!title || !description || !topics || !complexity)) {
+        return ["Missing required fields: title, description, topics, complexity"];
     }
 
     if (title !== undefined) {
@@ -81,11 +83,11 @@ function validateQuestionBody({ title, description, categories, complexity, comp
         }
     }
 
-    if (categories !== undefined) {
-        if (!Array.isArray(categories) || categories.length === 0) {
-            errors.push("categories must be a non-empty array of strings");
-        } else if (!categories.every(c => typeof c === "string" && c.trim().length > 0)) {
-            errors.push("each category must be a non-empty string");
+    if (topics !== undefined) {
+        if (!Array.isArray(topics) || topics.length === 0) {
+            errors.push("topics must be a non-empty array of strings");
+        } else if (!topics.every(c => typeof c === "string" && c.trim().length > 0)) {
+            errors.push("each topic must be a non-empty string");
         }
     }
 
@@ -142,16 +144,55 @@ async function fetchTestCases(questionIds, includePrivate = false) {
     return map;
 }
 
+function getBearerToken(req) {
+    const authHeader = req.get("authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) return null;
+    const token = authHeader.slice(7).trim();
+    return token || null;
+}
+
+async function fetchRequesterProfile(req) {
+    const token = getBearerToken(req);
+    if (!token) return null;
+
+    try {
+        const res = await fetch(`${USER_SERVICE_BASE_URL}/users/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) return null;
+        const user = await res.json().catch(() => null);
+        if (!user?.id) return null;
+
+        return {
+            id: String(user.id),
+            role: String(user.role || "").toUpperCase(),
+        };
+    } catch {
+        return null;
+    }
+}
+
+async function isPrivilegedRequester(req) {
+    const requester = await fetchRequesterProfile(req);
+    return requester ? PRIVILEGED_ROLES.has(requester.role) : false;
+}
+
+async function questionExists(questionId) {
+    const exists = await pool.query("SELECT 1 FROM questions WHERE id = $1", [questionId]);
+    return exists.rows.length > 0;
+}
+
 /** GET / — paginated list with optional filters and text search. */
 export async function getAllQuestions(req, res, next) {
     try {
-        const { complexity, category, company, search } = req.query;
+        const { complexity, topic, company, search } = req.query;
         const page = Math.max(1, parseInt(req.query.page, 10) || 1);
         const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(req.query.limit, 10) || DEFAULT_PAGE_SIZE));
         const offset = (page - 1) * limit;
 
         const countParams = [];
-        const whereClause = buildFilterClause(countParams, { complexity, category, company, search });
+        const whereClause = buildFilterClause(countParams, { complexity, topic, company, search });
 
         const countResult = await pool.query(
             `SELECT COUNT(*) FROM questions ${whereClause}`,
@@ -207,7 +248,8 @@ export async function getQuestionById(req, res, next) {
             return res.status(404).json({ success: false, error: "Question not found" });
         }
 
-        const includePrivate = req.query.include_private === "true";
+        const includePrivateRequested = req.query.include_private === "true";
+        const includePrivate = includePrivateRequested ? await isPrivilegedRequester(req) : false;
         const testCaseMap = await fetchTestCases([parseInt(id)], includePrivate);
 
         res.json({
@@ -222,10 +264,10 @@ export async function getQuestionById(req, res, next) {
 /** GET /random — return one question matching optional filters. */
 export async function getRandomQuestion(req, res, next) {
     try {
-        const { complexity, category, company } = req.query;
+        const { complexity, topic, company } = req.query;
 
         const params = [];
-        const whereClause = buildFilterClause(params, { complexity, category, company });
+        const whereClause = buildFilterClause(params, { complexity, topic, company });
 
         const result = await pool.query(
             `SELECT * FROM questions ${whereClause} ORDER BY RANDOM() LIMIT 1`,
@@ -245,9 +287,9 @@ export async function getRandomQuestion(req, res, next) {
 /** POST / — create a new question (with optional test cases). */
 export async function createQuestion(req, res, next) {
     try {
-        const { title, description, categories, complexity, companies, test_cases } = req.body;
+        const { title, description, topics, complexity, companies, test_cases } = req.body;
 
-        const errors = validateQuestionBody({ title, description, categories, complexity, companies }, true);
+        const errors = validateQuestionBody({ title, description, topics, complexity, companies }, true);
         if (test_cases !== undefined) {
             errors.push(...validateTestCases(test_cases));
         }
@@ -281,12 +323,22 @@ export async function createQuestion(req, res, next) {
                  )
                  ORDER BY gs
                  LIMIT 1
+             ),
+             inserted AS (
+                 INSERT INTO questions (id, title, description, topics, complexity, companies)
+                 SELECT next_id.id, $1, $2, $3, $4, $5
+                 FROM next_id
+                 RETURNING *
+             ),
+             sync_sequence AS (
+                 SELECT setval(
+                     pg_get_serial_sequence('questions', 'id'),
+                     (SELECT MAX(id) FROM questions),
+                     true
+                 )
              )
-             INSERT INTO questions (id, title, description, categories, complexity, companies)
-             SELECT next_id.id, $1, $2, $3, $4, $5
-             FROM next_id
-             RETURNING *`,
-            [title.trim(), description.trim(), categories, complexity, companies || []]
+             SELECT * FROM inserted`,
+            [title.trim(), description.trim(), topics, complexity, companies || []]
         );
 
         const question = result.rows[0];
@@ -320,13 +372,13 @@ export async function updateQuestion(req, res, next) {
         const { id } = req.params;
         const payload = req.body || {};
         const lockHolder = req.get("x-lock-holder") || payload.locked_by;
-        const { title, description, categories, complexity, companies, test_cases } = payload;
+        const { title, description, topics, complexity, companies, test_cases } = payload;
 
-        if (!title && !description && !categories && !complexity && !companies && !test_cases) {
+        if (!title && !description && !topics && !complexity && !companies && !test_cases) {
             return res.status(400).json({ success: false, error: "Provide at least one field to update" });
         }
 
-        const errors = validateQuestionBody({ title, description, categories, complexity, companies }, false);
+        const errors = validateQuestionBody({ title, description, topics, complexity, companies }, false);
         if (test_cases !== undefined) {
             errors.push(...validateTestCases(test_cases));
         }
@@ -379,7 +431,7 @@ export async function updateQuestion(req, res, next) {
             `UPDATE questions
              SET title = COALESCE($1, title),
                  description = COALESCE($2, description),
-                 categories = COALESCE($3, categories),
+                 topics = COALESCE($3, topics),
                  complexity = COALESCE($4, complexity),
                  companies = COALESCE($5, companies),
                  updated_at = CURRENT_TIMESTAMP
@@ -388,7 +440,7 @@ export async function updateQuestion(req, res, next) {
             [
                 title ? title.trim() : null,
                 description ? description.trim() : null,
-                categories || null,
+                topics || null,
                 complexity || null,
                 companies || null,
                 id,
@@ -474,13 +526,13 @@ export async function deleteQuestion(req, res, next) {
     }
 }
 
-/** GET /categories — list all distinct category values. */
-export async function listCategories(req, res, next) {
+/** GET /topics — list all distinct topic values. */
+export async function listTopics(req, res, next) {
     try {
         const result = await pool.query(
-            "SELECT DISTINCT UNNEST(categories) AS category FROM questions ORDER BY category"
+            "SELECT DISTINCT UNNEST(topics) AS topic FROM questions ORDER BY topic"
         );
-        res.json({ success: true, data: result.rows.map(r => r.category) });
+        res.json({ success: true, data: result.rows.map(r => r.topic) });
     } catch (error) {
         next(error);
     }
@@ -494,6 +546,254 @@ export async function listCompanies(req, res, next) {
         );
         res.json({ success: true, data: result.rows.map(r => r.company) });
     } catch (error) {
+        next(error);
+    }
+}
+
+/**
+ * POST /:id/completions — mark this question as completed by a unique user.
+ * Prefers authenticated requester id from user-service; falls back to body.user_id when provided.
+ */
+export async function markQuestionCompleted(req, res, next) {
+    try {
+        const questionId = parseInt(req.params.id, 10);
+        if (!Number.isInteger(questionId) || questionId <= 0) {
+            return res.status(400).json({ success: false, error: "Invalid question id" });
+        }
+
+        if (!(await questionExists(questionId))) {
+            return res.status(404).json({ success: false, error: "Question not found" });
+        }
+
+        const requester = await fetchRequesterProfile(req);
+        const fallbackUserId = typeof req.body?.user_id === "string" ? req.body.user_id.trim() : "";
+        const userId = requester?.id || fallbackUserId;
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                error: "Provide Authorization bearer token or user_id in request body",
+            });
+        }
+
+        const insertResult = await pool.query(
+            `INSERT INTO question_completions (question_id, user_id)
+             VALUES ($1, $2::uuid)
+             ON CONFLICT (question_id, user_id) DO NOTHING
+             RETURNING question_id, user_id, completed_at`,
+            [questionId, userId]
+        );
+
+        let completionRow = insertResult.rows[0] || null;
+        const alreadyCompleted = !completionRow;
+
+        if (!completionRow) {
+            const existing = await pool.query(
+                `SELECT question_id, user_id, completed_at
+                 FROM question_completions
+                 WHERE question_id = $1 AND user_id = $2::uuid`,
+                [questionId, userId]
+            );
+            completionRow = existing.rows[0] || null;
+        }
+
+        const countResult = await pool.query(
+            "SELECT COUNT(*)::int AS unique_users_completed FROM question_completions WHERE question_id = $1",
+            [questionId]
+        );
+
+        res.status(alreadyCompleted ? 200 : 201).json({
+            success: true,
+            data: {
+                question_id: questionId,
+                user_id: completionRow?.user_id || userId,
+                completed_at: completionRow?.completed_at || null,
+                already_completed: alreadyCompleted,
+                unique_users_completed: countResult.rows[0].unique_users_completed,
+            },
+        });
+    } catch (error) {
+        if (error?.code === "22P02") {
+            return res.status(400).json({ success: false, error: "user_id must be a valid UUID" });
+        }
+        next(error);
+    }
+}
+
+/**
+ * POST /:id/completions/bulk — mark a question completed by multiple unique users.
+ * Intended for collaboration/matching flow where two users finish the same question.
+ */
+export async function markQuestionCompletedByUsers(req, res, next) {
+    try {
+        const questionId = parseInt(req.params.id, 10);
+        if (!Number.isInteger(questionId) || questionId <= 0) {
+            return res.status(400).json({ success: false, error: "Invalid question id" });
+        }
+
+        if (!(await questionExists(questionId))) {
+            return res.status(404).json({ success: false, error: "Question not found" });
+        }
+
+        const rawUserIds = req.body?.user_ids;
+        if (!Array.isArray(rawUserIds) || rawUserIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: "user_ids must be a non-empty array of UUID strings",
+            });
+        }
+
+        const userIds = [...new Set(
+            rawUserIds
+                .filter((id) => typeof id === "string")
+                .map((id) => id.trim())
+                .filter(Boolean)
+        )];
+
+        if (userIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: "user_ids must contain at least one valid UUID string",
+            });
+        }
+
+        const insertedUserIds = [];
+        const alreadyCompletedUserIds = [];
+
+        for (const userId of userIds) {
+            const insertResult = await pool.query(
+                `INSERT INTO question_completions (question_id, user_id)
+                 VALUES ($1, $2::uuid)
+                 ON CONFLICT (question_id, user_id) DO NOTHING
+                 RETURNING user_id`,
+                [questionId, userId]
+            );
+
+            if (insertResult.rows.length > 0) {
+                insertedUserIds.push(insertResult.rows[0].user_id);
+            } else {
+                alreadyCompletedUserIds.push(userId);
+            }
+        }
+
+        const countResult = await pool.query(
+            "SELECT COUNT(*)::int AS unique_users_completed FROM question_completions WHERE question_id = $1",
+            [questionId]
+        );
+
+        res.status(insertedUserIds.length > 0 ? 201 : 200).json({
+            success: true,
+            data: {
+                question_id: questionId,
+                processed_user_ids: userIds,
+                inserted_user_ids: insertedUserIds,
+                already_completed_user_ids: alreadyCompletedUserIds,
+                unique_users_completed: countResult.rows[0].unique_users_completed,
+            },
+        });
+    } catch (error) {
+        if (error?.code === "22P02") {
+            return res.status(400).json({ success: false, error: "Each user_id must be a valid UUID" });
+        }
+        next(error);
+    }
+}
+
+/**
+ * GET /:id/completions — get unique completion stats for a question.
+ * Pass include_users=true to also return distinct user ids.
+ */
+export async function getQuestionCompletionStats(req, res, next) {
+    try {
+        const questionId = parseInt(req.params.id, 10);
+        if (!Number.isInteger(questionId) || questionId <= 0) {
+            return res.status(400).json({ success: false, error: "Invalid question id" });
+        }
+
+        if (!(await questionExists(questionId))) {
+            return res.status(404).json({ success: false, error: "Question not found" });
+        }
+
+        const countResult = await pool.query(
+            "SELECT COUNT(*)::int AS unique_users_completed FROM question_completions WHERE question_id = $1",
+            [questionId]
+        );
+
+        const includeUsers = req.query.include_users === "true";
+        let completedUserIds = undefined;
+
+        if (includeUsers) {
+            const usersResult = await pool.query(
+                `SELECT user_id
+                 FROM question_completions
+                 WHERE question_id = $1
+                 ORDER BY completed_at DESC`,
+                [questionId]
+            );
+            completedUserIds = usersResult.rows.map((row) => row.user_id);
+        }
+
+        res.json({
+            success: true,
+            data: {
+                question_id: questionId,
+                unique_users_completed: countResult.rows[0].unique_users_completed,
+                completed_user_ids: completedUserIds,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+/**
+ * GET /completions/users/:userId — list questions completed by a user.
+ * Pass include_details=true to include question metadata.
+ */
+export async function getCompletedQuestionsByUser(req, res, next) {
+    try {
+        const userId = String(req.params.userId || "").trim();
+        if (!userId) {
+            return res.status(400).json({ success: false, error: "userId is required" });
+        }
+
+        const includeDetails = req.query.include_details === "true";
+
+        const result = await pool.query(
+            `SELECT qc.question_id, qc.completed_at,
+                    q.title, q.complexity, q.topics
+             FROM question_completions qc
+             JOIN questions q ON q.id = qc.question_id
+             WHERE qc.user_id = $1::uuid
+             ORDER BY qc.completed_at DESC`,
+            [userId]
+        );
+
+        const completedQuestions = includeDetails
+            ? result.rows.map((row) => ({
+                question_id: row.question_id,
+                completed_at: row.completed_at,
+                title: row.title,
+                complexity: row.complexity,
+                topics: row.topics,
+            }))
+            : result.rows.map((row) => ({
+                question_id: row.question_id,
+                completed_at: row.completed_at,
+            }));
+
+        res.json({
+            success: true,
+            data: {
+                user_id: userId,
+                total_completed_questions: completedQuestions.length,
+                completed_questions: completedQuestions,
+            },
+        });
+    } catch (error) {
+        if (error?.code === "22P02") {
+            return res.status(400).json({ success: false, error: "userId must be a valid UUID" });
+        }
         next(error);
     }
 }

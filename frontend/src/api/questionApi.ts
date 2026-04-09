@@ -8,7 +8,7 @@ export interface Question {
     id: number;
     title: string;
     description: string;
-    categories: string[];
+    topics: string[];
     complexity: "Easy" | "Medium" | "Hard";
     companies: string[];
     created_at: string;
@@ -55,6 +55,11 @@ export interface QuestionApiError {
     data: { error?: string; errors?: string[]; data?: QuestionLock } | null;
 }
 
+interface RawQuestion extends Omit<Question, "topics"> {
+    categories?: string[];
+    topics?: string[];
+}
+
 // ── Helpers ───────────────────────────────────────────
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -72,12 +77,26 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     return data as T;
 }
 
+function asStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((v): v is string => typeof v === "string");
+}
+
+function normalizeQuestion(raw: RawQuestion): Question {
+    return {
+        ...raw,
+        topics: asStringArray(raw.topics ?? raw.categories),
+        companies: asStringArray(raw.companies),
+    };
+}
+
 // ── Questions ─────────────────────────────────────────
 
 export interface QuestionFilters {
     page?: number;
     limit?: number;
     complexity?: string;
+    topic?: string;
     category?: string;
     company?: string;
     search?: string;
@@ -88,31 +107,50 @@ export function getAllQuestions(filters: QuestionFilters = {}) {
     if (filters.page) params.set("page", String(filters.page));
     if (filters.limit) params.set("limit", String(filters.limit));
     if (filters.complexity) params.set("complexity", filters.complexity);
-    if (filters.category) params.set("category", filters.category);
+    const selectedTopic = filters.topic ?? filters.category;
+    if (selectedTopic) {
+        params.set("topic", selectedTopic);
+        params.set("category", selectedTopic);
+    }
     if (filters.company) params.set("company", filters.company);
     if (filters.search) params.set("search", filters.search);
     const qs = params.toString();
-    return request<PaginatedResponse>(`/questions${qs ? `?${qs}` : ""}`);
+    return request<PaginatedResponse>(`/questions${qs ? `?${qs}` : ""}`).then((res) => ({
+        ...res,
+        data: (res.data || []).map((q) => normalizeQuestion(q as RawQuestion)),
+    }));
 }
 
-export function getQuestionById(id: number | string) {
-    return request<SingleResponse<Question>>(`/questions/${id}?include_private=true`);
+export function getQuestionById(id: number | string, token?: string) {
+    const headers: HeadersInit = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+    return request<SingleResponse<RawQuestion>>(`/questions/${id}?include_private=true`, { headers }).then((res) => ({
+        ...res,
+        data: normalizeQuestion(res.data),
+    }));
 }
 
 export interface QuestionBody {
     title: string;
     description: string;
-    categories: string[];
+    topics: string[];
     complexity: string;
     companies?: string[];
     test_cases?: Omit<TestCase, "id" | "question_id" | "order_index">[];
 }
 
 export function createQuestion(body: QuestionBody) {
-    return request<SingleResponse<Question>>("/questions", {
+    return request<SingleResponse<RawQuestion>>("/questions", {
         method: "POST",
-        body: JSON.stringify(body),
-    });
+        body: JSON.stringify({
+            ...body,
+            topics: body.topics,
+        }),
+    }).then((res) => ({
+        ...res,
+        data: normalizeQuestion(res.data),
+    }));
 }
 
 export function updateQuestion(id: number | string, body: Partial<QuestionBody>, lockHolder?: string) {
@@ -120,11 +158,17 @@ export function updateQuestion(id: number | string, body: Partial<QuestionBody>,
         ? { "x-lock-holder": lockHolder }
         : {};
 
-    return request<SingleResponse<Question>>(`/questions/${id}`, {
+    return request<SingleResponse<RawQuestion>>(`/questions/${id}`, {
         method: "PUT",
         headers,
-        body: JSON.stringify(body),
-    });
+        body: JSON.stringify({
+            ...body,
+            ...(body.topics ? { topics: body.topics } : {}),
+        }),
+    }).then((res) => ({
+        ...res,
+        data: normalizeQuestion(res.data),
+    }));
 }
 
 export function deleteQuestion(id: number | string) {
@@ -133,10 +177,12 @@ export function deleteQuestion(id: number | string) {
     });
 }
 
-// ── Categories & Companies ────────────────────────────
+// ── Topics & Companies ────────────────────────────────
 
-export function getCategories() {
-    return request<SingleResponse<string[]>>("/questions/categories");
+export function getTopics() {
+    return request<SingleResponse<string[]>>("/questions/topics").catch(() =>
+        request<SingleResponse<string[]>>("/questions/categories")
+    );
 }
 
 export function getCompanies() {
