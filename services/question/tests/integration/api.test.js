@@ -94,15 +94,15 @@ describe("GET /api/v1/questions/random", () => {
 });
 
 // ============================================================
-// GET /api/v1/questions/categories
+// GET /api/v1/questions/topics
 // ============================================================
-describe("GET /api/v1/questions/categories", () => {
-    it("200 — returns distinct categories", async () => {
+describe("GET /api/v1/questions/topics", () => {
+    it("200 — returns distinct topics", async () => {
         mockQuery.mockResolvedValueOnce({
-            rows: [{ category: "Array" }, { category: "DP" }],
+            rows: [{ topic: "Array" }, { topic: "DP" }],
         });
 
-        const res = await request.get("/api/v1/questions/categories");
+        const res = await request.get("/api/v1/questions/topics");
 
         expect(res.status).toBe(200);
         expect(res.body.data).toEqual(["Array", "DP"]);
@@ -157,7 +157,7 @@ describe("POST /api/v1/questions", () => {
     const validPayload = {
         title: "Two Sum",
         description: "Given an array of integers...",
-        categories: ["Array", "Hash Table"],
+        topics: ["Array", "Hash Table"],
         complexity: "Easy",
     };
 
