@@ -23,7 +23,7 @@ export const validateUser = async (req, res, next) => {
             token = cookies["peerprep_access_token"];
         }
 
-        // 3. Reject if no token found
+        // 3. Reject if no token found.
         if (!token) {
             return res.status(401).json({
                 error: "Unauthorized",

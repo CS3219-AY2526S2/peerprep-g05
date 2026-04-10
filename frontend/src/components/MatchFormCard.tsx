@@ -17,7 +17,7 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/questions/categories`);
+        const res = await fetch(`${GATEWAY_URL}/api/v1/questions/topics`);
         const json = await res.json();
 
         const categories = Array.isArray(json.data) ? json.data : [];
@@ -36,7 +36,7 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
 
   const handleSubmit = () => {
     if (!user || !topic) return;
-    onFindMatch({ userId: user.id, topic, difficulty });
+    onFindMatch({ topic, difficulty });
   };
 
   return (

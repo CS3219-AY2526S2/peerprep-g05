@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getSessionInformation } from "../api/collaborationApi";
 import { CollaborativeEditor } from "../components/collaborative/CollaborativeEditor";
+import { Chat } from "../components/collaborative/Chat";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
 
@@ -45,6 +46,7 @@ export default function CollaborativeEditorPage() {
         description={sessionInfo.descriptionContent}
       />
       <CollaborativeEditor roomId={roomId} />
+      <Chat roomId={roomId} />
     </div>
   );
 }
