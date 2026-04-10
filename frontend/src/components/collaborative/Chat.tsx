@@ -24,6 +24,7 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [chatError, setChatError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const { user } = useAuth();
   const userId = user?.id ?? "";
@@ -173,6 +174,10 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
           isOwn: payload.sender === userId,
         }]);
         if (!isOpen) setUnreadCount((prev) => prev + 1);
+      }
+      if (payload.type === "CHAT_ERROR") {
+        setChatError(payload.message || "An unknown error occurred in the chat.");
+        setTimeout(() => setChatError(null), 5000);
       }
     };
 
@@ -418,6 +423,39 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
           ))}
           <div ref={messagesEndRef} />
         </div>
+        {chatError && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 12px",
+              background: "#2d1a1a",
+              borderTop: "1px solid #7f1d1d",
+              color: "#f87171",
+              fontSize: "12px",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ fontSize: "14px" }}>⚠️</span>
+            <span style={{ flex: 1 }}>{chatError}</span>
+            <button
+              onClick={() => setChatError(null)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#f87171",
+                cursor: "pointer",
+                fontSize: "14px",
+                padding: 0,
+                lineHeight: 1,
+              }}
+              aria-label="Dismiss error"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Input */}
         <div
