@@ -30,6 +30,13 @@ export const runWithModelFallback = async <T>(
   for (const [index, model] of models.entries()) {
     try {
       const value = await runner(model);
+      if (index > 0) {
+        console.info("[ai-service] Model fallback succeeded", {
+          model,
+          attempts: models.slice(0, index + 1),
+        });
+      }
+
       return {
         value,
         model,
@@ -45,6 +52,13 @@ export const runWithModelFallback = async <T>(
         retryable: normalized.retryable,
       });
 
+      console.warn("[ai-service] Model attempt failed", {
+        model,
+        status: normalized.status,
+        retryable: normalized.retryable,
+        message: normalized.message,
+      });
+
       if (!normalized.retryable) {
         throw new HttpError(
           normalized.status,
@@ -56,6 +70,8 @@ export const runWithModelFallback = async <T>(
 
   throw new HttpError(
     503,
-    `All configured AI models are temporarily unavailable. Attempted ${attempts.length} model(s).`,
+    `All configured AI models are temporarily unavailable. Attempted ${attempts.length} model(s): ${attempts
+      .map((attempt) => attempt.model)
+      .join(", ")}.`,
   );
 };

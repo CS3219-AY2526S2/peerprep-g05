@@ -46,13 +46,17 @@ const normalizeProviderError = (error: unknown): RetryableModelError => {
   const normalizedStatus = Number.isFinite(status) ? status : 502;
 
   // Retry all model candidates unless the failure indicates a service-wide
-  // auth/configuration problem. This matches the intended "try the next model"
-  // behavior for unavailable, unsupported, rate-limited, or account-scoped
-  // model failures.
-  const retryable =
-    normalizedStatus !== 401 &&
-    normalizedStatus !== 403 &&
-    !/invalid api key|unauthorized|forbidden/i.test(message);
+  // auth/configuration issue with the API key itself.
+  //
+  // Note: OpenRouter/model providers may return 403 for model-level limits,
+  // provider restrictions, or temporary access gates. Those should still
+  // trigger fallback to the next configured model.
+  const hasAuthKeyword =
+    /invalid api key|unauthorized|invalid signature|bad api key|authentication failed/i.test(
+      message,
+    );
+
+  const retryable = !(normalizedStatus === 401 || hasAuthKeyword);
 
   console.error("[ai-service] OpenRouter model attempt failed", {
     status: normalizedStatus,
@@ -81,7 +85,7 @@ export const generateText = async (
           maxOutputTokens: input.maxOutputTokens,
           provider: {
             allowFallbacks: false,
-            dataCollection: "deny",
+            dataCollection: "allow",
           },
           metadata: {
             feature: input.feature,
