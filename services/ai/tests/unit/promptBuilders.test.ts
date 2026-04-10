@@ -40,5 +40,14 @@ describe("prompt builders", () => {
       "Convert the following pseudocode to Python exactly as written in logic.",
     );
     expect(messages[1]?.content).toContain("set total to 0");
+    expect(messages[0]?.content).toContain(
+      "Do not use top-level `return` statements.",
+    );
+    expect(messages[0]?.content).toContain(
+      "Read inputs from standard input (`stdin`) when input handling is needed.",
+    );
+    expect(messages[0]?.content).toContain(
+      "Produce output using `print` when the pseudocode returns or outputs a result.",
+    );
   });
 });
