@@ -124,6 +124,14 @@ export const removeClientFromRoom = (
   }
 };
 
+export const handleClientDisconnect = (
+  roomName: RoomKey,
+  socket: CustomWebSocket,
+) => {
+  clearClientAwarenessStates(roomName, socket);
+  removeClientFromRoom(roomName, socket);
+};
+
 const cleanupRoomIfEmpty = (roomName: RoomKey) => {
   const clients = roomClients.get(roomName);
   if (clients && clients.size > 0) {

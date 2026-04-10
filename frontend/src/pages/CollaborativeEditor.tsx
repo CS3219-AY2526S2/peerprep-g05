@@ -49,7 +49,7 @@ export default function CollaborativeEditorPage() {
     );
   }
   return (
-    <div className="h-full">
+    <div className="h-full ">
       <div>
         <div
           className="red-button-class hover:cursor-pointer"
@@ -66,7 +66,7 @@ export default function CollaborativeEditorPage() {
         </div>
       </div>
 
-      <div className="h-full grid grid-cols-2">
+      <div className="h-full grid grid-cols-2 relative">
         <QuestionDescriptionPreview
           description={sessionInfo.descriptionContent}
         />

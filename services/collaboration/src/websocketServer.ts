@@ -10,6 +10,7 @@ import type { CustomWebSocket } from "./websocket/types.js";
 import {
   addClientToRoom,
   closeRoomConnections,
+  handleClientDisconnect,
   initDocForRoom,
 } from "./websocket/wsRooms.js";
 
@@ -43,6 +44,8 @@ wss.on("connection", async (conn: CustomWebSocket, req: IncomingMessage) => {
     if (code === WS_CLOSE_CODES.SESSION_ENDED) {
       closeRoomConnections(roomName, code, reason.toString(), conn);
     }
+
+    handleClientDisconnect(roomName, conn);
   });
 });
 export default wss;
