@@ -60,7 +60,10 @@ export const postConvertToPythonAndExecute: RequestHandler = async (req, res) =>
       testCases: parsed.data.testCases,
     });
 
-    res.json(result);
+    res.json({
+      pythonCode,
+      ...result,
+    });
   } catch (error) {
     respondToUnhandledError(error, res);
   }

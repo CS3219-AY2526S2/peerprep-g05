@@ -188,6 +188,13 @@ describe("Execution API stack", () => {
     await runHandlers([requireAuth, postConvertToPythonAndExecute], req, res);
 
     expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      pythonCode: "print(input())",
+      passedTestCases: [],
+      failedTestCases: [],
+      errorType: null,
+      errorsPresent: [],
+    });
     expect(convertPseudocodeToPython).toHaveBeenCalledWith({
       code: "OUTPUT input",
       token: "valid-token",

@@ -45,7 +45,8 @@ Response shape:
 - Receives the same payload.
 - Sends only `code` to AI `/api/v1/ai/pseudocode-to-python` as `pseudocode`.
 - Executes returned `pythonCode` with original test-case payload.
-- Returns the same response shape as `/execute-python-code`.
+- Returns the same response shape as `/execute-python-code`, plus:
+  - `pythonCode: string` (the generated Python that was executed)
 
 ## Authentication
 
