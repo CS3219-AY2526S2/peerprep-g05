@@ -64,11 +64,21 @@ export const closeRoomConnections = (
   roomName: RoomKey,
   code = WS_CLOSE_CODES.SESSION_ENDED,
   reason = "SESSION_ENDED",
+  excludeSocket?: CustomWebSocket,
 ) => {
   getRoomClients(roomName).forEach((socket) => {
+    if (socket === excludeSocket) {
+      return;
+    }
+
     clearClientAwarenessStates(roomName, socket);
-    socket.close(code, reason);
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.close(code, reason);
+    }
+    removeClientFromRoom(roomName, socket);
   });
+
+  cleanupRoomIfEmpty(roomName);
 };
 
 // Initialize a Y.Doc for the room if it doesn't exist
@@ -97,4 +107,29 @@ export const addClientToRoom = (roomName: RoomKey, client: CustomWebSocket) => {
     roomClients.set(roomName, new Set());
   }
   roomClients.get(roomName)!.add(client);
+};
+
+export const removeClientFromRoom = (
+  roomName: RoomKey,
+  client: CustomWebSocket,
+) => {
+  const clients = roomClients.get(roomName);
+  if (!clients) {
+    return;
+  }
+
+  clients.delete(client);
+  if (clients.size === 0) {
+    roomClients.delete(roomName);
+  }
+};
+
+const cleanupRoomIfEmpty = (roomName: RoomKey) => {
+  const clients = roomClients.get(roomName);
+  if (clients && clients.size > 0) {
+    return;
+  }
+
+  roomClients.delete(roomName);
+  roomDocs.delete(roomName);
 };

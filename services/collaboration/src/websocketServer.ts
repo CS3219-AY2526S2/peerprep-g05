@@ -40,9 +40,9 @@ wss.on("connection", async (conn: CustomWebSocket, req: IncomingMessage) => {
   });
 
   conn.on("close", (code: number, reason: Buffer<ArrayBufferLike>) => {
-    console.log(code, reason.toString());
-
-    closeRoomConnections(roomName, code, reason.toString());
+    if (code === WS_CLOSE_CODES.SESSION_ENDED) {
+      closeRoomConnections(roomName, code, reason.toString(), conn);
+    }
   });
 });
 export default wss;

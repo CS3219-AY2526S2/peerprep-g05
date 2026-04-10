@@ -43,7 +43,8 @@ export function CollaborativeEditor({
     const socket = provider.ws;
     if (socket) {
       socket.onclose = (event) => {
-        if (event.code === 4000) {
+        console.log("WebSocket closed:", event.code, event.reason);
+        if (event.code === 1000) {
           onSessionEnded?.();
         }
       };
