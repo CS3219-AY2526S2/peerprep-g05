@@ -64,10 +64,3 @@ export const executionRequestSchema = rawExecutionRequestSchema.transform(
 );
 
 export type ExecutionRequest = z.infer<typeof executionRequestSchema>;
-
-const aiConversionResponseSchema = z.object({
-  pythonCode: nonEmptyString("pythonCode"),
-});
-
-export const parseAiConversionResponse = (value: unknown) =>
-  aiConversionResponseSchema.parse(value);

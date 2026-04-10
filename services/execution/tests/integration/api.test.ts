@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const verifyAccessToken = vi.fn();
 const runPythonCodeAgainstTestCases = vi.fn();
-const convertPseudocodeToPython = vi.fn();
 
 vi.mock("@/services/jwksService.js", () => ({
   verifyAccessToken,
@@ -14,12 +13,9 @@ vi.mock("@/services/pythonRunnerService.js", () => ({
   runPythonCodeAgainstTestCases,
   isPythonRuntimeReady: vi.fn(async () => true),
   normalizeOutput: vi.fn((value: string) => value),
+  outputsMatch: vi.fn(() => true),
   parseSyntaxError: vi.fn(),
   parseRuntimeError: vi.fn(),
-}));
-
-vi.mock("@/services/aiClientService.js", () => ({
-  convertPseudocodeToPython,
 }));
 
 type MockRequest = {
@@ -143,62 +139,6 @@ describe("Execution API stack", () => {
     await runHandlers([requireAuth, postExecutePythonCode], req, res);
 
     expect(res.statusCode).toBe(200);
-    expect(runPythonCodeAgainstTestCases).toHaveBeenCalledWith({
-      code: "print(input())",
-      testCases: [
-        {
-          input: "a",
-          expectedOutput: "a",
-          isPublic: true,
-        },
-      ],
-    });
-  });
-
-  it("converts pseudocode then executes python", async () => {
-    const { requireAuth } = await import("@/middleware/requireAuth.js");
-    const { postConvertToPythonAndExecute } = await import(
-      "@/controllers/executionController.js"
-    );
-
-    verifyAccessToken.mockResolvedValue({
-      id: "user-1",
-      token: "valid-token",
-    });
-
-    convertPseudocodeToPython.mockResolvedValue("print(input())");
-    runPythonCodeAgainstTestCases.mockResolvedValue({
-      passedTestCases: [],
-      failedTestCases: [],
-      errorType: null,
-      errorsPresent: [],
-    });
-
-    const req: MockRequest = {
-      headers: {
-        authorization: "Bearer valid-token",
-      },
-      body: {
-        code: "OUTPUT input",
-        test_cases: [{ input: "a", expected_output: "a" }],
-      },
-    };
-    const res = createMockResponse();
-
-    await runHandlers([requireAuth, postConvertToPythonAndExecute], req, res);
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toEqual({
-      pythonCode: "print(input())",
-      passedTestCases: [],
-      failedTestCases: [],
-      errorType: null,
-      errorsPresent: [],
-    });
-    expect(convertPseudocodeToPython).toHaveBeenCalledWith({
-      code: "OUTPUT input",
-      token: "valid-token",
-    });
     expect(runPythonCodeAgainstTestCases).toHaveBeenCalledWith({
       code: "print(input())",
       testCases: [

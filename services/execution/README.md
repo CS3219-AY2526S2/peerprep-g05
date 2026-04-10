@@ -1,6 +1,6 @@
 # Execution Microservice
 
-Executes Python code against question-style test cases and supports pseudocode-to-python conversion via the AI microservice.
+Executes Python code against question-style test cases.
 
 ## Endpoints
 
@@ -40,25 +40,15 @@ Response shape:
 }
 ```
 
-### POST /api/v1/execution/convert-to-python-and-execute
-
-- Receives the same payload.
-- Sends only `code` to AI `/api/v1/ai/pseudocode-to-python` as `pseudocode`.
-- Executes returned `pythonCode` with original test-case payload.
-- Returns the same response shape as `/execute-python-code`, plus:
-  - `pythonCode: string` (the generated Python that was executed)
-
 ## Authentication
 
-Both endpoints require authentication using bearer token or auth cookie. The service verifies tokens using user-service JWKS.
+The endpoint requires authentication using bearer token or auth cookie. The service verifies tokens using user-service JWKS.
 
 ## Environment Variables
 
 - `PORT`
 - `USER_SERVICE_JWKS_URL`
-- `AI_SERVICE_BASE_URL`
 - `PYTHON_EXEC_TIMEOUT_MS`
-- `REQUEST_TIMEOUT_MS`
 - `MAX_REQUEST_BODY_SIZE`
 - `AUTH_COOKIE_NAME`
 - `JWKS_CACHE_TTL_MS`
