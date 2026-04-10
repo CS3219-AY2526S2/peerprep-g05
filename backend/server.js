@@ -134,6 +134,24 @@ function initProxyRoutes() {
         }
     }));
 
+    app.use("/api/v1/execution", createProxyMiddleware({
+        target: process.env.EXECUTION_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite: (path, req) => {
+            return `/api/v1/execution${path}`;
+        },
+        on: {
+            proxyReq: (proxyReq, req, res) => {
+                console.log("➡️ Incoming:", req.method, req.originalUrl);
+                console.log("➡️ Forwarding to:", proxyReq.path);
+            },
+            error: (err, req, res) => {
+                console.error("[Proxy] execution:", err.message);
+                res.status(502).json({ error: "Execution service unavailable" });
+            }
+        }
+    }));
+
     console.log("[Gateway] Proxy routes ready");
 }
 
