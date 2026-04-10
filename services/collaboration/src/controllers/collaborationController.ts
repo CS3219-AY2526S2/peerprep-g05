@@ -66,6 +66,10 @@ export const checkSessionIdExists: RequestHandler = async (req, res, next) => {
     res.status(404).json({ error: "Session not found" });
     return;
   }
+  if (session.status === "ENDED") {
+    res.status(410).json({ error: "Session has ended" });
+    return;
+  }
 
   const result = await authoriseConnectionForRoom(req);
   if (!result.ok) {

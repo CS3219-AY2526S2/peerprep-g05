@@ -13,38 +13,36 @@ export default function CollaborativeEditorPage() {
     descriptionContent: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   if (!roomId) {
     return <div>Room ID is required</div>;
   }
   const navigate = useNavigate();
 
   useEffect(() => {
-    getSessionInformation(roomId, token || "")
-      .then((info) => {
-        console.log("Session info:", info);
-        if (!info.ok) {
-          throw new Error(info.error);
-        } else {
-          setSessionInfo({
-            descriptionContent: info.session.descriptionContent,
-          });
-        }
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        alert("Error fetching editor session.");
-        console.error("Failed to fetch session:", error);
-        setIsLoading(false);
-      });
+    getSessionInformation(roomId, token || "").then((info) => {
+      console.log("Session info:", info);
+      if (!info.ok) {
+        setError(info.error);
+      } else {
+        setError(null);
+        setSessionInfo({
+          descriptionContent: info.session.descriptionContent,
+        });
+      }
+      setIsLoading(false);
+    });
   }, [roomId, token]);
 
   if (isLoading) {
     return <LoadingSpinner />;
   }
-  if (sessionInfo == null) {
+  if (error || sessionInfo == null) {
     return (
-      <div className="text-center text-red-500 text-3xl">
-        Invalid Editor Room
+      <div className="h-full flex items-center justify-center">
+        <p className="text-center text-red-500 text-3xl">
+          {error || "Invalid Editor Room"}
+        </p>
       </div>
     );
   }
@@ -74,6 +72,7 @@ export default function CollaborativeEditorPage() {
           roomId={roomId}
           onSessionEnded={() => {
             navigate("/");
+            alert("Session has ended.");
           }}
         />
       </div>

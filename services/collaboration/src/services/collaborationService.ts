@@ -146,12 +146,6 @@ const releaseUsersFromSession = async (users: string[], sessionId: string) => {
 const _getSessionById = async (sessionId: string) => {
   const session = await redisClient.get(getSessionKey(sessionId));
   if (!session) return null;
-  // TODO: To implement proper filtering, based on what one is trying to do
-  // Might need to return ended session to tell reconnected user the session is terminated
-  if (JSON.parse(session).status === "ENDED") {
-    return null;
-  }
-
   return JSON.parse(session) as CollaborationSession;
 };
 
