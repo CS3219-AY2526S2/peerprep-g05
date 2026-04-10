@@ -4,11 +4,9 @@ import { endSession, getSessionInformation } from "../api/collaborationApi";
 import { CollaborativeEditor } from "../components/collaborative/CollaborativeEditor";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
-import { useAuth } from "../context/AuthContext";
 
 export default function CollaborativeEditorPage() {
   const { roomId } = useParams();
-  const { token } = useAuth();
   const [sessionInfo, setSessionInfo] = useState<{
     descriptionContent: string;
   } | null>(null);
@@ -20,7 +18,7 @@ export default function CollaborativeEditorPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getSessionInformation(roomId, token || "").then((info) => {
+    getSessionInformation(roomId).then((info) => {
       console.log("Session info:", info);
       if (!info.ok) {
         setError(info.error);
@@ -32,7 +30,7 @@ export default function CollaborativeEditorPage() {
       }
       setIsLoading(false);
     });
-  }, [roomId, token]);
+  }, [roomId]);
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -52,7 +50,7 @@ export default function CollaborativeEditorPage() {
         <div
           className="red-button-class hover:cursor-pointer"
           onClick={() => {
-            endSession(roomId, token || "").then((success) => {
+            endSession(roomId).then((success) => {
               if (!success) {
                 alert("Failed to end session.");
               }

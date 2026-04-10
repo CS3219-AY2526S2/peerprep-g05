@@ -42,16 +42,14 @@ export function CollaborativeEditor({
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const [isProviderConnected, setIsProviderConnected] = useState(false);
   const [isPeerConnected, setIsPeerConnected] = useState(false);
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   const displayName = user?.display_name || user?.username || "Anonymous";
   const userColor = "#0fa0ff";
 
   useEffect(() => {
     const ydoc = new Y.Doc();
-    const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc, {
-      params: { token: token || "" },
-    });
+    const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc);
 
     const setWsStatus = (
       status: "connected" | "disconnected" | "connecting",
@@ -153,7 +151,7 @@ export function CollaborativeEditor({
       ydoc.destroy();
       provider.destroy();
     };
-  }, [roomId, userColor, displayName, onSessionEnded, onWsStatusChange, token]);
+  }, [roomId, userColor, displayName, onSessionEnded, onWsStatusChange]);
 
   return (
     <div className="h-full">

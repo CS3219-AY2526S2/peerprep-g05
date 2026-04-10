@@ -5,13 +5,13 @@ const SESSION_API_BASE_URL = `${GATEWAY_URL}/api/v1`;
 
 export async function getSessionInformation(
   roomId: string,
-  token: string,
 ): Promise<
   { ok: true; session: CollaborationSession } | { ok: false; error: string }
 > {
-  const res = await fetch(
-    `${SESSION_API_BASE_URL}/collaboration/${roomId}?token=${token}`,
-  );
+  const res = await fetch(`${SESSION_API_BASE_URL}/collaboration/${roomId}`, {
+    credentials: "include",
+  });
+
   if (res.status !== 200) {
     return {
       ok: false,
@@ -22,15 +22,10 @@ export async function getSessionInformation(
   return { ok: true, session };
 }
 
-export async function endSession(
-  roomId: string,
-  token: string,
-): Promise<boolean> {
-  const res = await fetch(
-    `${SESSION_API_BASE_URL}/collaboration/${roomId}?token=${token}`,
-    {
-      method: "DELETE",
-    },
-  );
+export async function endSession(roomId: string): Promise<boolean> {
+  const res = await fetch(`${SESSION_API_BASE_URL}/collaboration/${roomId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
   return res.status === 200;
 }
