@@ -5,7 +5,7 @@ import type { AdminUser, ApiError } from "../api/userApi.ts";
 import { isAdminRole } from "../utils/roles.ts";
 
 export default function AdminUsers() {
-    const { token } = useAuth();
+    const { user } = useAuth();
     const [users, setUsers] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -13,25 +13,29 @@ export default function AdminUsers() {
     const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!token) return;
+        if (!user) {
+            setUsers([]);
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
         setError("");
         api
-            .listAllUsers(token)
+            .listAllUsers()
             .then((res) => setUsers(res))
             .catch((err: ApiError) => setError(err.data?.error || "Failed to fetch users"))
             .finally(() => setLoading(false));
-    }, [token]);
+    }, [user]);
 
     async function handlePromote(userId: string) {
-        if (!token) return;
+        if (!user) return;
 
         setError("");
         setSuccess("");
         setUpdatingUserId(userId);
         try {
-            await api.promoteUserToAdmin(token, userId);
+            await api.promoteUserToAdmin(userId);
             setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: "ADMIN" } : u)));
             setSuccess("User promoted to ADMIN successfully.");
         } catch (err) {

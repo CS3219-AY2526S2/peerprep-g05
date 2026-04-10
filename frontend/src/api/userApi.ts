@@ -50,16 +50,13 @@ export type AdminUser = User;
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
+    credentials: "include",
     ...options,
     headers: { "Content-Type": "application/json", ...options.headers },
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw { status: res.status, data } as ApiError;
   return data as T;
-}
-
-function authHeader(token: string): HeadersInit {
-  return { Authorization: `Bearer ${token}` };
 }
 
 // ── Auth ──────────────────────────────────────────────
@@ -97,6 +94,11 @@ export const login = (identifier: string, password: string) =>
     body: JSON.stringify({ identifier, password }),
   });
 
+export const logout = () =>
+  request<{ message: string }>("/auth/logout", {
+    method: "POST",
+  });
+
 export const forgotPassword = (email: string) =>
   request<{ message: string }>("/auth/forgot-password", {
     method: "POST",
@@ -110,28 +112,21 @@ export const resetPassword = (token: string, password: string) =>
   });
 
 // ── User ──────────────────────────────────────────────
-export const getMe = (token: string) =>
-  request<User>("/users/me", { headers: authHeader(token) });
+export const getMe = () => request<User>("/users/me");
 
 export const updateMe = (
-  token: string,
   fields: Partial<Pick<User, "display_name" | "email" | "username">>,
 ) =>
   request<User>("/users/me", {
     method: "PATCH",
-    headers: authHeader(token),
     body: JSON.stringify(fields),
   });
 
 // ── Admin ─────────────────────────────────────────────
-export const listAllUsers = (token: string) =>
-  request<AdminUser[]>("/admin/users", {
-    headers: authHeader(token),
-  });
+export const listAllUsers = () => request<AdminUser[]>("/admin/users");
 
-export const promoteUserToAdmin = (token: string, userId: string) =>
+export const promoteUserToAdmin = (userId: string) =>
   request<AdminUser>(`/admin/users/${userId}/role`, {
     method: "PATCH",
-    headers: authHeader(token),
     body: JSON.stringify({ role: "ADMIN" }),
   });
