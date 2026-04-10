@@ -2,6 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { isDeepStrictEqual } from "node:util";
 import { config } from "@/config.js";
 import { HttpError } from "@/lib/httpError.js";
 
@@ -108,6 +109,28 @@ const runPythonProcess = async (input: {
 
 export const normalizeOutput = (value: string) =>
   value.replaceAll("\r\n", "\n").trim();
+
+const tryParseJson = (value: string): unknown | null => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
+export const outputsMatch = (expected: string, actual: string) => {
+  const normalizedExpected = normalizeOutput(expected);
+  const normalizedActual = normalizeOutput(actual);
+
+  const parsedExpected = tryParseJson(normalizedExpected);
+  const parsedActual = tryParseJson(normalizedActual);
+
+  if (parsedExpected !== null && parsedActual !== null) {
+    return isDeepStrictEqual(parsedExpected, parsedActual);
+  }
+
+  return normalizedExpected === normalizedActual;
+};
 
 const getNonEmptyLines = (value: string) =>
   value
@@ -272,7 +295,7 @@ export const runPythonCodeAgainstTestCases = async (input: {
         continue;
       }
 
-      if (actualOutput !== expectedOutput) {
+      if (!outputsMatch(expectedOutput, actualOutput)) {
         failedTestCases.push({
           index,
           input: testCase.input,

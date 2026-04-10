@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   normalizeOutput,
+  outputsMatch,
   parseRuntimeError,
   parseSyntaxError,
 } from "@/services/pythonRunnerService.js";
@@ -38,5 +39,17 @@ ZeroDivisionError: division by zero
       type: "ZeroDivisionError",
       message: "division by zero",
     });
+  });
+
+  it("treats equivalent JSON outputs as matching despite spacing", () => {
+    expect(outputsMatch("[0,1]", "[0, 1]")).toBe(true);
+    expect(outputsMatch("{\"a\":1,\"b\":[2,3]}", "{\"a\": 1, \"b\": [2, 3]}")).toBe(
+      true,
+    );
+  });
+
+  it("falls back to strict normalized string comparison for non-JSON outputs", () => {
+    expect(outputsMatch("hello world", "hello world")).toBe(true);
+    expect(outputsMatch("hello world", "hello  world")).toBe(false);
   });
 });

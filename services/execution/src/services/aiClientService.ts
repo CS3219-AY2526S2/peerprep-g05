@@ -26,6 +26,21 @@ const parseUpstreamErrorMessage = async (response: Response) => {
   return `AI service request failed with status ${response.status}.`;
 };
 
+export const stripMarkdownCodeFence = (value: string) => {
+  const trimmed = value.trim();
+  const fencedBlock = trimmed.match(/^```[\w-]*\s*\n([\s\S]*?)\n```$/);
+  if (fencedBlock?.[1]) {
+    return fencedBlock[1].trim();
+  }
+
+  const simpleFence = trimmed.match(/^```([\s\S]*?)```$/);
+  if (simpleFence?.[1]) {
+    return simpleFence[1].trim();
+  }
+
+  return value;
+};
+
 export const convertPseudocodeToPython = async (input: {
   code: string;
   token: string;
@@ -58,5 +73,5 @@ export const convertPseudocodeToPython = async (input: {
   }
 
   const body = parseAiConversionResponse(await response.json());
-  return body.pythonCode;
+  return stripMarkdownCodeFence(body.pythonCode);
 };
