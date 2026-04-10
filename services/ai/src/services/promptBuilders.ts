@@ -25,6 +25,10 @@ Rules:
 - Do not correct logical mistakes.
 - Do not add question-specific optimizations or assumptions.
 - Make the Python syntactically valid and executable where possible.
+- Assume the generated Python will be executed as a top-level script.
+- Do not use top-level \`return\` statements.
+- Read inputs from standard input (\`stdin\`) when input handling is needed.
+- Produce output using \`print\` when the pseudocode returns or outputs a result.
 - Return only the Python code, with brief comments only when they help preserve the pseudocode structure.
 `;
 
