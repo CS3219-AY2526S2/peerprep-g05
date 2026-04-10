@@ -33,17 +33,28 @@ const normalizeProviderError = (error: unknown): RetryableModelError => {
       ? error.message
       : fallbackMessage;
 
-  const status =
+  const rawStatus =
     typeof error === "object" && error !== null
       ? Number(
           Reflect.get(error, "status") ??
-            Reflect.get(error, "statusCode") ??
-            Reflect.get(error, "code") ??
-            502,
+            Reflect.get(error, "statusCode"),
         )
-      : 502;
+      : Number.NaN;
 
-  const normalizedStatus = Number.isFinite(status) ? status : 502;
+  const hasTimeoutKeyword = /timeout|timed out|aborted/i.test(message);
+  const isAbortError =
+    typeof error === "object" &&
+    error !== null &&
+    Reflect.get(error, "name") === "AbortError";
+
+  const isHttpStatus =
+    Number.isFinite(rawStatus) && rawStatus >= 100 && rawStatus <= 599;
+
+  const normalizedStatus = isHttpStatus
+    ? rawStatus
+    : hasTimeoutKeyword || isAbortError
+      ? 408
+      : 502;
 
   // Retry all model candidates unless the failure indicates a service-wide
   // auth/configuration issue with the API key itself.

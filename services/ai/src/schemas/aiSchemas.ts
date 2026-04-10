@@ -4,15 +4,15 @@ const nonEmptyString = (fieldName: string) =>
   z.string().trim().min(1, `${fieldName} is required.`);
 
 export const chatRequestSchema = z.object({
+  sessionId: nonEmptyString("sessionId"),
   prompt: nonEmptyString("prompt"),
   codeSnippet: nonEmptyString("codeSnippet"),
   question: nonEmptyString("question"),
-  sessionId: z.string().trim().min(1).optional(),
 });
 
 export const pseudocodeToPythonRequestSchema = z.object({
+  sessionId: nonEmptyString("sessionId"),
   pseudocode: nonEmptyString("pseudocode"),
-  sessionId: z.string().trim().min(1).optional(),
 });
 
 export type ChatRequest = z.infer<typeof chatRequestSchema>;

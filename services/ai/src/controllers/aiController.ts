@@ -43,11 +43,11 @@ export const postChatResponse: RequestHandler = async (req, res) => {
     });
 
     const response = await generateChatResponse({
+      sessionId: parsed.data.sessionId,
       prompt: parsed.data.prompt,
       codeSnippet: parsed.data.codeSnippet,
       question: parsed.data.question,
       userId: req.user!.id,
-      ...(parsed.data.sessionId ? { sessionId: parsed.data.sessionId } : {}),
     });
 
     res.json({
@@ -73,9 +73,9 @@ export const postPseudocodeToPython: RequestHandler = async (req, res) => {
     });
 
     const response = await convertPseudocodeToPython({
+      sessionId: parsed.data.sessionId,
       pseudocode: parsed.data.pseudocode,
       userId: req.user!.id,
-      ...(parsed.data.sessionId ? { sessionId: parsed.data.sessionId } : {}),
     });
 
     res.json({

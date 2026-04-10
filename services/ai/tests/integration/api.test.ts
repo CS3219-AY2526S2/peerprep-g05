@@ -8,6 +8,7 @@ const pingRedis = vi.fn(async () => true);
 const generateChatResponse = vi.fn();
 const convertPseudocodeToPython = vi.fn();
 const consumeDailyBudget = vi.fn();
+const assertActiveSessionAccess = vi.fn();
 
 vi.mock("@/services/jwksService.js", () => ({
   verifyAccessToken,
@@ -20,6 +21,10 @@ vi.mock("@/services/redisClient.js", () => ({
 
 vi.mock("@/services/budgetService.js", () => ({
   consumeDailyBudget,
+}));
+
+vi.mock("@/services/sessionValidationService.js", () => ({
+  assertActiveSessionAccess,
 }));
 
 vi.mock("@/services/aiService.js", () => ({
@@ -86,6 +91,7 @@ const runHandlers = async (
 describe("AI API stack", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    assertActiveSessionAccess.mockResolvedValue(undefined);
     consumeDailyBudget.mockResolvedValue({
       feature: "chat",
       usedFeature: 1,
@@ -100,6 +106,9 @@ describe("AI API stack", () => {
 
   it("returns chat output for an authenticated user with budget remaining", async () => {
     const { requireAuth } = await import("@/middleware/requireAuth.js");
+    const { requireActiveSession } = await import(
+      "@/middleware/requireActiveSession.js"
+    );
     const { postChatResponse } = await import("@/controllers/aiController.js");
 
     verifyAccessToken.mockResolvedValue({
@@ -117,6 +126,7 @@ describe("AI API stack", () => {
         authorization: "Bearer valid-token",
       },
       body: {
+        sessionId: "active-session-id",
         prompt: "What should I inspect next?",
         codeSnippet: "def solve(): pass",
         question: "Find the maximum sum subarray.",
@@ -124,7 +134,11 @@ describe("AI API stack", () => {
     };
     const res = createMockResponse();
 
-    await runHandlers([requireAuth, postChatResponse], req, res);
+    await runHandlers(
+      [requireAuth, requireActiveSession, postChatResponse],
+      req,
+      res,
+    );
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({
@@ -146,6 +160,9 @@ describe("AI API stack", () => {
 
   it("blocks requests when the user's daily AI budget is exhausted", async () => {
     const { requireAuth } = await import("@/middleware/requireAuth.js");
+    const { requireActiveSession } = await import(
+      "@/middleware/requireActiveSession.js"
+    );
     const { postPseudocodeToPython } = await import(
       "@/controllers/aiController.js"
     );
@@ -166,12 +183,17 @@ describe("AI API stack", () => {
         authorization: "Bearer valid-token",
       },
       body: {
+        sessionId: "active-session-id",
         pseudocode: "print hello world",
       },
     };
     const res = createMockResponse();
 
-    await runHandlers([requireAuth, postPseudocodeToPython], req, res);
+    await runHandlers(
+      [requireAuth, requireActiveSession, postPseudocodeToPython],
+      req,
+      res,
+    );
 
     expect(res.statusCode).toBe(429);
     expect(convertPseudocodeToPython).not.toHaveBeenCalled();
@@ -179,6 +201,9 @@ describe("AI API stack", () => {
 
   it("returns validation errors for invalid payloads", async () => {
     const { requireAuth } = await import("@/middleware/requireAuth.js");
+    const { requireActiveSession } = await import(
+      "@/middleware/requireActiveSession.js"
+    );
     const { postChatResponse } = await import("@/controllers/aiController.js");
 
     verifyAccessToken.mockResolvedValue({
@@ -191,6 +216,7 @@ describe("AI API stack", () => {
         authorization: "Bearer valid-token",
       },
       body: {
+        sessionId: "active-session-id",
         prompt: "",
         codeSnippet: "",
         question: "",
@@ -198,7 +224,11 @@ describe("AI API stack", () => {
     };
     const res = createMockResponse();
 
-    await runHandlers([requireAuth, postChatResponse], req, res);
+    await runHandlers(
+      [requireAuth, requireActiveSession, postChatResponse],
+      req,
+      res,
+    );
 
     expect(res.statusCode).toBe(400);
     expect(res.body).toEqual(
@@ -209,26 +239,26 @@ describe("AI API stack", () => {
     expect(generateChatResponse).not.toHaveBeenCalled();
   });
 
-  it("supports optional sessionId as soft request context", async () => {
+  it("blocks requests when the session is invalid or not active", async () => {
     const { requireAuth } = await import("@/middleware/requireAuth.js");
-    const { postChatResponse } = await import("@/controllers/aiController.js");
+    const { requireActiveSession } = await import(
+      "@/middleware/requireActiveSession.js"
+    );
 
     verifyAccessToken.mockResolvedValue({
       id: "user-1",
       token: "valid-token",
     });
-    generateChatResponse.mockResolvedValue({
-      reply: "Check the invariant before the loop starts.",
-      model: "model-b",
-      fallbackUsed: true,
-    });
+    assertActiveSessionAccess.mockRejectedValueOnce(
+      new HttpError(403, "A valid active session is required."),
+    );
 
     const req: MockRequest = {
       headers: {
         authorization: "Bearer valid-token",
       },
       body: {
-        sessionId: "soft-session-id",
+        sessionId: "invalid-session-id",
         prompt: "Can you hint at my base case?",
         codeSnippet: "def solve(nums):\n    return 0",
         question: "Compute the best subarray.",
@@ -236,13 +266,9 @@ describe("AI API stack", () => {
     };
     const res = createMockResponse();
 
-    await runHandlers([requireAuth, postChatResponse], req, res);
+    await runHandlers([requireAuth, requireActiveSession], req, res);
 
-    expect(res.statusCode).toBe(200);
-    expect(generateChatResponse).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sessionId: "soft-session-id",
-      }),
-    );
+    expect(res.statusCode).toBe(403);
+    expect(generateChatResponse).not.toHaveBeenCalled();
   });
 });

@@ -41,6 +41,15 @@ export const config = {
   REDIS_URL: requiredEnv.REDIS_URL!,
   USER_SERVICE_JWKS_URL: requiredEnv.USER_SERVICE_JWKS_URL!,
   REQUEST_TIMEOUT_MS: parseInteger(process.env["REQUEST_TIMEOUT_MS"], 30_000),
+  SESSION_VALIDATION_BASE_URL:
+    process.env["SESSION_VALIDATION_BASE_URL"] ??
+    process.env["GATEWAY_SERVICE_URL"] ??
+    process.env["COLLAB_SERVICE_URL"] ??
+    "http://gateway:4000",
+  SESSION_VALIDATION_TIMEOUT_MS: parseInteger(
+    process.env["SESSION_VALIDATION_TIMEOUT_MS"],
+    5_000,
+  ),
   MAX_REQUEST_BODY_SIZE: process.env["MAX_REQUEST_BODY_SIZE"] ?? "1mb",
   AUTH_COOKIE_NAME:
     process.env["AUTH_COOKIE_NAME"] ?? "peerprep_access_token",
