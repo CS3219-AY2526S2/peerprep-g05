@@ -193,20 +193,27 @@ export const createSession = async (users: string[], questionId: string) => {
   if (uniqueUsers.length !== users.length) {
     throw new Error("Users in a collaboration session must be unique");
   }
+  console.log(
+    "Creating session for users: ",
+    users,
+    " and questionId: ",
+    questionId,
+  );
   // check if there are active session for any user, if yes, return conflict error
-  if ((await filterUserWithActiveSession(users)).length > 0) {
-    // TODO: proper error message for the user session
-    // For now, just release all sessions.
-    const activeSessionIds = await filterUserWithActiveSession(users);
-    await Promise.all(
-      activeSessionIds.map(async (sessionId) => {
-        await releaseUsersFromSession(users, sessionId);
-      }),
-    );
-    // throw new Error("One or more users already have an active session");
-  }
+  // if ((await filterUserWithActiveSession(users)).length > 0) {
+  //   // TODO: proper error message for the user session
+  //   // For now, just release all sessions.
+  //   const activeSessionIds = await filterUserWithActiveSession(users);
+  //   await Promise.all(
+  //     activeSessionIds.map(async (sessionId) => {
+  //       await releaseUsersFromSession(users, sessionId);
+  //     }),
+  //   );
+  //   throw new Error("One or more users already have an active session");
+  // }
 
-  // TODO: proper check for active session
+  // console.log("All users are free, creating session...");
+  // // TODO: proper check for active session
   const newSessionId = randomUUID();
   // if (!(await markUserActiveSession(users, newSessionId))) {
   //   throw new Error(
@@ -218,17 +225,14 @@ export const createSession = async (users: string[], questionId: string) => {
     // fetch question
     const questionUrl =
       config.QUESTION_API_BASE_URL + `/api/v1/questions/${questionId}`;
-    const response = (await fetch(questionUrl)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to fetch question data");
-        }
-        return res.json();
-      })
-      .catch((err) => {
-        console.error("Error fetching question data: ", err);
+    const response = (await fetch(questionUrl).then((res) => {
+      console.log("Question API response status: ", res.status);
+
+      if (!res.ok) {
         throw new Error("Failed to fetch question data");
-      })) as { data: { title: string; description: string } };
+      }
+      return res.json();
+    })) as { data: { title: string; description: string } };
 
     // TODO: maybe move to an adapter to support more feature like test cases.
     const { data: questionData } = response;

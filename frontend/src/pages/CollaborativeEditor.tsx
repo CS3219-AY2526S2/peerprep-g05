@@ -22,7 +22,13 @@ export default function CollaborativeEditorPage() {
     getSessionInformation(roomId, token || "")
       .then((info) => {
         console.log("Session info:", info);
-        setSessionInfo(info);
+        if (!info.ok) {
+          throw new Error(info.error);
+        } else {
+          setSessionInfo({
+            descriptionContent: info.session.descriptionContent,
+          });
+        }
         setIsLoading(false);
       })
       .catch((error) => {
@@ -30,7 +36,7 @@ export default function CollaborativeEditorPage() {
         console.error("Failed to fetch session:", error);
         setIsLoading(false);
       });
-  }, [roomId]);
+  }, [roomId, token]);
 
   if (isLoading) {
     return <LoadingSpinner />;

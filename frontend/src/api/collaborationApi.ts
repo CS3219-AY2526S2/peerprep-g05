@@ -6,14 +6,20 @@ const SESSION_API_BASE_URL = `${GATEWAY_URL}/api/v1`;
 export async function getSessionInformation(
   roomId: string,
   token: string,
-): Promise<CollaborationSession | null> {
+): Promise<
+  { ok: true; session: CollaborationSession } | { ok: false; error: string }
+> {
   const res = await fetch(
     `${SESSION_API_BASE_URL}/collaboration/${roomId}?token=${token}`,
   );
   if (res.status !== 200) {
-    return null;
+    return {
+      ok: false,
+      error: (await res.json()).error || "Failed to fetch session information",
+    };
   }
-  return await res.json();
+  const session = await res.json();
+  return { ok: true, session };
 }
 
 export async function endSession(

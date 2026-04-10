@@ -5,9 +5,9 @@ import {
   getSessions,
   type SessionStatus,
 } from "@/services/collaborationService.js";
-import { closeRoomConnections } from "@/websocketServer.js";
+import { authoriseConnectionForRoom as authoriseConnectionForRoom } from "@/websocket/auth.js";
+import { closeRoomConnections } from "@/websocket/wsRooms.js";
 import type { RequestHandler } from "express";
-import { jwtDecode } from "jwt-decode";
 import z from "zod";
 
 export const getCollaborationSessions: RequestHandler = async (req, res) => {
@@ -66,16 +66,13 @@ export const checkSessionIdExists: RequestHandler = async (req, res, next) => {
     res.status(404).json({ error: "Session not found" });
     return;
   }
-  // check if user is part of the session
-  const token = req.query["token"] as string | undefined;
-  if (token) {
-    const decodedToken = jwtDecode(token);
-    if (decodedToken.sub && !session.users.includes(decodedToken.sub)) {
-      res.status(403).json({ error: "User is not part of the session" });
-      return;
-    }
+
+  const result = await authoriseConnectionForRoom(req);
+  if (!result.ok) {
+    res.status(403).json({ error: result.reason });
+    return;
   }
-  res.locals["session"] = session;
+  res.locals["session"] = result.session;
   next();
 };
 export const getCollaborationSession: RequestHandler = async (_, res) => {
