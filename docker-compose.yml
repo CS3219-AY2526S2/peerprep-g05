@@ -247,6 +247,42 @@ services:
     networks:
       - peerprep-network
 
+  # ── AI Service ───────────────────────────────────────────────
+  ai-service:
+    build:
+      context: ./services/ai
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3005:3004"
+    env_file:
+      - ./services/ai/.env
+    environment:
+      PORT: 3004
+      REDIS_URL: redis://redis:6379
+      USER_SERVICE_JWKS_URL: http://user-service:3001/api/v1/auth/jwks
+      SESSION_VALIDATION_BASE_URL: http://gateway:4000
+      SESSION_VALIDATION_TIMEOUT_MS: 5000
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3004/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - peerprep-network
+
 
 
   # ---------------- INFRASTRUCTURE ----------------
@@ -277,6 +313,7 @@ services:
       QUESTION_SERVICE_URL: http://question-service:3002
       USER_SERVICE_URL: http://user-service:3001
       COLLAB_SERVICE_URL: http://collaboration-server:3003
+      AI_SERVICE_URL: http://ai-service:3004
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
