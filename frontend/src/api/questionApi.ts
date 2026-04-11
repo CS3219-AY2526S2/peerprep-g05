@@ -98,7 +98,6 @@ export interface QuestionFilters {
     limit?: number;
     complexity?: string;
     topic?: string;
-    category?: string;
     company?: string;
     search?: string;
 }
@@ -108,11 +107,7 @@ export function getAllQuestions(filters: QuestionFilters = {}) {
     if (filters.page) params.set("page", String(filters.page));
     if (filters.limit) params.set("limit", String(filters.limit));
     if (filters.complexity) params.set("complexity", filters.complexity);
-    const selectedTopic = filters.topic ?? filters.category;
-    if (selectedTopic) {
-        params.set("topic", selectedTopic);
-        params.set("category", selectedTopic);
-    }
+    if (filters.topic) params.set("topic", filters.topic);
     if (filters.company) params.set("company", filters.company);
     if (filters.search) params.set("search", filters.search);
     const qs = params.toString();
@@ -182,9 +177,7 @@ export function deleteQuestion(id: number | string) {
 // ── Topics & Companies ────────────────────────────────
 
 export function getTopics() {
-    return request<SingleResponse<string[]>>("/questions/topics").catch(() =>
-        request<SingleResponse<string[]>>("/questions/categories")
-    );
+    return request<SingleResponse<string[]>>("/questions/topics");
 }
 
 export function getCompanies() {

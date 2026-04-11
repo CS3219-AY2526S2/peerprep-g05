@@ -1,15 +1,15 @@
 import {
+    extractToken,
     fetchRequesterProfile,
-    getBearerToken,
     isPrivilegedRole,
 } from "../utils/requesterAuth.js";
 
 export async function requirePrivilegedRequester(req, res, next) {
     try {
-        if (!getBearerToken(req)) {
+        if (!extractToken(req)) {
             return res.status(401).json({
                 success: false,
-                error: "Authorization bearer token is required",
+                error: "Authentication token is required",
             });
         }
 

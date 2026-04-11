@@ -162,6 +162,7 @@ services:
       POSTGRES_DB: questions_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      GATEWAY_URL: http://gateway:4000
       USER_SERVICE_BASE_URL: http://user-service:3001/api/v1
     depends_on:
       question-db:
