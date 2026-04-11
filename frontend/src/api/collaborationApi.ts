@@ -5,10 +5,27 @@ const SESSION_API_BASE_URL = `${GATEWAY_URL}/api/v1`;
 
 export async function getSessionInformation(
   roomId: string,
-): Promise<CollaborationSession | null> {
-  const res = await fetch(`${SESSION_API_BASE_URL}/collaboration/${roomId}`);
+): Promise<
+  { ok: true; session: CollaborationSession } | { ok: false; error: string }
+> {
+  const res = await fetch(`${SESSION_API_BASE_URL}/collaboration/${roomId}`, {
+    credentials: "include",
+  });
+
   if (res.status !== 200) {
-    return null;
+    return {
+      ok: false,
+      error: (await res.json()).error || "Failed to fetch session information",
+    };
   }
-  return await res.json();
+  const session = await res.json();
+  return { ok: true, session };
+}
+
+export async function endSession(roomId: string): Promise<boolean> {
+  const res = await fetch(`${SESSION_API_BASE_URL}/collaboration/${roomId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  return res.status === 200;
 }

@@ -8,13 +8,13 @@ dotenv.config();
 type ConfigType = {
   REDIS_URL: string;
   EXPRESS_PORT: string;
-  QUESTION_API_BASE_URL: string;
+  GATEWAY_URL: string;
 };
 
 export const config: ConfigType = {
   REDIS_URL: process.env["REDIS_URL"]!,
   EXPRESS_PORT: process.env["EXPRESS_PORT"]!,
-  QUESTION_API_BASE_URL: process.env["QUESTION_API_BASE_URL"]!,
+  GATEWAY_URL: process.env["GATEWAY_URL"]!,
 };
 
 const missingEnvVars: string[] = [];
