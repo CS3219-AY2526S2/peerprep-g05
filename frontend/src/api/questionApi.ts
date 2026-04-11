@@ -144,10 +144,9 @@ export interface QuestionBody {
     test_cases?: Omit<TestCase, "id" | "question_id" | "order_index">[];
 }
 
-export function createQuestion(body: QuestionBody, token?: string) {
+export function createQuestion(body: QuestionBody) {
     return request<SingleResponse<RawQuestion>>("/questions", {
         method: "POST",
-        headers: authHeader(token),
         body: JSON.stringify({
             ...body,
             topics: body.topics,

@@ -9,6 +9,8 @@ const TITLE_MAX_LENGTH = 255;
 const DESCRIPTION_MAX_LENGTH = 10000;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+const PRIVILEGED_ROLES = new Set(["ADMIN", "MASTER_ADMIN"]);
+const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL || "http://localhost:3001/api/v1";
 
 /**
  * Build an absolute pagination URL while preserving existing query filters.
