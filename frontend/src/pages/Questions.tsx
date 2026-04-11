@@ -13,7 +13,7 @@ const COMPLEXITY_COLORS: Record<string, string> = {
 };
 
 export default function Questions() {
-    const { user, token } = useAuth();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const isAdmin = isAdminRole(user?.role);
 
@@ -86,7 +86,7 @@ export default function Questions() {
         if (!deleteTarget) return;
         setDeleting(true);
         try {
-            await qApi.deleteQuestion(deleteTarget.id, token || undefined);
+            await qApi.deleteQuestion(deleteTarget.id);
             setDeleteTarget(null);
             loadQuestions();
         } catch (err) {

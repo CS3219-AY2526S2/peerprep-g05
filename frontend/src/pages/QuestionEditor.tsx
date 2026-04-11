@@ -22,7 +22,7 @@ export default function QuestionEditor() {
     const { id } = useParams<{ id: string }>();
     const isEdit = Boolean(id);
     const navigate = useNavigate();
-    const { user, token, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
     const lockHolder = user?.username || user?.id || "unknown";
 
@@ -59,10 +59,10 @@ export default function QuestionEditor() {
             setError("");
             try {
                 // Acquire lock first
-                await qApi.acquireLock(id!, lockHolder, token || undefined);
+                await qApi.acquireLock(id!, lockHolder);
                 lockAcquired.current = true;
 
-                const res = await qApi.getQuestionById(id!, token || undefined);
+                const res = await qApi.getQuestionById(id!);
                 const q = res.data;
                 setTitle(q.title);
                 setDescription(q.description);
@@ -89,16 +89,16 @@ export default function QuestionEditor() {
         }
 
         load();
-    }, [id, isEdit, lockHolder, authLoading, user, token]);
+    }, [id, isEdit, lockHolder, authLoading, user]);
 
     // Release lock on unmount
     const releaseLockRef = useCallback(() => {
         if (isEdit && id && lockAcquired.current) {
             // Fire-and-forget release
-            qApi.releaseLock(id, lockHolder, token || undefined).catch(() => {});
+            qApi.releaseLock(id, lockHolder).catch(() => {});
             lockAcquired.current = false;
         }
-    }, [id, isEdit, lockHolder, token]);
+    }, [id, isEdit, lockHolder]);
 
     useEffect(() => {
         // On unmount, release lock
@@ -165,13 +165,13 @@ export default function QuestionEditor() {
                     return;
                 }
 
-                await qApi.updateQuestion(id, body, lockHolder, token || undefined);
+                await qApi.updateQuestion(id, body, lockHolder);
                 // Release lock after successful save
-                await qApi.releaseLock(id, lockHolder, token || undefined).catch(() => {});
+                await qApi.releaseLock(id, lockHolder).catch(() => {});
                 lockAcquired.current = false;
                 navigate(`/questions/${id}`);
             } else {
-                const res = await qApi.createQuestion(body, token || undefined);
+                const res = await qApi.createQuestion(body);
                 navigate(`/questions/${res.data.id}`);
             }
         } catch (err) {
