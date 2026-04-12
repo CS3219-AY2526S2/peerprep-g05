@@ -22,6 +22,7 @@ import {
     releaseLock,
     getLockStatus,
 } from "../controllers/lockController.js";
+import { requirePrivilegedRequester } from "../middlewares/requirePrivilegedRequester.js";
 
 const router = express.Router();
 
@@ -36,13 +37,13 @@ router.get("/:id", getQuestionById);
 router.get("/:id/completions", getQuestionCompletionStats);
 router.post("/:id/completions", markQuestionCompleted);
 router.post("/:id/completions/bulk", markQuestionCompletedByUsers);
-router.post("/", createQuestion);
-router.put("/:id", updateQuestion);
-router.delete("/:id", deleteQuestion);
+router.post("/", requirePrivilegedRequester, createQuestion);
+router.put("/:id", requirePrivilegedRequester, updateQuestion);
+router.delete("/:id", requirePrivilegedRequester, deleteQuestion);
 
 // Lock routes
 router.get("/:id/lock", getLockStatus);
-router.post("/:id/lock", acquireLock);
-router.delete("/:id/lock", releaseLock);
+router.post("/:id/lock", requirePrivilegedRequester, acquireLock);
+router.delete("/:id/lock", requirePrivilegedRequester, releaseLock);
 
 export default router;

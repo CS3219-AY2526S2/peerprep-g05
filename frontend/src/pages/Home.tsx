@@ -17,15 +17,25 @@ export default function Home() {
       {!user && <AuthOverlay />}
 
       <div className="p-8 text-center">
-        <h1 className="mb-2 text-4xl font-semibold text-slate-900">
-          Welcome to PeerPrep
+        <h1 className="mb-2 text-4xl font-semibold" style={{ color: "var(--app-text)" }}>
+          Welcome to{" "}
+          <span aria-label="PeerPrep" role="text">
+            <span className="text-red-500">P</span>
+            <span className="text-orange-500">e</span>
+            <span className="text-yellow-500">e</span>
+            <span className="text-green-500">r</span>
+            <span className="text-blue-500">P</span>
+            <span className="text-indigo-500">r</span>
+            <span className="text-violet-500">e</span>
+            <span className="text-pink-500">p</span>
+          </span>
         </h1>
-        <p className="mb-8 text-lg text-slate-600">
+        <p className="mb-8 text-lg" style={{ color: "var(--app-text)", opacity: 0.8 }}>
           Collaborative technical interview preparation
         </p>
 
         {user && (
-          <div className="inline-block rounded-xl bg-slate-50 px-8 py-6 text-left shadow">
+          <div className="inline-block rounded-xl bg-slate-50 px-8 py-6 text-left text-slate-800 shadow">
             <h3 className="mb-4 text-xl font-semibold text-slate-900">
               Your Profile
             </h3>
