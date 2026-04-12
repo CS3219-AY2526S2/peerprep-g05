@@ -7,6 +7,7 @@ const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 const PRIVILEGED_ROLES = new Set(["ADMIN", "MASTER_ADMIN"]);
 const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL || "http://localhost:3001/api/v1";
+const PROGRESS_STATUSES = new Set(["COMPLETED", "ATTEMPTED", "INCOMPLETE"]);
 
 /**
  * Build an absolute pagination URL while preserving existing query filters.
@@ -181,6 +182,11 @@ async function isPrivilegedRequester(req) {
 async function questionExists(questionId) {
     const exists = await pool.query("SELECT 1 FROM questions WHERE id = $1", [questionId]);
     return exists.rows.length > 0;
+}
+
+function normalizeProgressStatus(value) {
+    const normalized = String(value || "").trim().toUpperCase();
+    return PROGRESS_STATUSES.has(normalized) ? normalized : null;
 }
 
 /** GET / — paginated list with optional filters and text search. */
@@ -576,29 +582,33 @@ export async function markQuestionCompleted(req, res, next) {
             });
         }
 
-        const insertResult = await pool.query(
-            `INSERT INTO question_completions (question_id, user_id)
-             VALUES ($1, $2::uuid)
-             ON CONFLICT (question_id, user_id) DO NOTHING
-             RETURNING question_id, user_id, completed_at`,
+        const existingResult = await pool.query(
+            `SELECT status, attempted_at, completed_at
+             FROM question_completions
+             WHERE question_id = $1 AND user_id = $2::uuid`,
             [questionId, userId]
         );
 
-        let completionRow = insertResult.rows[0] || null;
-        const alreadyCompleted = !completionRow;
+        const alreadyCompleted = existingResult.rows[0]?.status === "COMPLETED";
 
-        if (!completionRow) {
-            const existing = await pool.query(
-                `SELECT question_id, user_id, completed_at
-                 FROM question_completions
-                 WHERE question_id = $1 AND user_id = $2::uuid`,
-                [questionId, userId]
-            );
-            completionRow = existing.rows[0] || null;
-        }
+        const upsertResult = await pool.query(
+            `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
+             VALUES ($1, $2::uuid, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+             ON CONFLICT (question_id, user_id) DO UPDATE
+             SET status = 'COMPLETED',
+                 attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
+                 completed_at = COALESCE(question_completions.completed_at, CURRENT_TIMESTAMP)
+             RETURNING question_id, user_id, status, attempted_at, completed_at`,
+            [questionId, userId]
+        );
+
+        const completionRow = upsertResult.rows[0] || null;
 
         const countResult = await pool.query(
-            "SELECT COUNT(*)::int AS unique_users_completed FROM question_completions WHERE question_id = $1",
+            `SELECT COUNT(*) FILTER (WHERE status = 'COMPLETED')::int AS unique_users_completed,
+                    COUNT(*) FILTER (WHERE status = 'ATTEMPTED')::int AS unique_users_attempted
+             FROM question_completions
+             WHERE question_id = $1`,
             [questionId]
         );
 
@@ -607,9 +617,12 @@ export async function markQuestionCompleted(req, res, next) {
             data: {
                 question_id: questionId,
                 user_id: completionRow?.user_id || userId,
+                status: completionRow?.status || "COMPLETED",
+                attempted_at: completionRow?.attempted_at || null,
                 completed_at: completionRow?.completed_at || null,
                 already_completed: alreadyCompleted,
                 unique_users_completed: countResult.rows[0].unique_users_completed,
+                unique_users_attempted: countResult.rows[0].unique_users_attempted,
             },
         });
     } catch (error) {
@@ -635,60 +648,96 @@ export async function markQuestionCompletedByUsers(req, res, next) {
             return res.status(404).json({ success: false, error: "Question not found" });
         }
 
-        const rawUserIds = req.body?.user_ids;
-        if (!Array.isArray(rawUserIds) || rawUserIds.length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: "user_ids must be a non-empty array of UUID strings",
-            });
-        }
+        const rawOutcomes = Array.isArray(req.body?.user_outcomes)
+            ? req.body.user_outcomes
+            : null;
 
-        const userIds = [...new Set(
-            rawUserIds
+        const legacyUserIds = Array.isArray(req.body?.user_ids) ? req.body.user_ids : null;
+
+        const normalizedOutcomes = rawOutcomes
+            ? rawOutcomes
+                .filter((entry) => entry && typeof entry === "object")
+                .map((entry) => ({
+                    user_id: typeof entry.user_id === "string" ? entry.user_id.trim() : "",
+                    status: normalizeProgressStatus(entry.status),
+                }))
+                .filter((entry) => entry.user_id && entry.status)
+            : (legacyUserIds || [])
                 .filter((id) => typeof id === "string")
-                .map((id) => id.trim())
-                .filter(Boolean)
-        )];
+                .map((id) => ({ user_id: id.trim(), status: "COMPLETED" }))
+                .filter((entry) => entry.user_id);
 
-        if (userIds.length === 0) {
+        if (normalizedOutcomes.length === 0) {
             return res.status(400).json({
                 success: false,
-                error: "user_ids must contain at least one valid UUID string",
+                error: "Provide user_ids or user_outcomes with valid user_id and status",
             });
         }
 
-        const insertedUserIds = [];
-        const alreadyCompletedUserIds = [];
+        const outcomesByUser = new Map();
+        for (const outcome of normalizedOutcomes) {
+            outcomesByUser.set(outcome.user_id, outcome.status);
+        }
 
-        for (const userId of userIds) {
-            const insertResult = await pool.query(
-                `INSERT INTO question_completions (question_id, user_id)
-                 VALUES ($1, $2::uuid)
-                 ON CONFLICT (question_id, user_id) DO NOTHING
-                 RETURNING user_id`,
+        const completedUserIds = [];
+        const attemptedUserIds = [];
+        const incompleteUserIds = [];
+
+        for (const [userId, status] of outcomesByUser.entries()) {
+            if (status === "INCOMPLETE") {
+                await pool.query(
+                    `DELETE FROM question_completions
+                     WHERE question_id = $1 AND user_id = $2::uuid`,
+                    [questionId, userId]
+                );
+                incompleteUserIds.push(userId);
+                continue;
+            }
+
+            if (status === "ATTEMPTED") {
+                await pool.query(
+                    `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
+                     VALUES ($1, $2::uuid, 'ATTEMPTED', CURRENT_TIMESTAMP, NULL)
+                     ON CONFLICT (question_id, user_id) DO UPDATE
+                     SET status = 'ATTEMPTED',
+                         attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
+                         completed_at = NULL`,
+                    [questionId, userId]
+                );
+                attemptedUserIds.push(userId);
+                continue;
+            }
+
+            await pool.query(
+                `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
+                 VALUES ($1, $2::uuid, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                 ON CONFLICT (question_id, user_id) DO UPDATE
+                 SET status = 'COMPLETED',
+                     attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
+                     completed_at = COALESCE(question_completions.completed_at, CURRENT_TIMESTAMP)`,
                 [questionId, userId]
             );
-
-            if (insertResult.rows.length > 0) {
-                insertedUserIds.push(insertResult.rows[0].user_id);
-            } else {
-                alreadyCompletedUserIds.push(userId);
-            }
+            completedUserIds.push(userId);
         }
 
         const countResult = await pool.query(
-            "SELECT COUNT(*)::int AS unique_users_completed FROM question_completions WHERE question_id = $1",
+            `SELECT COUNT(*) FILTER (WHERE status = 'COMPLETED')::int AS unique_users_completed,
+                    COUNT(*) FILTER (WHERE status = 'ATTEMPTED')::int AS unique_users_attempted
+             FROM question_completions
+             WHERE question_id = $1`,
             [questionId]
         );
 
-        res.status(insertedUserIds.length > 0 ? 201 : 200).json({
+        res.status(200).json({
             success: true,
             data: {
                 question_id: questionId,
-                processed_user_ids: userIds,
-                inserted_user_ids: insertedUserIds,
-                already_completed_user_ids: alreadyCompletedUserIds,
+                processed_user_ids: Array.from(outcomesByUser.keys()),
+                completed_user_ids: completedUserIds,
+                attempted_user_ids: attemptedUserIds,
+                incomplete_user_ids: incompleteUserIds,
                 unique_users_completed: countResult.rows[0].unique_users_completed,
+                unique_users_attempted: countResult.rows[0].unique_users_attempted,
             },
         });
     } catch (error) {
@@ -715,22 +764,31 @@ export async function getQuestionCompletionStats(req, res, next) {
         }
 
         const countResult = await pool.query(
-            "SELECT COUNT(*)::int AS unique_users_completed FROM question_completions WHERE question_id = $1",
+            `SELECT COUNT(*) FILTER (WHERE status = 'COMPLETED')::int AS unique_users_completed,
+                    COUNT(*) FILTER (WHERE status = 'ATTEMPTED')::int AS unique_users_attempted
+             FROM question_completions
+             WHERE question_id = $1`,
             [questionId]
         );
 
         const includeUsers = req.query.include_users === "true";
         let completedUserIds = undefined;
+        let attemptedUserIds = undefined;
 
         if (includeUsers) {
             const usersResult = await pool.query(
-                `SELECT user_id
+                `SELECT user_id, status
                  FROM question_completions
                  WHERE question_id = $1
-                 ORDER BY completed_at DESC`,
+                 ORDER BY COALESCE(completed_at, attempted_at) DESC`,
                 [questionId]
             );
-            completedUserIds = usersResult.rows.map((row) => row.user_id);
+            completedUserIds = usersResult.rows
+                .filter((row) => row.status === "COMPLETED")
+                .map((row) => row.user_id);
+            attemptedUserIds = usersResult.rows
+                .filter((row) => row.status === "ATTEMPTED")
+                .map((row) => row.user_id);
         }
 
         res.json({
@@ -738,7 +796,9 @@ export async function getQuestionCompletionStats(req, res, next) {
             data: {
                 question_id: questionId,
                 unique_users_completed: countResult.rows[0].unique_users_completed,
+                unique_users_attempted: countResult.rows[0].unique_users_attempted,
                 completed_user_ids: completedUserIds,
+                attempted_user_ids: attemptedUserIds,
             },
         });
     } catch (error) {
@@ -758,20 +818,24 @@ export async function getCompletedQuestionsByUser(req, res, next) {
         }
 
         const includeDetails = req.query.include_details === "true";
+        const includeAttempted = req.query.include_attempted === "true";
 
         const result = await pool.query(
-            `SELECT qc.question_id, qc.completed_at,
+            `SELECT qc.question_id, qc.status, qc.attempted_at, qc.completed_at,
                     q.title, q.complexity, q.topics
              FROM question_completions qc
              JOIN questions q ON q.id = qc.question_id
              WHERE qc.user_id = $1::uuid
-             ORDER BY qc.completed_at DESC`,
-            [userId]
+               AND ($2::boolean OR qc.status = 'COMPLETED')
+             ORDER BY COALESCE(qc.completed_at, qc.attempted_at) DESC`,
+            [userId, includeAttempted]
         );
 
-        const completedQuestions = includeDetails
+        const progressRows = includeDetails
             ? result.rows.map((row) => ({
                 question_id: row.question_id,
+                status: row.status,
+                attempted_at: row.attempted_at,
                 completed_at: row.completed_at,
                 title: row.title,
                 complexity: row.complexity,
@@ -779,15 +843,22 @@ export async function getCompletedQuestionsByUser(req, res, next) {
             }))
             : result.rows.map((row) => ({
                 question_id: row.question_id,
+                status: row.status,
+                attempted_at: row.attempted_at,
                 completed_at: row.completed_at,
             }));
+
+        const completedQuestions = progressRows.filter((row) => row.status === "COMPLETED");
+        const attemptedQuestions = progressRows.filter((row) => row.status === "ATTEMPTED");
 
         res.json({
             success: true,
             data: {
                 user_id: userId,
                 total_completed_questions: completedQuestions.length,
+                total_attempted_questions: attemptedQuestions.length,
                 completed_questions: completedQuestions,
+                attempted_questions: includeAttempted ? attemptedQuestions : undefined,
             },
         });
     } catch (error) {
