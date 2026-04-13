@@ -231,6 +231,15 @@ export function createWsServer(server) {
         socket.on("close", (code, reason) => {
             console.log(`[Chat WS] User ${userId || 'unknown'} disconnected | code: ${code} | reason: ${reason?.toString()}`);
             if (userId) {
+                // Broadcast before leaving so the room still has the user
+                const roomId = socket.roomId;
+                if (roomId) {
+                    broadcastToRoom(roomId, {
+                        type: "CHAT_USER_LEFT",
+                        userId,
+                    });
+                }
+
                 leaveRoom(socket, userId);
                 clients.delete(userId);
                 console.log(`[Chat WS] Clients remaining: ${clients.size}`);
