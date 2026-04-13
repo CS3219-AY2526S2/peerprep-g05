@@ -61,7 +61,7 @@ function extractToken(req: IncomingMessage): string | null {
   return token;
 }
 
-async function authenticateRequest(req: IncomingMessage) {
+export const authenticateRequest = async (req: IncomingMessage) => {
   const token = extractToken(req);
   console.log("Extracted token: ", token);
   if (!token) return null;
@@ -92,7 +92,7 @@ async function authenticateRequest(req: IncomingMessage) {
     accountRole: data.accountRole,
     exp: data.exp,
   };
-}
+};
 
 /**
  * Check the request to validate that the room is correct, and for the

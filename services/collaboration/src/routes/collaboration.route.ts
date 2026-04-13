@@ -3,6 +3,7 @@ import {
   checkSessionIdExists,
   createCollaborationSession,
   endCollaborationSession,
+  getActiveCollaborationSession,
   getCollaborationSession,
   getCollaborationSessions,
 } from "@/controllers/collaborationController.js";
@@ -22,3 +23,5 @@ collaborationRouter.delete(
   checkSessionIdExists,
   endCollaborationSession,
 );
+
+collaborationRouter.get("/active-session", getActiveCollaborationSession);

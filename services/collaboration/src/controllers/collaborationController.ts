@@ -1,11 +1,15 @@
 import {
   createSession,
   endSession,
+  getActiveSessionsByUserId,
   getSessionById,
   getSessions,
   type SessionStatus,
 } from "@/services/collaborationService.js";
-import { authoriseConnectionForRoom as authoriseConnectionForRoom } from "@/websocket/auth.js";
+import {
+  authenticateRequest,
+  authoriseConnectionForRoom as authoriseConnectionForRoom,
+} from "@/websocket/auth.js";
 import { closeRoomConnections } from "@/websocket/wsRooms.js";
 import type { RequestHandler } from "express";
 import z from "zod";
@@ -81,6 +85,24 @@ export const checkSessionIdExists: RequestHandler = async (req, res, next) => {
 };
 export const getCollaborationSession: RequestHandler = async (_, res) => {
   res.json(res.locals["session"] as CollaborationSessionType);
+};
+
+export const getActiveCollaborationSession: RequestHandler = async (
+  req,
+  res,
+) => {
+  const user = await authenticateRequest(req);
+  if (!user) {
+    res.status(403).json({ error: "Unauthorized" });
+    return;
+  }
+  const session = await getActiveSessionsByUserId(user.userId);
+  if (!session) {
+    res.status(404).json({ error: "No active session found for user" });
+    return;
+  } else {
+    res.json({ ok: true, session });
+  }
 };
 
 export const endCollaborationSession: RequestHandler = async (_, res) => {

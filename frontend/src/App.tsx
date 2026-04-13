@@ -12,10 +12,12 @@ import QuestionEditor from "./pages/QuestionEditor.tsx";
 import Questions from "./pages/Questions.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VerifyOtp from "./pages/VerifyOtp.tsx";
+import { Toaster } from "react-hot-toast";
 
 export default function App() {
   return (
     <div className="flex flex-col h-full">
+      <Toaster />
       <Navbar />
       <Routes>
         {/* Public routes */}
