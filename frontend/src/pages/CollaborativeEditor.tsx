@@ -4,6 +4,7 @@ import { endSession, getSessionInformation } from "../api/collaborationApi";
 import { CollaborativeEditor } from "../components/collaborative/CollaborativeEditor";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
+import toast from "react-hot-toast";
 
 export default function CollaborativeEditorPage() {
   const { roomId } = useParams();
@@ -52,9 +53,11 @@ export default function CollaborativeEditorPage() {
           onClick={() => {
             endSession(roomId).then((success) => {
               if (!success) {
-                alert("Failed to end session.");
+                toast.error("Failed to end session. Please try again.");
+              } else {
+                toast.success("Session ended successfully.");
+                navigate("/");
               }
-              navigate("/");
             });
           }}
         >
@@ -70,7 +73,7 @@ export default function CollaborativeEditorPage() {
           roomId={roomId}
           onSessionEnded={() => {
             navigate("/");
-            alert("Session has ended.");
+            toast.success("Session has ended.");
           }}
         />
       </div>
