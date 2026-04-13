@@ -9,17 +9,17 @@ services:
     ports:
       - 3003:3003
     depends_on:
-      - redis
+      - collaboration-redis
     environment:
       QUESTION_API_BASE_URL: http://question-service:3002 #share same network so can driectly call the service name
-      REDIS_URL: "redis://redis:6379"
+      REDIS_URL: "redis://collaboration-redis:6379"
       EXPRESS_PORT: 3003
       NODE_ENV: production
     networks:
       - peerprep-network
     restart: always
 
-  redis:
+  collaboration-redis:
     image: redis:8.2.1-alpine
     ports:
       - 6380:6379
