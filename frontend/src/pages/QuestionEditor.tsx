@@ -22,7 +22,7 @@ export default function QuestionEditor() {
     const { id } = useParams<{ id: string }>();
     const isEdit = Boolean(id);
     const navigate = useNavigate();
-    const { user, token, loading: authLoading } = useAuth();
+    const { user, loading: authLoading } = useAuth();
 
     const lockHolder = user?.username || user?.id || "unknown";
 
@@ -62,7 +62,7 @@ export default function QuestionEditor() {
                 await qApi.acquireLock(id!, lockHolder);
                 lockAcquired.current = true;
 
-                const res = await qApi.getQuestionById(id!, token || undefined);
+                const res = await qApi.getQuestionById(id!);
                 const q = res.data;
                 setTitle(q.title);
                 setDescription(q.description);
@@ -89,7 +89,7 @@ export default function QuestionEditor() {
         }
 
         load();
-    }, [id, isEdit, lockHolder, authLoading, user, token]);
+    }, [id, isEdit, lockHolder, authLoading, user]);
 
     // Release lock on unmount
     const releaseLockRef = useCallback(() => {
