@@ -247,7 +247,6 @@ services:
     networks:
       - peerprep-network
 
-<<<<<<< HEAD
   # ---------------- CHAT SERVICE ----------------
   chat-service:
     build: ./services/chat
@@ -264,8 +263,8 @@ services:
       - "4002:4002"
     networks:
       - peerprep-network
-=======
-  # ── AI Service ───────────────────────────────────────────────
+
+  # ---------------- AI SERVICE ----------------
   ai-service:
     build:
       context: ./services/ai
@@ -301,8 +300,6 @@ services:
     networks:
       - peerprep-network
 
-
->>>>>>> ebe251ce8d00d65f6a533af6585a1509219f3c75
 
   # ---------------- INFRASTRUCTURE ----------------
   rabbitmq:

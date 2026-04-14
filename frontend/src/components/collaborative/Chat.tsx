@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 interface Message {
   id: string;
@@ -25,6 +28,7 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [isAiThinking, setIsAiThinking] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const { user } = useAuth();
   const userId = user?.id ?? "";
@@ -225,7 +229,26 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
           ]);
           if (!isOpen) setUnreadCount((prev) => prev + 1);
           break;
-
+        
+        case "CHAT_AI_REQUEST":
+          setIsAiThinking(true);
+          break;
+        
+        case "CHAT_AI_RESPONSE":
+          setIsAiThinking(false);
+          setMessages((prev) => [...prev, {
+              ...payload,
+              timestamp: new Date(payload.timestamp),
+              isOwn: false,
+          }]);
+          if (!isOpen) setUnreadCount((prev) => prev + 1);
+          break;
+        
+        case "CHAT_AI_ERROR":
+          setIsAiThinking(false);
+          showError(payload.message ?? "AI request failed.");
+          break;
+        
         default:
           console.warn("[Chat WS] Unknown payload type:", payload.type);
       }
@@ -279,6 +302,22 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleAskAi = () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed || !wsRef.current) return;
+    if (wsRef.current.readyState !== WebSocket.OPEN) {
+        showError("Not connected.");
+        return;
+    }
+    setInputValue("");
+    wsRef.current.send(JSON.stringify({
+        type: "CHAT_AI_REQUEST",
+        roomId,
+        sessionId: roomId,
+        prompt: trimmed,
+    }));
   };
 
   const formatTime = (date: Date) =>
@@ -439,93 +478,163 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
             </div>
           )}
 
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems:
-                  msg.sender === "system"
+          {messages.map((msg) => {
+            const isSystem = msg.sender === "system";
+            const isAI = msg.sender === "ai";
+
+            return (
+              <div
+                key={msg.id}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: isSystem
                     ? "center"
                     : msg.isOwn
                     ? "flex-end"
                     : "flex-start",
-              }}
-            >
-              {/* System message (e.g. user left) */}
-              {msg.sender === "system" ? (
-                <span
-                  style={{
-                    fontSize: "11px",
-                    color: "#fbbf24",
-                    fontStyle: "italic",
-                    padding: "3px 12px",
-                    background: "#2d1f0a",
-                    borderRadius: "999px",
-                    userSelect: "none",
-                  }}
-                >
-                  {msg.content}
-                </span>
-              ) : (
-                <>
-                  {!msg.isOwn && (
-                    <span
-                      style={{
-                        fontSize: "10px",
-                        color: "#4b5580",
-                        fontWeight: 600,
-                        marginBottom: "2px",
-                        paddingLeft: "4px",
-                      }}
-                    >
-                      {msg.sender}
-                    </span>
-                  )}
-                  <div
+                }}
+              >
+                {/* 🟡 System message */}
+                {isSystem ? (
+                  <span
                     style={{
-                      display: "flex",
-                      alignItems: "flex-end",
-                      gap: "6px",
-                      flexDirection: msg.isOwn ? "row-reverse" : "row",
+                      fontSize: "11px",
+                      color: "#fbbf24",
+                      fontStyle: "italic",
+                      padding: "3px 12px",
+                      background: "#2d1f0a",
+                      borderRadius: "999px",
+                      userSelect: "none",
                     }}
                   >
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </span>
+                ) : (
+                  <>
+                    {/* 👤 Sender label (hide for own + AI) */}
+                    {!msg.isOwn && !isAI && (
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "#4b5563",
+                          fontWeight: 600,
+                          marginBottom: "2px",
+                          paddingLeft: "4px",
+                        }}
+                      >
+                        <ReactMarkdown>{msg.sender}</ReactMarkdown>
+                      </span>
+                    )}
+
                     <div
                       style={{
-                        padding: "8px 12px",
-                        maxWidth: "240px",
-                        wordBreak: "break-word",
-                        background: msg.isOwn
-                          ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
-                          : "#1f2937",
-                        color: msg.isOwn ? "#fff" : "#d1d5db",
-                        borderRadius: msg.isOwn
-                          ? "14px 14px 4px 14px"
-                          : "14px 14px 14px 4px",
-                        fontSize: "13px",
-                        lineHeight: "1.45",
-                        boxShadow: msg.isOwn
-                          ? "0 2px 8px rgba(99,102,241,0.3)"
-                          : "0 2px 4px rgba(0,0,0,0.2)",
+                        display: "flex",
+                        alignItems: "flex-end",
+                        gap: "6px",
+                        flexDirection: msg.isOwn ? "row-reverse" : "row",
                       }}
                     >
-                      {msg.content}
+                      {/* 💬 Message Bubble */}
+                      {isAI ? (
+                        <div
+                          style={{
+                            overflow: "hidden",
+                            padding: "8px 12px",
+                            maxWidth: "260px",
+                            wordBreak: "break-word",
+                            background: "linear-gradient(135deg, #064e3b, #065f46)",
+                            color: "#6ee7b7",
+                            borderRadius: "14px 14px 14px 4px",
+                            fontSize: "13px",
+                            lineHeight: "1.45",
+                            border: "1px solid #10b981",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              color: "#34d399",
+                              fontWeight: 600,
+                              display: "block",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            ✨ AI Assistant
+                          </span>
+                          <ReactMarkdown   remarkPlugins={[remarkGfm, remarkBreaks]}
+                            components={{
+                              pre: ({ children }) => (
+                                <pre style={{
+                                  overflowX: "auto",
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                  background: "#022c22",
+                                  borderRadius: "6px",
+                                  padding: "8px",
+                                  fontSize: "11px",
+                                  margin: "4px 0",
+                                }}>
+                                  {children}
+                                </pre>
+                              ),
+                              code: ({ children }) => (
+                                <code style={{
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                  fontSize: "11px",
+                                }}>
+                                  {children}
+                                </code>
+                              ),
+                              p: ({ children }) => (
+                                <p style={{ margin: "2px 0" }}>{children}</p>
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            padding: "8px 12px",
+                            maxWidth: "240px",
+                            wordBreak: "break-word",
+                            background: msg.isOwn
+                              ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
+                              : "#1f2937",
+                            color: msg.isOwn ? "#fff" : "#d1d5db",
+                            borderRadius: msg.isOwn
+                              ? "14px 14px 4px 14px"
+                              : "14px 14px 14px 4px",
+                            fontSize: "13px",
+                            lineHeight: "1.45",
+                            boxShadow: msg.isOwn
+                              ? "0 2px 8px rgba(99,102,241,0.3)"
+                              : "0 2px 4px rgba(0,0,0,0.2)",
+                          }}
+                        >
+                          {msg.content}
+                        </div>
+                      )}
+
+                      {/* 🕒 Timestamp */}
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "#4b5563",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatTime(msg.timestamp)}
+                      </span>
                     </div>
-                    <span
-                      style={{
-                        fontSize: "10px",
-                        color: "#4b5563",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {formatTime(msg.timestamp)}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+                  </>
+                )}
+              </div>
+            );
+          })}
 
           <div ref={messagesEndRef} />
         </div>
@@ -636,6 +745,30 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
+          </button>
+          <button
+            onClick={handleAskAi}
+            disabled={!inputValue.trim() || isAiThinking}
+            title="Ask AI"
+            style={{
+                flexShrink: 0,
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: inputValue.trim() && !isAiThinking
+                    ? "linear-gradient(135deg, #059669, #10b981)"
+                    : "#1f2937",
+                border: "none",
+                cursor: inputValue.trim() && !isAiThinking ? "pointer" : "default",
+                opacity: inputValue.trim() && !isAiThinking ? 1 : 0.4,
+                fontSize: "16px",
+                transition: "all 0.15s",
+            }}
+            aria-label="Ask AI">
+            {isAiThinking ? "⏳" : "✨"}
           </button>
         </div>
       </div>

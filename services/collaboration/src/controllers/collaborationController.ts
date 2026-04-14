@@ -59,6 +59,26 @@ export const createCollaborationSession: RequestHandler = async (req, res) => {
 type CollaborationSessionType = NonNullable<
   Awaited<ReturnType<typeof getSessionById>>
 >;
+
+
+export const isValidSessionId: RequestHandler = async (req, res) => {
+  const { sessionId } = req.params;
+
+  const session = await getSessionById(sessionId as string);
+
+  if (!session) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+  if (session.status === "ENDED") {
+    res.status(410).json({ error: "Session has ended" });
+    return;
+  }
+
+  res.json(session);
+  console.log(session);
+};
+
 export const checkSessionIdExists: RequestHandler = async (req, res, next) => {
   const { sessionId } = req.params;
   const session = await getSessionById(sessionId as string);
@@ -79,6 +99,7 @@ export const checkSessionIdExists: RequestHandler = async (req, res, next) => {
   res.locals["session"] = result.session;
   next();
 };
+
 export const getCollaborationSession: RequestHandler = async (_, res) => {
   res.json(res.locals["session"] as CollaborationSessionType);
 };
