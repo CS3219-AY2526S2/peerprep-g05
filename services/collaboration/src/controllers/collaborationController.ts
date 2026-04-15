@@ -64,7 +64,6 @@ type CollaborationSessionType = NonNullable<
   Awaited<ReturnType<typeof getSessionById>>
 >;
 
-
 export const isValidSessionId: RequestHandler = async (req, res) => {
   const { sessionId } = req.params;
 
