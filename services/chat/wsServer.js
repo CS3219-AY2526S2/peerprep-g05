@@ -99,6 +99,11 @@ function getQuestionDesc(session) {
     return session.descriptionContent;
 }
 
+function getExistingCode(session) {
+    console.log(session.editorContent);
+    return session.editorContent;
+}
+
 function broadcastToRoom(roomId, payload) {
     const room = rooms.get(roomId);
     if (!room || room.size === 0) {
@@ -231,7 +236,9 @@ async function handleAiRequest(socket, userId, payload) {
     }
 
     const questionDesc = getQuestionDesc(session);
+    const editorCode = getExistingCode(session);
     console.log(`[AI WS] Extracted question description: "${questionDesc}"`);
+    console.log(`[AI WS] Extracted editor code: "${editorCode}"`);
 
     // ─── 2. Prepare request ──────────────────────────────────────
     const url = `${process.env.GATEWAY_URL}/api/v1/ai/chat`;
@@ -249,7 +256,7 @@ async function handleAiRequest(socket, userId, payload) {
     const requestBody = {
         sessionId: roomId,
         prompt: prompt.trim(),
-        codeSnippet: "",
+        codeSnippet: editorCode,
         question: questionDesc
     };
 

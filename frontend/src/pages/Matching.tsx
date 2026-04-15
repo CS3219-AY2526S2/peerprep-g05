@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { useMatchmakingContext } from "../hooks/MatchingContext";
 import { useNavigate } from "react-router-dom";
 import { endSession, getActiveSession } from "../api/collaborationApi";
 import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
 import { MatchFormCard } from "../components/MatchFormCard";
 import { MatchProposedModal } from "../components/MatchProposedModal";
 import { QueuingCard } from "../components/QueuingCard";
-import { useMatchmakingContext } from "../hooks/MatchingContext";
 import { CollaborationSession } from "../types/EditorSession";
 import { STATE } from "../utils/types";
 
