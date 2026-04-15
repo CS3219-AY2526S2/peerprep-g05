@@ -1,5 +1,4 @@
 import { GATEWAY_URL } from "../utils/types";
-import type { PythonExecutionTestCase } from "./executionApi";
 
 const QUESTION_BASE = `${GATEWAY_URL}/api/v1`;
 
@@ -12,6 +11,7 @@ export interface Question {
     topics: string[];
     complexity: "Easy" | "Medium" | "Hard";
     companies: string[];
+    boilerplate_code?: string | null;
     created_at: string;
     updated_at: string;
     test_cases?: TestCase[];
@@ -56,18 +56,24 @@ export interface QuestionApiError {
     data: { error?: string; errors?: string[]; data?: QuestionLock } | null;
 }
 
-export interface CollaborationQuestionPayload {
-    question: Question;
-    execution: {
-        language: string;
-        function_name: string;
-        boilerplate_code: string;
-        test_cases: Array<PythonExecutionTestCase & {
-            id?: number;
-            case_label?: string;
-            order_index?: number;
-        }>;
-    };
+export type CompletionStatus = "ATTEMPTED" | "COMPLETED";
+
+export interface UserQuestionProgress {
+    question_id: number;
+    status: CompletionStatus;
+    attempted_at: string | null;
+    completed_at: string | null;
+    title?: string;
+    complexity?: string;
+    topics?: string[];
+}
+
+export interface UserAttemptHistory {
+    user_id: string;
+    total_completed_questions: number;
+    total_attempted_questions: number;
+    completed_questions: UserQuestionProgress[];
+    attempted_questions?: UserQuestionProgress[];
 }
 
 interface RawQuestion extends Omit<Question, "topics"> {
@@ -139,18 +145,13 @@ export function getQuestionById(id: number | string) {
     }));
 }
 
-export function getCollaborationQuestionPayload(id: number | string) {
-    return request<SingleResponse<CollaborationQuestionPayload>>(
-        `/questions/${id}/collaboration-payload?language=python`
-    );
-}
-
 export interface QuestionBody {
     title: string;
     description: string;
     topics: string[];
     complexity: string;
     companies?: string[];
+    boilerplate_code?: string;
     test_cases?: Omit<TestCase, "id" | "question_id" | "order_index">[];
 }
 
@@ -223,4 +224,16 @@ export function releaseLock(id: number | string, lockedBy: string) {
 
 export function getLockStatus(id: number | string) {
     return request<SingleResponse<QuestionLock | null>>(`/questions/${id}/lock`);
+}
+
+// ── User Progress ────────────────────────────────────
+
+export function getUserAttemptHistory(userId: string, includeAttempted = true, includeDetails = true) {
+    const params = new URLSearchParams();
+    params.set("include_attempted", String(includeAttempted));
+    params.set("include_details", String(includeDetails));
+
+    return request<SingleResponse<UserAttemptHistory>>(
+        `/questions/completions/users/${encodeURIComponent(userId)}?${params.toString()}`
+    );
 }

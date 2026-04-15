@@ -3,6 +3,7 @@ import AdminOnlyRoute from "./components/AdminOnlyRoute.tsx";
 import Navbar from "./components/Navbar.tsx";
 import ProtectedRoute from "./components/Protectedroute.tsx";
 import AdminUsers from "./pages/AdminUsers.tsx";
+import AttemptHistory from "./pages/AttemptHistory.tsx";
 import CollaborativeEditor from "./pages/CollaborativeEditor.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import Home from "./pages/Home.tsx";
@@ -36,7 +37,18 @@ export default function App() {
             <Route path="/editor/:roomId" element={<CollaborativeEditor />} />
           </Route>
 
-          {/* Admin-only routes */}
+        {/* Admin-only routes */}
+        <Route
+          path="/admin/users"
+          element={
+            <AdminOnlyRoute>
+              <AdminUsers />
+            </AdminOnlyRoute>
+          }
+        />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/questions" element={<Questions />} />
+          <Route path="/attempt-history" element={<AttemptHistory />} />
           <Route
             path="/admin/users"
             element={
