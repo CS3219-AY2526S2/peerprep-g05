@@ -13,7 +13,7 @@ The React Compiler is not enabled on this template because of its impact on dev 
 
 ## Environment
 
-Create a local `.env` file in this frontend directory and define:
+Create a local `.env` file in this frontend directory and define the variables as per the secrets document.
 
 ## Expanding the ESLint configuration
 
