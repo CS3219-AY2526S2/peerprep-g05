@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { STATE } from "../utils/types";
-import { MatchFormCard } from "../components/MatchFormCard";
-import { QueuingCard } from "../components/QueuingCard";
-import { MatchProposedModal } from "../components/MatchProposedModal";
-import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { endSession, getActiveSession } from "../api/collaborationApi";
-import { useMatchmaking } from "../hooks/useMatchmaking";
+import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
+import { MatchFormCard } from "../components/MatchFormCard";
+import { MatchProposedModal } from "../components/MatchProposedModal";
+import { QueuingCard } from "../components/QueuingCard";
+import { useMatchmakingContext } from "../hooks/MatchingContext";
 import { CollaborationSession } from "../types/EditorSession";
-import toast from "react-hot-toast";
+import { STATE } from "../utils/types";
 
 export default function Matching() {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ export default function Matching() {
     decline,
     reset,
     disconnectWs,
-  } = useMatchmaking();
+  } = useMatchmakingContext();
   useEffect(() => {
     // check for active editor session for user, if exists, check if user wants to terminate or resume the editor session
     getActiveSession().then((result) => {
