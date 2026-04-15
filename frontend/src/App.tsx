@@ -29,36 +29,21 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/matching" element={<Matching />} />
-
             <Route path="/editor" element={<CollaborativeEditor />} />
             <Route path="/editor/:roomId" element={<CollaborativeEditor />} />
-          </Route>
-
-        {/* Admin-only routes */}
-        <Route
-          path="/admin/users"
-          element={
-            <AdminOnlyRoute>
-              <AdminUsers />
-            </AdminOnlyRoute>
-          }
-        />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/questions" element={<Questions />} />
-          <Route path="/attempt-history" element={<AttemptHistory />} />
-          <Route
-            path="/admin/users"
-            element={
-              <AdminOnlyRoute>
-                <AdminUsers />
-              </AdminOnlyRoute>
-            }
-          />
-          <Route element={<ProtectedRoute />}>
             <Route path="/questions" element={<Questions />} />
+            <Route path="/attempt-history" element={<AttemptHistory />} />
+            <Route path="/questions/:id" element={<QuestionDetail />} />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminOnlyRoute>
+                  <AdminUsers />
+                </AdminOnlyRoute>
+              }
+            />
             <Route
               path="/questions/new"
               element={
@@ -67,7 +52,6 @@ export default function App() {
                 </AdminOnlyRoute>
               }
             />
-            <Route path="/questions/:id" element={<QuestionDetail />} />
             <Route
               path="/questions/:id/edit"
               element={

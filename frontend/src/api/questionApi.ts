@@ -1,4 +1,5 @@
 import { GATEWAY_URL } from "../utils/types";
+import type { PythonExecutionTestCase } from "./executionApi";
 
 const QUESTION_BASE = `${GATEWAY_URL}/api/v1`;
 
@@ -54,6 +55,20 @@ interface SingleResponse<T> {
 export interface QuestionApiError {
     status: number;
     data: { error?: string; errors?: string[]; data?: QuestionLock } | null;
+}
+
+export interface CollaborationQuestionPayload {
+    question: Question;
+    execution: {
+        language: string;
+        function_name: string;
+        boilerplate_code: string;
+        test_cases: Array<PythonExecutionTestCase & {
+            id?: number;
+            case_label?: string;
+            order_index?: number;
+        }>;
+    };
 }
 
 export type CompletionStatus = "ATTEMPTED" | "COMPLETED";
@@ -143,6 +158,12 @@ export function getQuestionById(id: number | string) {
         ...res,
         data: normalizeQuestion(res.data),
     }));
+}
+
+export function getCollaborationQuestionPayload(id: number | string) {
+    return request<SingleResponse<CollaborationQuestionPayload>>(
+        `/questions/${id}/collaboration-payload?language=python`
+    );
 }
 
 export interface QuestionBody {
