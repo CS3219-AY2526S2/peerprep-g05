@@ -57,6 +57,7 @@ services:
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EXCHANGE: matchmaking.exchange
       MATCH_EVENTS_EXCHANGE: match.events
+      GATEWAY_URL: http://gateway:4000
     ports:
       - "3000:3000"
     networks:
@@ -337,6 +338,7 @@ services:
       MATCH_EVENTS_EXCHANGE: match.events
       COLLAB_SERVICE_URL: http://collaboration-server:3003
       QUESTION_SERVICE_URL: http://question-service:3002
+      GATEWAY_URL: http://gateway:4000
 
     ports:
       - "4001:4001"
@@ -350,11 +352,14 @@ services:
       context: ./frontend
       args:
         VITE_COLLAB_WEBSOCKET_URL: ws://localhost:3003
+        VITE_MATCHING_WEBSOCKET_URL: ws://ws-service:4001
+        VITE_GATEWAY_URL: http://gateway:4000
     ports:
       - "5173:80"
 
     depends_on:
       - ws-service
+      - gateway
     networks:
       - peerprep-network
 

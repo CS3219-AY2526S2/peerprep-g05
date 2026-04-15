@@ -38,8 +38,6 @@ export function MatchProposedModal({
         </div>
 
         <div className="mb-5 divide-y divide-slate-100">
-          <MatchInfoRow label="You"        value={matchInfo.userId} />
-          <MatchInfoRow label="Peer"   value={proposedMatch.peer || "—"} />
           <MatchInfoRow label="Topic"      value={matchInfo.topic} />
           <MatchInfoRow label="Difficulty" value={<DifficultyBadge difficulty={matchInfo.difficulty} />} />
         </div>

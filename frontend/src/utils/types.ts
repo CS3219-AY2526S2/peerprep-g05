@@ -1,5 +1,5 @@
-export const GATEWAY_URL = "http://localhost:4000";
-export const WS_URL      = "ws://localhost:4001";
+export const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
+export const WS_URL      = import.meta.env.VITE_MATCHING_WEBSOCKET_URL;
 
 export const TOPICS = [
   "Arrays",
@@ -22,7 +22,6 @@ export const STATE = {
 export type FSMState = typeof STATE[keyof typeof STATE];
 
 export interface MatchInfo {
-  userId:     string;
   topic:      string;
   difficulty: Difficulty;
   matchId:    string;

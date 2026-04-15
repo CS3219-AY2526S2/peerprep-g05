@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { endSession, getSessionInformation } from "../api/collaborationApi";
 import { CollaborativeEditor } from "../components/collaborative/CollaborativeEditor";
+import { Chat } from "../components/collaborative/Chat";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
 
@@ -73,6 +74,7 @@ export default function CollaborativeEditorPage() {
             alert("Session has ended.");
           }}
         />
+        <Chat roomId={roomId} />
       </div>
     </div>
   );

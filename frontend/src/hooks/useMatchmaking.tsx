@@ -80,9 +80,9 @@ export function useMatchmaking() {
   const handleWsMessageRef = useRef(handleWsMessage);
   useEffect(() => { handleWsMessageRef.current = handleWsMessage; }, [handleWsMessage]);
 
-  const connectWs = useCallback((userId: string) => {
+  const connectWs = useCallback(() => {
     return new Promise<WebSocket>((resolve, reject) => {
-      const socket = new WebSocket(`${WS_URL}?user_id=${userId}`);
+      const socket = new WebSocket(`${WS_URL}`);
       socket.onopen    = () => { ws.current = socket; resolve(socket); };
       socket.onerror   = () => reject(new Error("WebSocket connection failed"));
       socket.onmessage = (event) => {
@@ -92,22 +92,23 @@ export function useMatchmaking() {
     });
   }, []);
 
-  const findMatch = async ({ userId, topic, difficulty }: Omit<MatchInfo, "matchId">) => {
+  const findMatch = async ({ topic, difficulty }: Omit<MatchInfo, "matchId">) => {
     setError("");
     setLoading(true);
     try {
       const res = await fetch(`${GATEWAY_URL}/api/v1/matches`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ user_id: userId, topic, difficulty }),
+        credentials: "include",
+        body:    JSON.stringify({ topic, difficulty }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to enter matchmaking");
       }
       const data = await res.json();
-      setMatchInfo({ userId, topic, difficulty, matchId: data.match_id });
-      await connectWs(userId);
+      setMatchInfo({ topic, difficulty, matchId: data.match_id });
+      await connectWs();
       resetTimer();
       setFsm(STATE.QUEUING);
     } catch (err: any) {
@@ -123,8 +124,8 @@ export function useMatchmaking() {
       await fetch(`${GATEWAY_URL}/api/v1/matches`, {
         method:  "DELETE",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body:    JSON.stringify({
-          user_id:    matchInfo?.userId,
           topic:      matchInfo?.topic,
           difficulty: matchInfo?.difficulty,
         }),
@@ -141,8 +142,7 @@ export function useMatchmaking() {
     try {
       await fetch(`${GATEWAY_URL}/api/v1/matches/${proposedMatch?.matchId}/accept`, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ user_id: matchInfo?.userId }),
+        credentials: "include",
       });
     } catch { setAccepted(false); }
   };
@@ -152,8 +152,7 @@ export function useMatchmaking() {
     try {
       await fetch(`${GATEWAY_URL}/api/v1/matches/${proposedMatch?.matchId}/decline`, {
         method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ user_id: matchInfo?.userId }),
+        credentials: "include",
       });
     } catch {}
     disconnectWs();
