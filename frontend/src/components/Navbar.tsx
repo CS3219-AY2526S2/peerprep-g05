@@ -24,18 +24,17 @@ export default function Navbar() {
           <Link to="/questions" className="nav-button">
             Questions
           </Link>
+          {user && (
+            <Link to="/attempt-history" className="nav-button">
+              Attempt History
+            </Link>
+          )}
         </div>
       </div>
 
       <div className="flex items-center gap-3">
         {user ? (
           <>
-            <Link
-              to="/questions"
-              className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25"
-            >
-              Questions
-            </Link>
             {isAdminRole(user.role) && (
               <Link
                 to="/admin/users"
@@ -57,12 +56,6 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link
-              to="/questions"
-              className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25"
-            >
-              Questions
-            </Link>
             <Link
               to="/"
               className="rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white no-underline hover:bg-white/25"

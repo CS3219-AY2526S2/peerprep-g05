@@ -55,6 +55,26 @@ export interface QuestionApiError {
     data: { error?: string; errors?: string[]; data?: QuestionLock } | null;
 }
 
+export type CompletionStatus = "ATTEMPTED" | "COMPLETED";
+
+export interface UserQuestionProgress {
+    question_id: number;
+    status: CompletionStatus;
+    attempted_at: string | null;
+    completed_at: string | null;
+    title?: string;
+    complexity?: string;
+    topics?: string[];
+}
+
+export interface UserAttemptHistory {
+    user_id: string;
+    total_completed_questions: number;
+    total_attempted_questions: number;
+    completed_questions: UserQuestionProgress[];
+    attempted_questions?: UserQuestionProgress[];
+}
+
 interface RawQuestion extends Omit<Question, "topics"> {
     categories?: string[];
     topics?: string[];
@@ -207,4 +227,16 @@ export function releaseLock(id: number | string, lockedBy: string) {
 
 export function getLockStatus(id: number | string) {
     return request<SingleResponse<QuestionLock | null>>(`/questions/${id}/lock`);
+}
+
+// ── User Progress ────────────────────────────────────
+
+export function getUserAttemptHistory(userId: string, includeAttempted = true, includeDetails = true) {
+    const params = new URLSearchParams();
+    params.set("include_attempted", String(includeAttempted));
+    params.set("include_details", String(includeDetails));
+
+    return request<SingleResponse<UserAttemptHistory>>(
+        `/questions/completions/users/${encodeURIComponent(userId)}?${params.toString()}`
+    );
 }
