@@ -68,8 +68,9 @@ export default function App() {
               }
             />
           </Route>
-        </Routes>
-      </div>
-    </MatchmakingProvider>
+        </Route>
+      </Routes>
+    </div>
+  </MatchmakingProvider>
   );
 }
