@@ -22,6 +22,7 @@ import {
   type PythonExecutionResult,
   type PythonExecutionTestCase,
 } from "../../api/executionApi";
+import { markQuestionProgressForUsers } from "../../api/questionApi";
 import { useAuth } from "../../context/AuthContext.tsx";
 import { WS_CLOSE_CODES } from "../../utils/socketSessionConst.ts";
 
@@ -72,6 +73,7 @@ const errorLineField = StateField.define<DecorationSet>({
 const AWARENESS_HEARTBEAT_MS = 1000;
 const PEER_STALE_TIMEOUT_MS = 3000;
 const ACTIVE_ACTION_KEY = "activeAction";
+const INITIAL_CONTENT_APPLIED_KEY = "initialContentApplied";
 
 type EditorActionType = "pseudocode_to_python" | "execute_python";
 type EditorActionStatus =
@@ -97,6 +99,7 @@ type EditorSharedAction = {
   declinedBy?: string;
   result?: ConversionResult | PythonExecutionResult;
   error?: string;
+  completionError?: string;
 };
 
 const actionLabel: Record<EditorActionType, string> = {
@@ -135,16 +138,29 @@ const getExecutionErrorLine = (result: PythonExecutionResult) =>
   result.errorsPresent.find((issue) => typeof issue.line === "number")?.line ??
   null;
 
+const executionPassedAllTests = (
+  result: PythonExecutionResult,
+  totalTestCases: number,
+) =>
+  totalTestCases > 0 &&
+  result.passedTestCases.length === totalTestCases &&
+  result.failedTestCases.length === 0 &&
+  result.errorsPresent.length === 0;
+
 export function CollaborativeEditor({
   roomId,
+  questionId,
   sessionUsers,
+  initialEditorContent,
   executionTestCases,
   executionSetupError,
   onSessionEnded,
   onWsStatusChange,
 }: {
   roomId: string;
+  questionId: string;
   sessionUsers: string[];
+  initialEditorContent: string;
   executionTestCases: PythonExecutionTestCase[];
   executionSetupError?: string | null;
   onSessionEnded?: () => void;
@@ -219,7 +235,39 @@ export function CollaborativeEditor({
     const ydoc = new Y.Doc();
     const provider = new WebsocketProvider(WEBSOCKET_URL, roomId, ydoc);
     const actionMap = ydoc.getMap<EditorSharedAction>("editorActions");
+    const metadataMap = ydoc.getMap<string>("editorMetadata");
+    const ytext = ydoc.getText();
     actionMapRef.current = actionMap;
+
+    const initializerUserId = [...sessionUsers].sort()[0] ?? userId;
+    const applyInitialContent = () => {
+      const content = initialEditorContent;
+      if (
+        !content.trim() ||
+        userId !== initializerUserId ||
+        metadataMap.get(INITIAL_CONTENT_APPLIED_KEY) ||
+        ytext.length > 0
+      ) {
+        return;
+      }
+
+      ydoc.transact(() => {
+        if (
+          metadataMap.get(INITIAL_CONTENT_APPLIED_KEY) ||
+          ytext.length > 0
+        ) {
+          return;
+        }
+
+        metadataMap.set(INITIAL_CONTENT_APPLIED_KEY, new Date().toISOString());
+        ytext.insert(0, content);
+      });
+    };
+    const handleProviderSync = (isSynced: boolean) => {
+      if (isSynced) {
+        applyInitialContent();
+      }
+    };
 
     const setWsStatus = (
       status: "connected" | "disconnected" | "connecting",
@@ -234,6 +282,7 @@ export function CollaborativeEditor({
         setWsStatus(event.status);
       },
     );
+    provider.on("sync", handleProviderSync);
 
     provider.on("connection-close", (event: CloseEvent | null) => {
       setWsStatus("connecting");
@@ -304,7 +353,6 @@ export function CollaborativeEditor({
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("offline", handleOffline);
 
-    const ytext = ydoc.getText();
     const publishPresence = () => {
       provider.awareness.setLocalStateField("user", {
         name: displayName,
@@ -348,6 +396,7 @@ export function CollaborativeEditor({
       window.clearInterval(awarenessHeartbeat);
       window.clearInterval(peerPresenceCheck);
       provider.awareness.off("change", updatePeerPresence);
+      provider.off("sync", handleProviderSync);
       actionMap.unobserve(syncActionState);
       provider.awareness.setLocalState(null);
       editorViewRef.current = null;
@@ -356,7 +405,16 @@ export function CollaborativeEditor({
       ydoc.destroy();
       provider.destroy();
     };
-  }, [roomId, userColor, displayName, onSessionEnded, onWsStatusChange]);
+  }, [
+    roomId,
+    userColor,
+    displayName,
+    initialEditorContent,
+    onSessionEnded,
+    onWsStatusChange,
+    sessionUsers,
+    userId,
+  ]);
 
   useEffect(() => {
     if (
@@ -373,7 +431,7 @@ export function CollaborativeEditor({
 
     const finishAction = (
       status: "completed" | "failed",
-      payload: Pick<EditorSharedAction, "result" | "error">,
+      payload: Pick<EditorSharedAction, "result" | "error" | "completionError">,
     ) => {
       const actionMap = actionMapRef.current;
       const currentAction = actionMap?.get(ACTIVE_ACTION_KEY);
@@ -413,7 +471,23 @@ export function CollaborativeEditor({
           code: actionToRun.codeSnapshot,
           test_cases: testCases,
         });
-        finishAction("completed", { result });
+        let completionError: string | undefined;
+        const progressStatus = executionPassedAllTests(result, testCases.length)
+          ? "COMPLETED"
+          : "ATTEMPTED";
+        try {
+          await markQuestionProgressForUsers(
+            questionId,
+            Array.from(new Set(requiredUsers)),
+            progressStatus,
+          );
+        } catch (error) {
+          completionError = getApiErrorMessage(
+            error,
+            "Execution finished, but question progress could not be saved.",
+          );
+        }
+        finishAction("completed", { result, completionError });
       } catch (error) {
         finishAction("failed", {
           error: getApiErrorMessage(error, "Action failed. Please try again."),
@@ -422,7 +496,7 @@ export function CollaborativeEditor({
     }
 
     void runAction();
-  }, [activeAction, executionSetupError, roomId, userId]);
+  }, [activeAction, executionSetupError, questionId, requiredUsers, roomId, userId]);
 
   const startAction = (type: EditorActionType) => {
     setLocalError(null);
@@ -684,6 +758,7 @@ function ActionModal({
           action.result ? (
             <ExecutionResultContent
               result={action.result as PythonExecutionResult}
+              completionError={action.completionError}
             />
           ) : null}
         </div>
@@ -769,8 +844,10 @@ function ConversionResultContent({
 
 function ExecutionResultContent({
   result,
+  completionError,
 }: {
   result: PythonExecutionResult;
+  completionError?: string;
 }) {
   const total = result.passedTestCases.length + result.failedTestCases.length;
   const hasErrors = result.errorsPresent.length > 0;
@@ -807,6 +884,12 @@ function ExecutionResultContent({
               {issue.line ? ` on line ${issue.line}` : ""}: {issue.message}
             </div>
           ))}
+        </div>
+      ) : null}
+
+      {completionError ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {completionError}
         </div>
       ) : null}
 

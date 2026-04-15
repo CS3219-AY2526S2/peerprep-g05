@@ -91,6 +91,16 @@ export interface UserAttemptHistory {
     attempted_questions?: UserQuestionProgress[];
 }
 
+export interface BulkCompletionResponse {
+    question_id: number;
+    processed_user_ids: string[];
+    completed_user_ids: string[];
+    attempted_user_ids: string[];
+    incomplete_user_ids: string[];
+    unique_users_completed: number;
+    unique_users_attempted: number;
+}
+
 interface RawQuestion extends Omit<Question, "topics"> {
     categories?: string[];
     topics?: string[];
@@ -257,4 +267,27 @@ export function getUserAttemptHistory(userId: string, includeAttempted = true, i
     return request<SingleResponse<UserAttemptHistory>>(
         `/questions/completions/users/${encodeURIComponent(userId)}?${params.toString()}`
     );
+}
+
+export function markQuestionProgressForUsers(
+    questionId: number | string,
+    userIds: string[],
+    status: CompletionStatus
+) {
+    return request<SingleResponse<BulkCompletionResponse>>(
+        `/questions/${questionId}/completions/bulk`,
+        {
+            method: "POST",
+            body: JSON.stringify({
+                user_outcomes: userIds.map((userId) => ({
+                    user_id: userId,
+                    status,
+                })),
+            }),
+        }
+    );
+}
+
+export function markQuestionCompletedForUsers(questionId: number | string, userIds: string[]) {
+    return markQuestionProgressForUsers(questionId, userIds, "COMPLETED");
 }
