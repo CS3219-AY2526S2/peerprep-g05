@@ -6,12 +6,15 @@ import {
   getActiveCollaborationSession,
   getCollaborationSession,
   getCollaborationSessions,
+  isValidSessionId,
 } from "@/controllers/collaborationController.js";
 
 export const collaborationRouter = express.Router();
 
 collaborationRouter.get("/", getCollaborationSessions);
 collaborationRouter.post("/", createCollaborationSession);
+
+collaborationRouter.get("/validate/:sessionId", isValidSessionId);
 
 collaborationRouter.get(
   "/:sessionId",

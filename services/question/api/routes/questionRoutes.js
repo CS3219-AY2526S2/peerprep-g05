@@ -14,6 +14,10 @@ import {
     getCompletedQuestionsByUser,
 } from "../controllers/questionController.js";
 import {
+    getBoilerplateAndEvaluate,
+    getCollaborationQuestionPayload,
+} from "../controllers/executionController.js";
+import {
     acquireLock,
     releaseLock,
     getLockStatus,
@@ -25,6 +29,8 @@ const router = express.Router();
 router.get("/topics", listTopics);
 router.get("/companies", listCompanies);
 router.get("/completions/users/:userId", getCompletedQuestionsByUser);
+router.get("/:id/collaboration-payload", getCollaborationQuestionPayload);
+router.post("/:id/boilerplate", getBoilerplateAndEvaluate);
 router.get("/", getAllQuestions);
 router.get("/random", getRandomQuestion);
 router.get("/:id", getQuestionById);

@@ -13,57 +13,60 @@ import Questions from "./pages/Questions.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VerifyOtp from "./pages/VerifyOtp.tsx";
 import { Toaster } from "react-hot-toast";
+import { MatchmakingProvider } from "./hooks/MatchingContext.tsx";
 
 export default function App() {
   return (
-    <div className="flex flex-col h-full">
-      <Toaster />
-      <Navbar />
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/verify-otp" element={<VerifyOtp />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+    <MatchmakingProvider>
+      <div className="flex flex-col h-full">
+        <Toaster />
+        <Navbar />
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/matching" element={<Matching />} />
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/matching" element={<Matching />} />
 
-          <Route path="/editor" element={<CollaborativeEditor />} />
-          <Route path="/editor/:roomId" element={<CollaborativeEditor />} />
-        </Route>
+            <Route path="/editor" element={<CollaborativeEditor />} />
+            <Route path="/editor/:roomId" element={<CollaborativeEditor />} />
+          </Route>
 
-        {/* Admin-only routes */}
-        <Route
-          path="/admin/users"
-          element={
-            <AdminOnlyRoute>
-              <AdminUsers />
-            </AdminOnlyRoute>
-          }
-        />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/questions" element={<Questions />} />
+          {/* Admin-only routes */}
           <Route
-            path="/questions/new"
+            path="/admin/users"
             element={
               <AdminOnlyRoute>
-                <QuestionEditor />
+                <AdminUsers />
               </AdminOnlyRoute>
             }
           />
-          <Route path="/questions/:id" element={<QuestionDetail />} />
-          <Route
-            path="/questions/:id/edit"
-            element={
-              <AdminOnlyRoute>
-                <QuestionEditor />
-              </AdminOnlyRoute>
-            }
-          />
-        </Route>
-      </Routes>
-    </div>
+          <Route element={<ProtectedRoute />}>
+            <Route path="/questions" element={<Questions />} />
+            <Route
+              path="/questions/new"
+              element={
+                <AdminOnlyRoute>
+                  <QuestionEditor />
+                </AdminOnlyRoute>
+              }
+            />
+            <Route path="/questions/:id" element={<QuestionDetail />} />
+            <Route
+              path="/questions/:id/edit"
+              element={
+                <AdminOnlyRoute>
+                  <QuestionEditor />
+                </AdminOnlyRoute>
+              }
+            />
+          </Route>
+        </Routes>
+      </div>
+    </MatchmakingProvider>
   );
 }

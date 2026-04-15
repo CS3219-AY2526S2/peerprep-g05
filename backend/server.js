@@ -3,10 +3,17 @@ import http from "http";
 import dotenv from "dotenv";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+});
 
 dotenv.config();
 
 const app = express();
+app.use(limiter);
 
 //CORS
 app.use(cors({
@@ -130,6 +137,24 @@ function initProxyRoutes() {
             error: (err, req, res) => {
                 console.error("[Proxy] ai:", err.message);
                 res.status(502).json({ error: "AI service unavailable" });
+            }
+        }
+    }));
+
+    app.use("/api/v1/execution", createProxyMiddleware({
+        target: process.env.EXECUTION_SERVICE_URL,
+        changeOrigin: true,
+        pathRewrite: (path, req) => {
+            return `/api/v1/execution${path}`;
+        },
+        on: {
+            proxyReq: (proxyReq, req, res) => {
+                console.log("➡️ Incoming:", req.method, req.originalUrl);
+                console.log("➡️ Forwarding to:", proxyReq.path);
+            },
+            error: (err, req, res) => {
+                console.error("[Proxy] execution:", err.message);
+                res.status(502).json({ error: "Execution service unavailable" });
             }
         }
     }));

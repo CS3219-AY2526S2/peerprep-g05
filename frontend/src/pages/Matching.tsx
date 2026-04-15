@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import { STATE } from "../utils/types";
+import { useMatchmakingContext } from "../hooks/MatchingContext";
+import { MatchFormCard } from "../components/MatchFormCard";
+import { QueuingCard } from "../components/QueuingCard";
+import { MatchProposedModal } from "../components/MatchProposedModal";
+import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
 import { useNavigate } from "react-router-dom";
 import { endSession, getActiveSession } from "../api/collaborationApi";
 import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
@@ -17,9 +23,21 @@ export default function Matching() {
   >(undefined);
 
   const {
-    fsm, error, loading, elapsedFmt,
-    matchInfo, proposedMatch, confirmedMatch, accepted, questionMatch,
-    findMatch, cancel, accept, decline, reset, disconnectWs
+    fsm,
+    error,
+    loading,
+    elapsedFmt,
+    matchInfo,
+    proposedMatch,
+    confirmedMatch,
+    accepted,
+    questionMatch,
+    findMatch,
+    cancel,
+    accept,
+    decline,
+    reset,
+    disconnectWs,
   } = useMatchmaking();
   useEffect(() => {
     // check for active editor session for user, if exists, check if user wants to terminate or resume the editor session
@@ -51,15 +69,27 @@ export default function Matching() {
   ) : activeSession === null ? ( // no active session, show matchmaking
     <div className="relative flex min-h-[calc(100vh-52px)] items-center justify-center p-8">
       {fsm === STATE.IDLE && (
-        <MatchFormCard onFindMatch={findMatch} error={error} loading={loading} />
+        <MatchFormCard
+          onFindMatch={findMatch}
+          error={error}
+          loading={loading}
+        />
       )}
 
       {fsm === STATE.QUEUING && matchInfo && (
-        <QueuingCard matchInfo={matchInfo} onCancel={cancel} elapsedFmt={elapsedFmt} />
+        <QueuingCard
+          matchInfo={matchInfo}
+          onCancel={cancel}
+          elapsedFmt={elapsedFmt}
+        />
       )}
 
       {fsm === STATE.CONFIRMED && confirmedMatch && (
-        <MatchConfirmedCard confirmedMatch={confirmedMatch} questionMatch={questionMatch} onPlayAgain={reset}/>
+        <MatchConfirmedCard
+          confirmedMatch={confirmedMatch}
+          questionMatch={questionMatch}
+          onPlayAgain={reset}
+        />
       )}
 
       {showModal && proposedMatch && matchInfo && (

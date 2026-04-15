@@ -5,7 +5,6 @@ services:
   # ---------------- MATCHING SERVICE ----------------
   postgres:
     image: postgres:16
-    # container_name: matchmaking-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -26,7 +25,6 @@ services:
 
   redis:
     image: redis
-    # container_name: matchmaking-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -57,6 +55,7 @@ services:
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EXCHANGE: matchmaking.exchange
       MATCH_EVENTS_EXCHANGE: match.events
+      GATEWAY_URL: http://gateway:4000
     ports:
       - "3000:3000"
     networks:
@@ -127,7 +126,7 @@ services:
     networks:
       - peerprep-network
 
-  # ── Question Service ────────────────────────────────────────
+  # # ---------------- QUESTION SERVICE ----------------
   question-db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -191,7 +190,7 @@ services:
     networks:
       - peerprep-network
 
-  # ── User Service ─────────────────────────────────────────────
+  # ---------------- USER SERVICE ----------------
   user-db:
     image: postgres:16-alpine
     container_name: peerprep-user-db
@@ -248,7 +247,24 @@ services:
     networks:
       - peerprep-network
 
-  # ── AI Service ───────────────────────────────────────────────
+  # ---------------- CHAT SERVICE ----------------
+  chat-service:
+    build: ./services/chat
+    command: node index.js
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 4002
+      REDIS_URL: redis://redis:6379
+      GATEWAY_URL: http://gateway:4000
+    ports:
+      - "4002:4002"
+    networks:
+      - peerprep-network
+
+  # ---------------- AI SERVICE ----------------
   ai-service:
     build:
       context: ./services/ai
@@ -284,6 +300,39 @@ services:
     networks:
       - peerprep-network
 
+  # ── Execution Service ────────────────────────────────────────
+  execution-service:
+    build:
+      context: ./services/execution
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      PORT: 3006
+      USER_SERVICE_JWKS_URL: http://user-service:3001/api/v1/auth/jwks
+      PYTHON_EXEC_TIMEOUT_MS: 5000
+      MAX_REQUEST_BODY_SIZE: 1mb
+      AUTH_COOKIE_NAME: peerprep_access_token
+      JWKS_CACHE_TTL_MS: 300000
+      MAX_TEST_CASES: 50
+    depends_on:
+      user-service:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3006/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - peerprep-network
 
 
   # ---------------- INFRASTRUCTURE ----------------
@@ -315,6 +364,7 @@ services:
       USER_SERVICE_URL: http://user-service:3001
       COLLAB_SERVICE_URL: http://collaboration-server:3003
       AI_SERVICE_URL: http://ai-service:3004
+      EXECUTION_SERVICE_URL: http://execution-service:3006
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
@@ -337,6 +387,7 @@ services:
       MATCH_EVENTS_EXCHANGE: match.events
       COLLAB_SERVICE_URL: http://collaboration-server:3003
       QUESTION_SERVICE_URL: http://question-service:3002
+      GATEWAY_URL: http://gateway:4000
 
     ports:
       - "4001:4001"
@@ -350,11 +401,14 @@ services:
       context: ./frontend
       args:
         VITE_COLLAB_WEBSOCKET_URL: ws://localhost:3003
+        VITE_MATCHING_WEBSOCKET_URL: ws://ws-service:4001
+        VITE_GATEWAY_URL: http://gateway:4000
     ports:
       - "5173:80"
 
     depends_on:
       - ws-service
+      - gateway
     networks:
       - peerprep-network
 

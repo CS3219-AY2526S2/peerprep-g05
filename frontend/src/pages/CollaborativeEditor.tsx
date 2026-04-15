@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { endSession, getSessionInformation } from "../api/collaborationApi";
 import { CollaborativeEditor } from "../components/collaborative/CollaborativeEditor";
+import { Chat } from "../components/collaborative/Chat";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
 import toast from "react-hot-toast";
@@ -76,6 +77,7 @@ export default function CollaborativeEditorPage() {
             toast.success("Session has ended.");
           }}
         />
+        <Chat roomId={roomId} />
       </div>
     </div>
   );
