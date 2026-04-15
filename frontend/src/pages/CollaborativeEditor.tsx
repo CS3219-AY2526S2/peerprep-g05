@@ -59,6 +59,11 @@ export default function CollaborativeEditorPage() {
       let executionTestCases: PythonExecutionTestCase[] = [];
       let executionPayloadError: string | null = null;
 
+      const loadQuestionTestCases = async () => {
+        const question = await getQuestionById(info.session.questionId);
+        return toPythonExecutionTestCases(question.data.test_cases);
+      };
+
       try {
         const payload = await getCollaborationQuestionPayload(
           info.session.questionId,
@@ -66,12 +71,12 @@ export default function CollaborativeEditorPage() {
         executionTestCases = toPythonExecutionTestCases(
           payload.data.execution.test_cases,
         );
+        if (executionTestCases.length === 0) {
+          executionTestCases = await loadQuestionTestCases();
+        }
       } catch {
         try {
-          const question = await getQuestionById(info.session.questionId);
-          executionTestCases = toPythonExecutionTestCases(
-            question.data.test_cases,
-          );
+          executionTestCases = await loadQuestionTestCases();
         } catch (err) {
           const apiError = err as { data?: { error?: string } };
           executionPayloadError =
