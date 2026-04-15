@@ -8,7 +8,6 @@ import { MatchProposedModal } from "../components/MatchProposedModal";
 import { QueuingCard } from "../components/QueuingCard";
 import { CollaborationSession } from "../types/EditorSession";
 import { STATE } from "../utils/types";
-import toast from "react-hot-toast";
 
 export default function Matching() {
   const navigate = useNavigate();

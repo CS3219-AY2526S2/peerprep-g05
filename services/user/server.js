@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 
 import authRoutes from "./api/routes/authRoutes.js";
 import userRoutes from "./api/routes/userRoutes.js";
@@ -12,20 +11,12 @@ import config from "./config/index.js";
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(cors({
     origin: config.frontendUrl,
     credentials: true,
 }));
 app.use(express.json());
-
-// ─── Rate limiting on auth endpoints ──────────────────
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // limit each IP to 50 requests per window
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: "Too many requests, please try again later" },
-});
 
 async function init() {
     try {
@@ -39,7 +30,7 @@ async function init() {
         });
 
         // ─── Routes ──────────────────────────────────
-        app.use("/api/v1/auth", authLimiter, authRoutes);
+        app.use("/api/v1/auth", authRoutes);
         app.use("/api/v1/users", userRoutes);
         app.use("/api/v1/admin", adminRoutes);
 

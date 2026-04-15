@@ -55,6 +55,30 @@ export async function getCollaborationQuestionPayload(req, res, next) {
              ORDER BY order_index, id`,
             [profile.profile_id]
         );
+        const legacyTestCaseResult = testCaseResult.rows.length > 0
+            ? null
+            : await pool.query(
+                `SELECT id, input, expected_output, order_index
+                 FROM test_cases
+                 WHERE question_id = $1
+                 ORDER BY order_index, id`,
+                [questionId]
+            );
+        const testCases = testCaseResult.rows.length > 0
+            ? testCaseResult.rows.map((tc) => ({
+                id: tc.id,
+                case_label: tc.case_label,
+                input: tc.input_payload,
+                expected_output: tc.expected_output,
+                order_index: tc.order_index,
+            }))
+            : (legacyTestCaseResult?.rows || []).map((tc) => ({
+                id: tc.id,
+                case_label: null,
+                input: tc.input,
+                expected_output: tc.expected_output,
+                order_index: tc.order_index,
+            }));
 
         const responseData = {
             question: {
@@ -71,13 +95,7 @@ export async function getCollaborationQuestionPayload(req, res, next) {
                 language: profile.language,
                 function_name: profile.function_name,
                 boilerplate_code: profile.boilerplate_code,
-                test_cases: testCaseResult.rows.map((tc) => ({
-                    id: tc.id,
-                    case_label: tc.case_label,
-                    input: tc.input_payload,
-                    expected_output: tc.expected_output,
-                    order_index: tc.order_index,
-                })),
+                test_cases: testCases,
             },
         };
 
