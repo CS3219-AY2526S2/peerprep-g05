@@ -7,11 +7,14 @@ import {
 const VALID_COMPLEXITIES = ["Easy", "Medium", "Hard"];
 const TITLE_MAX_LENGTH = 255;
 const DESCRIPTION_MAX_LENGTH = 10000;
+const BOILERPLATE_MAX_LENGTH = 30000;
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 const PRIVILEGED_ROLES = new Set(["ADMIN", "MASTER_ADMIN"]);
 const USER_SERVICE_BASE_URL = process.env.USER_SERVICE_BASE_URL || "http://localhost:3001/api/v1";
 const PROGRESS_STATUSES = new Set(["COMPLETED", "ATTEMPTED", "INCOMPLETE"]);
+const DEFAULT_EXECUTION_LANGUAGE = "python";
+const DEFAULT_EXECUTION_FUNCTION_NAME = "solve";
 
 /**
  * Build an absolute pagination URL while preserving existing query filters.
@@ -61,11 +64,11 @@ function buildFilterClause(params, { complexity, topic, company, search }) {
 }
 
 /**
- * @param {{ title?: string, description?: string, topics?: string[], complexity?: string, companies?: string[] }} body
+ * @param {{ title?: string, description?: string, topics?: string[], complexity?: string, companies?: string[], boilerplate_code?: string }} body
  * @param {boolean} requireAll - If true, all core fields are mandatory.
  * @returns {string[]} Validation error messages.
  */
-function validateQuestionBody({ title, description, topics, complexity, companies }, requireAll = true) {
+function validateQuestionBody({ title, description, topics, complexity, companies, boilerplate_code }, requireAll = true) {
     const errors = [];
 
     if (requireAll && (!title || !description || !topics || !complexity)) {
@@ -105,6 +108,14 @@ function validateQuestionBody({ title, description, topics, complexity, companie
             errors.push("companies must be an array of strings");
         } else if (!companies.every(c => typeof c === "string" && c.trim().length > 0)) {
             errors.push("each company must be a non-empty string");
+        }
+    }
+
+    if (boilerplate_code !== undefined) {
+        if (typeof boilerplate_code !== "string") {
+            errors.push("boilerplate_code must be a string");
+        } else if (boilerplate_code.length > BOILERPLATE_MAX_LENGTH) {
+            errors.push(`boilerplate_code must be at most ${BOILERPLATE_MAX_LENGTH} characters`);
         }
     }
 
@@ -157,6 +168,38 @@ async function questionExists(questionId) {
 function normalizeProgressStatus(value) {
     const normalized = String(value || "").trim().toUpperCase();
     return PROGRESS_STATUSES.has(normalized) ? normalized : null;
+}
+
+async function fetchQuestionBoilerplate(questionId) {
+    const result = await pool.query(
+        `SELECT boilerplate_code
+         FROM question_execution_profiles
+         WHERE question_id = $1
+           AND is_active = true
+         ORDER BY CASE WHEN language = $2 THEN 0 ELSE 1 END, id
+         LIMIT 1`,
+        [questionId, DEFAULT_EXECUTION_LANGUAGE]
+    );
+
+    return result.rows[0]?.boilerplate_code ?? null;
+}
+
+async function upsertQuestionBoilerplate(questionId, boilerplateCode) {
+    if (typeof boilerplateCode !== "string" || boilerplateCode.trim().length === 0) {
+        return;
+    }
+
+    await pool.query(
+        `INSERT INTO question_execution_profiles
+            (question_id, language, function_name, boilerplate_code, is_active)
+         VALUES ($1, $2, $3, $4, true)
+         ON CONFLICT (question_id, language)
+         DO UPDATE
+         SET boilerplate_code = EXCLUDED.boilerplate_code,
+             is_active = true,
+             updated_at = CURRENT_TIMESTAMP`,
+        [questionId, DEFAULT_EXECUTION_LANGUAGE, DEFAULT_EXECUTION_FUNCTION_NAME, boilerplateCode]
+    );
 }
 
 /** GET / — paginated list with optional filters and text search. */
@@ -227,10 +270,11 @@ export async function getQuestionById(req, res, next) {
         const includePrivateRequested = req.query.include_private === "true";
         const includePrivate = includePrivateRequested ? await isPrivilegedRequester(req) : false;
         const testCaseMap = await fetchTestCases([parseInt(id)], includePrivate);
+        const boilerplateCode = await fetchQuestionBoilerplate(parseInt(id, 10));
 
         res.json({
             success: true,
-            data: { ...result.rows[0], test_cases: testCaseMap[id] || [] },
+            data: { ...result.rows[0], boilerplate_code: boilerplateCode, test_cases: testCaseMap[id] || [] },
         });
     } catch (error) {
         next(error);
@@ -263,9 +307,9 @@ export async function getRandomQuestion(req, res, next) {
 /** POST / — create a new question (with optional test cases). */
 export async function createQuestion(req, res, next) {
     try {
-        const { title, description, topics, complexity, companies, test_cases } = req.body;
+        const { title, description, topics, complexity, companies, boilerplate_code, test_cases } = req.body;
 
-        const errors = validateQuestionBody({ title, description, topics, complexity, companies }, true);
+        const errors = validateQuestionBody({ title, description, topics, complexity, companies, boilerplate_code }, true);
         if (test_cases !== undefined) {
             errors.push(...validateTestCases(test_cases));
         }
@@ -336,7 +380,17 @@ export async function createQuestion(req, res, next) {
             insertedTestCases = tcResult.rows;
         }
 
-        res.status(201).json({ success: true, data: { ...question, test_cases: insertedTestCases } });
+        await upsertQuestionBoilerplate(question.id, boilerplate_code);
+        const resolvedBoilerplateCode = await fetchQuestionBoilerplate(question.id);
+
+        res.status(201).json({
+            success: true,
+            data: {
+                ...question,
+                boilerplate_code: resolvedBoilerplateCode,
+                test_cases: insertedTestCases,
+            },
+        });
     } catch (error) {
         next(error);
     }
@@ -348,13 +402,13 @@ export async function updateQuestion(req, res, next) {
         const { id } = req.params;
         const payload = req.body || {};
         const lockHolder = req.get("x-lock-holder") || payload.locked_by;
-        const { title, description, topics, complexity, companies, test_cases } = payload;
+        const { title, description, topics, complexity, companies, boilerplate_code, test_cases } = payload;
 
-        if (!title && !description && !topics && !complexity && !companies && !test_cases) {
+        if (!title && !description && !topics && !complexity && !companies && boilerplate_code === undefined && !test_cases) {
             return res.status(400).json({ success: false, error: "Provide at least one field to update" });
         }
 
-        const errors = validateQuestionBody({ title, description, topics, complexity, companies }, false);
+        const errors = validateQuestionBody({ title, description, topics, complexity, companies, boilerplate_code }, false);
         if (test_cases !== undefined) {
             errors.push(...validateTestCases(test_cases));
         }
@@ -451,7 +505,17 @@ export async function updateQuestion(req, res, next) {
             updatedTestCases = tcResult.rows;
         }
 
-        res.json({ success: true, data: { ...result.rows[0], test_cases: updatedTestCases } });
+        await upsertQuestionBoilerplate(parseInt(id, 10), boilerplate_code);
+        const resolvedBoilerplateCode = await fetchQuestionBoilerplate(parseInt(id, 10));
+
+        res.json({
+            success: true,
+            data: {
+                ...result.rows[0],
+                boilerplate_code: resolvedBoilerplateCode,
+                test_cases: updatedTestCases,
+            },
+        });
     } catch (error) {
         next(error);
     }

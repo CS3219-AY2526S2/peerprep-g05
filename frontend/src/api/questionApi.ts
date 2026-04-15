@@ -11,6 +11,7 @@ export interface Question {
     topics: string[];
     complexity: "Easy" | "Medium" | "Hard";
     companies: string[];
+    boilerplate_code?: string | null;
     created_at: string;
     updated_at: string;
     test_cases?: TestCase[];
@@ -150,6 +151,7 @@ export interface QuestionBody {
     topics: string[];
     complexity: string;
     companies?: string[];
+    boilerplate_code?: string;
     test_cases?: Omit<TestCase, "id" | "question_id" | "order_index">[];
 }
 
