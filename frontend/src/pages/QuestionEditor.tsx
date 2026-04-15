@@ -32,6 +32,7 @@ export default function QuestionEditor() {
     const [complexity, setComplexity] = useState("Easy");
     const [topicsStr, setTopicsStr] = useState("");
     const [companiesStr, setCompaniesStr] = useState("");
+    const [boilerplateCode, setBoilerplateCode] = useState("");
     const [testCases, setTestCases] = useState<TestCaseInput[]>(
         isEdit ? [] : [buildDefaultTestCase(1)]
     );
@@ -69,6 +70,7 @@ export default function QuestionEditor() {
                 setComplexity(q.complexity);
                 setTopicsStr(q.topics.join(", "));
                 setCompaniesStr(q.companies.join(", "));
+                setBoilerplateCode(q.boilerplate_code || "");
                 setTestCases(
                     (q.test_cases || []).map((tc: TestCase) => ({
                         input: tc.input,
@@ -154,6 +156,7 @@ export default function QuestionEditor() {
             topics,
             complexity,
             companies,
+            boilerplate_code: boilerplateCode.trim().length > 0 ? boilerplateCode : undefined,
             test_cases: testCases.length > 0 ? testCases : undefined,
         };
 
@@ -187,7 +190,7 @@ export default function QuestionEditor() {
     if (lockError) {
         return (
             <div className="p-8">
-                <div className="mx-auto max-w-[700px] rounded-xl bg-white p-6 shadow">
+                <div className="mx-auto max-w-175 rounded-xl bg-white p-6 shadow">
                     <div className="mb-4 rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
                         <strong>🔒 Cannot Edit:</strong> {lockError}
                     </div>
@@ -212,7 +215,7 @@ export default function QuestionEditor() {
 
     return (
         <div className="p-8">
-            <div className="mx-auto max-w-[700px]">
+            <div className="mx-auto max-w-175">
                 <Link
                     to={isEdit ? `/questions/${id}` : "/questions"}
                     className="mb-4 inline-block text-sm text-indigo-600 hover:text-indigo-700 no-underline"
@@ -309,6 +312,23 @@ export default function QuestionEditor() {
                                 placeholder="e.g. Google, Meta (comma-separated)"
                             />
                             <p className="mt-1 text-xs text-slate-400">Optional, separate with commas</p>
+                        </div>
+
+                        {/* Boilerplate */}
+                        <div>
+                            <label className="mb-1 block text-sm font-semibold text-slate-700">
+                                Boilerplate Code
+                            </label>
+                            <textarea
+                                value={boilerplateCode}
+                                onChange={(e) => setBoilerplateCode(e.target.value)}
+                                className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                rows={10}
+                                placeholder={`def solve(...):\n    # Write starter template here\n    pass`}
+                            />
+                            <p className="mt-1 text-xs text-slate-400">
+                                Optional starter code shown in collaborative execution.
+                            </p>
                         </div>
 
                         {/* Test Cases */}

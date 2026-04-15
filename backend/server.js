@@ -5,15 +5,15 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 
-// const limiter = rateLimit({
-//     windowMs: 15 * 60 * 1000,
-//     max: 100,
-// });
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+});
 
 dotenv.config();
 
 const app = express();
-// app.use(limiter);
+app.use(limiter);
 
 //CORS
 app.use(cors({

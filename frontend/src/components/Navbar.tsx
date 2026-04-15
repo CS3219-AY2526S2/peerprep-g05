@@ -54,7 +54,6 @@ export default function Navbar() {
     }
 
     const navBtn = "rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white no-underline transition hover:bg-white/20";
-    const subtleBtn = "rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25";
 
     return (
         <nav className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 px-6 py-3 text-slate-200">
@@ -76,14 +75,17 @@ export default function Navbar() {
                     <Link to="/questions" className={navBtn}>
                         Questions
                     </Link>
+                    {user && (
+                        <Link to="/attempt-history" className={navBtn}>
+                            Attempt History
+                        </Link>
+                    )}
+                    {user && isAdminRole(user.role) && (
+                        <Link to="/admin/users" className={navBtn}>
+                            Admin Users
+                        </Link>
+                    )}
                 </div>
-                {user && (
-                    <div className="flex flex-wrap items-center gap-2">
-                        {isAdminRole(user.role) && (
-                            <Link to="/admin/users" className={`${subtleBtn} no-underline`}>Admin Users</Link>
-                        )}
-                    </div>
-                )}
             </div>
 
             <div className="flex items-center gap-3">

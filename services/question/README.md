@@ -119,9 +119,15 @@ Authentication/body behavior:
 Request Body (fallback when token is not provided):
 ```json
 {
-  "user_id": "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09"
+  "user_id": "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09",
+  "completed": true
 }
 ```
+
+Status mapping for execution workflows:
+- `completed: true` (or `status: true`) -> `COMPLETED`
+- `completed: false` (or `status: false`) -> `ATTEMPTED`
+- String statuses are also supported: `COMPLETED`, `ATTEMPTED`, `INCOMPLETE`.
 
 ### POST /api/v1/questions/:id/completions/bulk
 Upsert progress for multiple users in one call (for example, when a collaboration session ends).
@@ -132,11 +138,11 @@ Request Body:
   "user_outcomes": [
     {
       "user_id": "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09",
-      "status": "COMPLETED"
+      "completed": true
     },
     {
       "user_id": "11111111-1111-1111-1111-111111111111",
-      "status": "ATTEMPTED"
+      "completed": false
     }
   ]
 }
@@ -144,6 +150,10 @@ Request Body:
 
 Behavior:
 - Supported statuses: `COMPLETED`, `ATTEMPTED`, `INCOMPLETE`.
+- Boolean payloads are accepted for execution/matching workflows:
+  - `true` -> `COMPLETED`
+  - `false` -> `ATTEMPTED`
+  - Works with either `status` or `completed` fields in each `user_outcomes` entry.
 - `INCOMPLETE` is represented by removing progress row for that question/user (default state).
 - Legacy `user_ids` payload is still accepted and treated as `COMPLETED` for all users.
 

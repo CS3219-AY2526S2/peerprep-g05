@@ -22,6 +22,27 @@ export async function getSessionInformation(
   return { ok: true, session };
 }
 
+export async function getActiveSession(): Promise<
+  { ok: true; session: CollaborationSession } | { ok: false; error: string }
+> {
+  const res = await fetch(
+    `${SESSION_API_BASE_URL}/collaboration/active-session`,
+    {
+      credentials: "include",
+    },
+  );
+  if (res.status !== 200) {
+    return {
+      ok: false,
+      error:
+        (await res.json()).error ||
+        "Failed to fetch active session information",
+    };
+  }
+  const session = await res.json();
+  return { ok: true, session };
+}
+
 export async function endSession(roomId: string): Promise<boolean> {
   const res = await fetch(`${SESSION_API_BASE_URL}/collaboration/${roomId}`, {
     method: "DELETE",
