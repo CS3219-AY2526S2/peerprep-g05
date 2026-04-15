@@ -290,3 +290,60 @@ Converted the frontend folder to .ts and .tsx as specified.
 - [ ] Rejected
 # Author Notes:
 Edited some minor errors due to the new types and then tested all the user service endpoints to ensure everything worked before commiting.
+
+----------
+
+# Date/Time:
+2026-04-07 15:26
+# Tool:
+GPT 5.3 - Codex
+# Prompt/Command:
+I have created the AI microservice, located under /service/ai. The purpose of this service can be inferred by its 2 endpoints, /chat and /pseudocode-to-python where the first one is for users to obtain hints from the AI whereas the second one is to send pseudocode to be converted into python. The AI here uses OpenRouter API.
+
+Provide the relevant integration and unit under /services/ai/tests that covers the endpoints.
+
+# Output Summary:
+/tests files under /services/ai
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+
+----------
+
+# Date/Time:
+2026-04-10 19:53
+# Tool:
+GPT 5.3 - Codex
+# Prompt/Command:
+I have created the Execution microservice, located under /service/execution. This service has 2 endpoints, which is to execute python code and to convert pseudocode to python, then execute it. In both endpoints, they will return errors present, failed test cases, and passed test cases.
+
+Provide the relevant integration and unit under /services/execution/tests that covers the endpoints.
+
+# Output Summary:
+/tests files under /services/execution
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
+
+----------
+
+# Date/Time:
+2026-04-10 23:07
+# Tool:
+GPT 5.3 - Codex
+# Prompt/Command:
+Previously, I asked you to generate some test files for the execution service which consisted of 2 endpoints. I have since removed the endpoint for converting pseudocode to python then executing.
+
+Update the test files under /services/execution/tests
+
+# Output Summary:
+Updates to the /tests files under /services/execution
+# Action Taken:
+- [X] Accepted as-is
+- [ ] Modified
+- [ ] Rejected
+# Author Notes:
