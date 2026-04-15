@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
 import { STATE } from "../utils/types";
-import { useMatchmakingContext } from "../hooks/MatchingContext";
 import { MatchFormCard } from "../components/MatchFormCard";
 import { QueuingCard } from "../components/QueuingCard";
 import { MatchProposedModal } from "../components/MatchProposedModal";
 import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
 import { useNavigate } from "react-router-dom";
 import { endSession, getActiveSession } from "../api/collaborationApi";
-import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
-import { MatchFormCard } from "../components/MatchFormCard";
-import { MatchProposedModal } from "../components/MatchProposedModal";
-import { QueuingCard } from "../components/QueuingCard";
 import { useMatchmaking } from "../hooks/useMatchmaking";
 import { CollaborationSession } from "../types/EditorSession";
-import { STATE } from "../utils/types";
 import toast from "react-hot-toast";
 
 export default function Matching() {

@@ -13,7 +13,6 @@ services:
     environment:
       GATEWAY_URL: http://gateway:4000
       REDIS_URL: "redis://collaboration-redis:6379"
-      GATEWAY_URL: "http://gateway:4000"
       EXPRESS_PORT: 3003
       NODE_ENV: production
     networks:
