@@ -62,7 +62,7 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
     return () => window.removeEventListener("resize", onResize);
   }, [clamp]);
 
-  // Global mouse/touch move & up listeners
+  // Global mouse/touch move & up listeners (attached only while dragging)
   useEffect(() => {
     const onMove = (e: MouseEvent | TouchEvent) => {
       if (!isDragging.current) return;
@@ -111,9 +111,8 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
     }
   };
 
-  // Panel positioning relative to button
-  const panelBelow =
-    pos.y + BUTTON_SIZE + PANEL_GAP + PANEL_HEIGHT < window.innerHeight;
+  // Decide which side to open the panel (above/below, left/right of button)
+  const panelBelow = pos.y + BUTTON_SIZE + PANEL_GAP + PANEL_HEIGHT < window.innerHeight;
   const panelRight = pos.x + PANEL_WIDTH < window.innerWidth;
 
   const panelStyle: React.CSSProperties = {
@@ -139,8 +138,7 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
     transform: isOpen ? "scale(1)" : "scale(0.85)",
     opacity: isOpen ? 1 : 0,
     pointerEvents: isOpen ? "all" : "none",
-    transition:
-      "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.15s ease",
+    transition: "transform 0.2s cubic-bezier(0.34,1.56,0.64,1), opacity 0.15s ease",
   };
 
   // Scroll to bottom on new messages
