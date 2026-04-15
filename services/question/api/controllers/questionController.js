@@ -679,9 +679,15 @@ export async function markQuestionCompleted(req, res, next) {
                 `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
                  VALUES ($1, $2::uuid, 'ATTEMPTED', CURRENT_TIMESTAMP, NULL)
                  ON CONFLICT (question_id, user_id) DO UPDATE
-                 SET status = 'ATTEMPTED',
+                 SET status = CASE
+                         WHEN question_completions.status = 'COMPLETED' THEN question_completions.status
+                         ELSE 'ATTEMPTED'
+                     END,
                      attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
-                     completed_at = NULL
+                     completed_at = CASE
+                         WHEN question_completions.status = 'COMPLETED' THEN question_completions.completed_at
+                         ELSE NULL
+                     END
                  RETURNING question_id, user_id, status, attempted_at, completed_at`,
                 [questionId, userId]
             );
@@ -795,9 +801,15 @@ export async function markQuestionCompletedByUsers(req, res, next) {
                     `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
                      VALUES ($1, $2::uuid, 'ATTEMPTED', CURRENT_TIMESTAMP, NULL)
                      ON CONFLICT (question_id, user_id) DO UPDATE
-                     SET status = 'ATTEMPTED',
+                     SET status = CASE
+                             WHEN question_completions.status = 'COMPLETED' THEN question_completions.status
+                             ELSE 'ATTEMPTED'
+                         END,
                          attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
-                         completed_at = NULL`,
+                         completed_at = CASE
+                             WHEN question_completions.status = 'COMPLETED' THEN question_completions.completed_at
+                             ELSE NULL
+                         END`,
                     [questionId, userId]
                 );
                 attemptedUserIds.push(userId);
