@@ -12,6 +12,8 @@ Manages coding questions for the PeerPrep platform.
 - Duplicate title prevention (case-insensitive)
 - List all distinct topics
 - Get random questions for matching
+- Curated execution profiles (boilerplate + structured test cases) in separate tables
+- Collaboration payload endpoint with question details + starter code + test cases
 - Track unique question completions per user
 - Centralised error handling & request logging
 - Graceful shutdown (SIGINT / SIGTERM)
@@ -52,6 +54,27 @@ List all distinct topics currently in the database.
 
 ### GET /api/v1/questions/:id
 Get a specific question by ID.
+
+### GET /api/v1/questions/:id/collaboration-payload
+Get full collaboration payload for a question:
+- question details (title, description, topics, complexity, companies)
+- execution details (language, function name, boilerplate, test cases with input and expected output)
+
+This route is intended for collaboration-session startup.
+
+### POST /api/v1/questions/:id/boilerplate
+Backward-compatible alias of collaboration payload retrieval.
+
+Request body:
+```json
+{
+  "language": "python",
+  "run": false,
+  "submission_code": "def two_sum(nums, target):\n    ..."
+}
+```
+
+Only `language` is used in the current workflow.
 
 ### POST /api/v1/questions
 Create a new question. Returns `409` if a question with the same title already exists (case-insensitive).
@@ -101,22 +124,28 @@ Request Body (fallback when token is not provided):
 ```
 
 ### POST /api/v1/questions/:id/completions/bulk
-Record completion for multiple users in one call (for example, the 2 users in a collaboration session).
+Upsert progress for multiple users in one call (for example, when a collaboration session ends).
 
 Request Body:
 ```json
 {
-  "user_ids": [
-    "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09",
-    "11111111-1111-1111-1111-111111111111"
+  "user_outcomes": [
+    {
+      "user_id": "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09",
+      "status": "COMPLETED"
+    },
+    {
+      "user_id": "11111111-1111-1111-1111-111111111111",
+      "status": "ATTEMPTED"
+    }
   ]
 }
 ```
 
 Behavior:
-- Duplicates in `user_ids` are de-duplicated.
-- Existing completion rows are not duplicated.
-- Response includes `inserted_user_ids`, `already_completed_user_ids`, and `unique_users_completed`.
+- Supported statuses: `COMPLETED`, `ATTEMPTED`, `INCOMPLETE`.
+- `INCOMPLETE` is represented by removing progress row for that question/user (default state).
+- Legacy `user_ids` payload is still accepted and treated as `COMPLETED` for all users.
 
 ### GET /api/v1/questions/:id/completions
 Get completion stats for a question.
@@ -131,8 +160,12 @@ Example response:
   "data": {
     "question_id": 200,
     "unique_users_completed": 12,
+    "unique_users_attempted": 5,
     "completed_user_ids": [
       "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09"
+    ],
+    "attempted_user_ids": [
+      "11111111-1111-1111-1111-111111111111"
     ]
   }
 }
@@ -143,6 +176,7 @@ Get all questions completed by a specific user.
 
 Query Parameters:
 - `include_details=true` (optional): Include question metadata like title, complexity, topics.
+- `include_attempted=true` (optional): Include attempted (non-completed) records as well.
 
 Example response:
 ```json
@@ -151,13 +185,24 @@ Example response:
   "data": {
     "user_id": "45d0f6d0-52b4-4cd5-9e16-06bc3faa2b09",
     "total_completed_questions": 2,
+    "total_attempted_questions": 1,
     "completed_questions": [
       {
         "question_id": 200,
+        "status": "COMPLETED",
+        "attempted_at": "2026-03-29T09:30:01.000Z",
         "completed_at": "2026-03-29T09:31:12.000Z",
         "title": "Valid Anagram",
         "complexity": "Easy",
         "topics": ["Hash Table", "String", "Sorting"]
+      }
+    ],
+    "attempted_questions": [
+      {
+        "question_id": 201,
+        "status": "ATTEMPTED",
+        "attempted_at": "2026-03-30T08:00:00.000Z",
+        "completed_at": null
       }
     ]
   }
