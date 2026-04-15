@@ -151,6 +151,151 @@ describe("GET /api/v1/questions/:id", () => {
 });
 
 // ============================================================
+// GET /api/v1/questions/:id/collaboration-payload
+// POST /api/v1/questions/:id/boilerplate
+// ============================================================
+describe("Collaboration payload endpoints", () => {
+    it("200 — returns full collaboration payload via GET", async () => {
+        mockQuery
+            .mockResolvedValueOnce({
+                rows: [{
+                    question_id: 1,
+                    title: "Two Sum",
+                    description: "Given an array of integers...",
+                    topics: ["Array", "Hash Table"],
+                    complexity: "Easy",
+                    companies: ["Amazon"],
+                    created_at: "2026-04-12T00:00:00.000Z",
+                    updated_at: "2026-04-12T00:00:00.000Z",
+                    profile_id: 5,
+                    language: "python",
+                    function_name: "two_sum",
+                    boilerplate_code: "def two_sum(nums, target):\n    pass",
+                }],
+            })
+            .mockResolvedValueOnce({
+                rows: [{
+                    id: 10,
+                    case_label: "basic",
+                    input_payload: { nums: [2, 7, 11, 15], target: 9 },
+                    expected_output: [0, 1],
+                    order_index: 0,
+                }],
+            });
+
+        const res = await request
+            .get("/api/v1/questions/1/collaboration-payload?language=python");
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.question.title).toBe("Two Sum");
+        expect(res.body.data.execution.boilerplate_code).toContain("def two_sum");
+        expect(res.body.data.execution.test_cases).toHaveLength(1);
+    });
+
+    it("200 — returns payload via POST /boilerplate for backward compatibility", async () => {
+        mockQuery
+            .mockResolvedValueOnce({
+                rows: [{
+                    question_id: 1,
+                    title: "Two Sum",
+                    description: "Given an array of integers...",
+                    topics: ["Array", "Hash Table"],
+                    complexity: "Easy",
+                    companies: ["Amazon"],
+                    created_at: "2026-04-12T00:00:00.000Z",
+                    updated_at: "2026-04-12T00:00:00.000Z",
+                    profile_id: 5,
+                    language: "python",
+                    function_name: "two_sum",
+                    boilerplate_code: "def two_sum(nums, target):\n    pass",
+                }],
+            })
+            .mockResolvedValueOnce({
+                rows: [{
+                    id: 10,
+                    case_label: "basic",
+                    input_payload: { nums: [2, 7, 11, 15], target: 9 },
+                    expected_output: [0, 1],
+                    order_index: 0,
+                }],
+            });
+
+        const res = await request
+            .post("/api/v1/questions/1/boilerplate")
+            .send({ language: "python" });
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.execution.function_name).toBe("two_sum");
+    });
+});
+
+// ============================================================
+// Progress status workflow
+// ============================================================
+describe("Progress status workflow", () => {
+    it("200 — upserts bulk user outcomes (COMPLETED/ATTEMPTED/INCOMPLETE)", async () => {
+        mockQuery
+            .mockResolvedValueOnce({ rows: [{ "?column?": 1 }] }) // question exists
+            .mockResolvedValueOnce({ rows: [] }) // completed upsert
+            .mockResolvedValueOnce({ rows: [] }) // attempted upsert
+            .mockResolvedValueOnce({ rows: [] }) // incomplete delete
+            .mockResolvedValueOnce({ rows: [{ unique_users_completed: 1, unique_users_attempted: 1 }] });
+
+        const res = await request
+            .post("/api/v1/questions/10/completions/bulk")
+            .send({
+                user_outcomes: [
+                    { user_id: "11111111-1111-1111-1111-111111111111", status: "COMPLETED" },
+                    { user_id: "22222222-2222-2222-2222-222222222222", status: "ATTEMPTED" },
+                    { user_id: "33333333-3333-3333-3333-333333333333", status: "INCOMPLETE" },
+                ],
+            });
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.completed_user_ids).toEqual([
+            "11111111-1111-1111-1111-111111111111",
+        ]);
+        expect(res.body.data.attempted_user_ids).toEqual([
+            "22222222-2222-2222-2222-222222222222",
+        ]);
+        expect(res.body.data.incomplete_user_ids).toEqual([
+            "33333333-3333-3333-3333-333333333333",
+        ]);
+    });
+
+    it("200 — returns completion stats including attempted users", async () => {
+        mockQuery
+            .mockResolvedValueOnce({ rows: [{ "?column?": 1 }] }) // question exists
+            .mockResolvedValueOnce({ rows: [{ unique_users_completed: 2, unique_users_attempted: 1 }] })
+            .mockResolvedValueOnce({
+                rows: [
+                    { user_id: "11111111-1111-1111-1111-111111111111", status: "COMPLETED" },
+                    { user_id: "22222222-2222-2222-2222-222222222222", status: "ATTEMPTED" },
+                    { user_id: "33333333-3333-3333-3333-333333333333", status: "COMPLETED" },
+                ],
+            });
+
+        const res = await request
+            .get("/api/v1/questions/10/completions?include_users=true");
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.unique_users_completed).toBe(2);
+        expect(res.body.data.unique_users_attempted).toBe(1);
+        expect(res.body.data.completed_user_ids).toEqual([
+            "11111111-1111-1111-1111-111111111111",
+            "33333333-3333-3333-3333-333333333333",
+        ]);
+        expect(res.body.data.attempted_user_ids).toEqual([
+            "22222222-2222-2222-2222-222222222222",
+        ]);
+    });
+});
+
+// ============================================================
 // POST /api/v1/questions
 // ============================================================
 describe("POST /api/v1/questions", () => {

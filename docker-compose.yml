@@ -300,6 +300,40 @@ services:
     networks:
       - peerprep-network
 
+  # ── Execution Service ────────────────────────────────────────
+  execution-service:
+    build:
+      context: ./services/execution
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      PORT: 3006
+      USER_SERVICE_JWKS_URL: http://user-service:3001/api/v1/auth/jwks
+      PYTHON_EXEC_TIMEOUT_MS: 5000
+      MAX_REQUEST_BODY_SIZE: 1mb
+      AUTH_COOKIE_NAME: peerprep_access_token
+      JWKS_CACHE_TTL_MS: 300000
+      MAX_TEST_CASES: 50
+    depends_on:
+      user-service:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3006/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - peerprep-network
+
 
   # ---------------- INFRASTRUCTURE ----------------
   rabbitmq:
@@ -330,6 +364,7 @@ services:
       USER_SERVICE_URL: http://user-service:3001
       COLLAB_SERVICE_URL: http://collaboration-server:3003
       AI_SERVICE_URL: http://ai-service:3004
+      EXECUTION_SERVICE_URL: http://execution-service:3006
       RABBITMQ_URL: amqp://rabbitmq:5672
       MATCH_EVENTS_EXCHANGE: match.events
     ports:
