@@ -166,8 +166,33 @@ async function questionExists(questionId) {
 }
 
 function normalizeProgressStatus(value) {
+    if (typeof value === "boolean") {
+        return value ? "COMPLETED" : "ATTEMPTED";
+    }
+
     const normalized = String(value || "").trim().toUpperCase();
+    if (normalized === "TRUE") return "COMPLETED";
+    if (normalized === "FALSE") return "ATTEMPTED";
+
     return PROGRESS_STATUSES.has(normalized) ? normalized : null;
+}
+
+function resolveOutcomeStatus(outcome) {
+    if (!outcome || typeof outcome !== "object") return null;
+
+    if (Object.prototype.hasOwnProperty.call(outcome, "status")) {
+        return normalizeProgressStatus(outcome.status);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(outcome, "completed")) {
+        return normalizeProgressStatus(outcome.completed);
+    }
+
+    if (Object.prototype.hasOwnProperty.call(outcome, "is_completed")) {
+        return normalizeProgressStatus(outcome.is_completed);
+    }
+
+    return null;
 }
 
 async function fetchQuestionBoilerplate(questionId) {
@@ -616,27 +641,64 @@ export async function markQuestionCompleted(req, res, next) {
             });
         }
 
+        const hasExplicitStatus = Object.prototype.hasOwnProperty.call(req.body || {}, "status")
+            || Object.prototype.hasOwnProperty.call(req.body || {}, "completed")
+            || Object.prototype.hasOwnProperty.call(req.body || {}, "is_completed");
+        const requestedStatusRaw = hasExplicitStatus
+            ? ((req.body?.status ?? req.body?.completed) ?? req.body?.is_completed)
+            : undefined;
+        const requestedStatus = hasExplicitStatus
+            ? normalizeProgressStatus(requestedStatusRaw)
+            : "COMPLETED";
+
+        if (hasExplicitStatus && !requestedStatus) {
+            return res.status(400).json({
+                success: false,
+                error: "status/completed must be COMPLETED, ATTEMPTED, INCOMPLETE, true, or false",
+            });
+        }
+
         const existingResult = await pool.query(
             `SELECT status, attempted_at, completed_at
              FROM question_completions
              WHERE question_id = $1 AND user_id = $2::uuid`,
             [questionId, userId]
         );
+        const alreadySameStatus = existingResult.rows[0]?.status === requestedStatus;
 
-        const alreadyCompleted = existingResult.rows[0]?.status === "COMPLETED";
+        let completionRow = null;
 
-        const upsertResult = await pool.query(
-            `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
-             VALUES ($1, $2::uuid, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-             ON CONFLICT (question_id, user_id) DO UPDATE
-             SET status = 'COMPLETED',
-                 attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
-                 completed_at = COALESCE(question_completions.completed_at, CURRENT_TIMESTAMP)
-             RETURNING question_id, user_id, status, attempted_at, completed_at`,
-            [questionId, userId]
-        );
-
-        const completionRow = upsertResult.rows[0] || null;
+        if (requestedStatus === "INCOMPLETE") {
+            await pool.query(
+                `DELETE FROM question_completions
+                 WHERE question_id = $1 AND user_id = $2::uuid`,
+                [questionId, userId]
+            );
+        } else if (requestedStatus === "ATTEMPTED") {
+            const upsertResult = await pool.query(
+                `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
+                 VALUES ($1, $2::uuid, 'ATTEMPTED', CURRENT_TIMESTAMP, NULL)
+                 ON CONFLICT (question_id, user_id) DO UPDATE
+                 SET status = 'ATTEMPTED',
+                     attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
+                     completed_at = NULL
+                 RETURNING question_id, user_id, status, attempted_at, completed_at`,
+                [questionId, userId]
+            );
+            completionRow = upsertResult.rows[0] || null;
+        } else {
+            const upsertResult = await pool.query(
+                `INSERT INTO question_completions (question_id, user_id, status, attempted_at, completed_at)
+                 VALUES ($1, $2::uuid, 'COMPLETED', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                 ON CONFLICT (question_id, user_id) DO UPDATE
+                 SET status = 'COMPLETED',
+                     attempted_at = COALESCE(question_completions.attempted_at, CURRENT_TIMESTAMP),
+                     completed_at = COALESCE(question_completions.completed_at, CURRENT_TIMESTAMP)
+                 RETURNING question_id, user_id, status, attempted_at, completed_at`,
+                [questionId, userId]
+            );
+            completionRow = upsertResult.rows[0] || null;
+        }
 
         const countResult = await pool.query(
             `SELECT COUNT(*) FILTER (WHERE status = 'COMPLETED')::int AS unique_users_completed,
@@ -646,15 +708,15 @@ export async function markQuestionCompleted(req, res, next) {
             [questionId]
         );
 
-        res.status(alreadyCompleted ? 200 : 201).json({
+        res.status(alreadySameStatus ? 200 : 201).json({
             success: true,
             data: {
                 question_id: questionId,
                 user_id: completionRow?.user_id || userId,
-                status: completionRow?.status || "COMPLETED",
+                status: completionRow?.status || requestedStatus,
                 attempted_at: completionRow?.attempted_at || null,
                 completed_at: completionRow?.completed_at || null,
-                already_completed: alreadyCompleted,
+                already_completed: requestedStatus === "COMPLETED" ? alreadySameStatus : false,
                 unique_users_completed: countResult.rows[0].unique_users_completed,
                 unique_users_attempted: countResult.rows[0].unique_users_attempted,
             },
@@ -693,7 +755,7 @@ export async function markQuestionCompletedByUsers(req, res, next) {
                 .filter((entry) => entry && typeof entry === "object")
                 .map((entry) => ({
                     user_id: typeof entry.user_id === "string" ? entry.user_id.trim() : "",
-                    status: normalizeProgressStatus(entry.status),
+                    status: resolveOutcomeStatus(entry),
                 }))
                 .filter((entry) => entry.user_id && entry.status)
             : (legacyUserIds || [])
@@ -704,7 +766,7 @@ export async function markQuestionCompletedByUsers(req, res, next) {
         if (normalizedOutcomes.length === 0) {
             return res.status(400).json({
                 success: false,
-                error: "Provide user_ids or user_outcomes with valid user_id and status",
+                error: "Provide user_ids or user_outcomes with valid user_id and status/completed",
             });
         }
 

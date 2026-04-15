@@ -266,6 +266,32 @@ describe("Progress status workflow", () => {
         ]);
     });
 
+    it("200 — maps boolean outcomes to COMPLETED/ATTEMPTED", async () => {
+        mockQuery
+            .mockResolvedValueOnce({ rows: [{ "?column?": 1 }] }) // question exists
+            .mockResolvedValueOnce({ rows: [] }) // completed upsert
+            .mockResolvedValueOnce({ rows: [] }) // attempted upsert
+            .mockResolvedValueOnce({ rows: [{ unique_users_completed: 1, unique_users_attempted: 1 }] });
+
+        const res = await request
+            .post("/api/v1/questions/10/completions/bulk")
+            .send({
+                user_outcomes: [
+                    { user_id: "11111111-1111-1111-1111-111111111111", completed: true },
+                    { user_id: "22222222-2222-2222-2222-222222222222", completed: false },
+                ],
+            });
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.data.completed_user_ids).toEqual([
+            "11111111-1111-1111-1111-111111111111",
+        ]);
+        expect(res.body.data.attempted_user_ids).toEqual([
+            "22222222-2222-2222-2222-222222222222",
+        ]);
+    });
+
     it("200 — returns completion stats including attempted users", async () => {
         mockQuery
             .mockResolvedValueOnce({ rows: [{ "?column?": 1 }] }) // question exists
