@@ -10,6 +10,7 @@ import { CollaborativeEditor } from "../components/collaborative/CollaborativeEd
 import { Chat } from "../components/collaborative/Chat";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { QuestionDescriptionPreview } from "../components/QuestionDescriptionPreview";
+import toast from "react-hot-toast";
 
 function toPythonExecutionTestCases(
   testCases: PythonExecutionTestCase[] | undefined,
@@ -127,9 +128,11 @@ export default function CollaborativeEditorPage() {
           onClick={() => {
             endSession(roomId).then((success) => {
               if (!success) {
-                alert("Failed to end session.");
+                toast.error("Failed to end session. Please try again.");
+              } else {
+                toast.success("Session ended successfully.");
+                navigate("/");
               }
-              navigate("/");
             });
           }}
         >
@@ -148,7 +151,7 @@ export default function CollaborativeEditorPage() {
           executionSetupError={sessionInfo.executionPayloadError}
           onSessionEnded={() => {
             navigate("/");
-            alert("Session has ended.");
+            toast.success("Session has ended.");
           }}
         />
         <Chat roomId={roomId} />
