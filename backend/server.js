@@ -7,12 +7,16 @@ import rateLimit from "express-rate-limit";
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: parseInt(process.env.GATEWAY_RATE_LIMIT_MAX || "2000", 10),
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many requests, please try again later" },
 });
 
 dotenv.config();
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(limiter);
 
 //CORS
@@ -32,6 +36,7 @@ function initProxyRoutes() {
     app.use("/api/v1/auth", createProxyMiddleware({
         target: process.env.USER_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite: (path, req) => {
             return `/api/v1/auth${path}`;
         },
@@ -50,6 +55,7 @@ function initProxyRoutes() {
     app.use("/api/v1/admin", createProxyMiddleware({
         target: process.env.USER_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite: (path, req) => {
             return `/api/v1/admin${path}`;
         },
@@ -64,6 +70,7 @@ function initProxyRoutes() {
     app.use("/api/v1/matches", createProxyMiddleware({
         target: process.env.MATCHING_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite : (path) => `/api/v1/matches${path}`,
         on: {
             error: (err, req, res) => {
@@ -76,6 +83,7 @@ function initProxyRoutes() {
     app.use("/api/v1/users", createProxyMiddleware({
         target: process.env.USER_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite: (path, req) => {
             return `/api/v1/users${path}`;
         },
@@ -90,6 +98,7 @@ function initProxyRoutes() {
     app.use("/api/v1/questions", createProxyMiddleware({
         target: process.env.QUESTION_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite: (path, req) => {
             return `/api/v1/questions${path}`;
         },
@@ -108,6 +117,7 @@ function initProxyRoutes() {
     app.use("/api/v1/collaboration", createProxyMiddleware({
         target: process.env.COLLAB_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite: (path, req) => {
             return `/api/v1/collaboration${path}`;
         },
@@ -126,6 +136,7 @@ function initProxyRoutes() {
     app.use("/api/v1/ai", createProxyMiddleware({
         target: process.env.AI_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite: (path, req) => {
             return `/api/v1/ai${path}`;
         },
@@ -144,6 +155,7 @@ function initProxyRoutes() {
     app.use("/api/v1/execution", createProxyMiddleware({
         target: process.env.EXECUTION_SERVICE_URL,
         changeOrigin: true,
+        xfwd: true,
         pathRewrite: (path, req) => {
             return `/api/v1/execution${path}`;
         },

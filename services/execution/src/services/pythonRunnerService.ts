@@ -177,21 +177,30 @@ export const parseSyntaxError = (stderr: string): ExecutionIssue => {
 
 export const parseRuntimeError = (
   stderr: string,
-): { type: string; message: string } => {
+): ExecutionIssue => {
   const lines = getNonEmptyLines(stderr);
   const lastLine = lines.at(-1) ?? "RuntimeError: Python execution failed.";
   const match = lastLine.match(/^([^:]+):\s*(.+)$/);
+  const lineMatches = Array.from(
+    stderr.matchAll(/File\s+"[^"]*submission\.py",\s+line\s+(\d+)/g),
+  );
+  const lastLineMatch = lineMatches.at(-1);
+  const line = lastLineMatch
+    ? Number.parseInt(lastLineMatch[1]!, 10)
+    : undefined;
 
   if (!match) {
     return {
       type: "RuntimeError",
       message: lastLine,
+      ...(line ? { line } : {}),
     };
   }
 
   return {
     type: match[1]!.trim(),
     message: match[2]!.trim(),
+    ...(line ? { line } : {}),
   };
 };
 
@@ -290,6 +299,8 @@ export const runPythonCodeAgainstTestCases = async (input: {
         errorsPresent.push({
           type: runtimeError.type,
           message: runtimeError.message,
+          ...(runtimeError.line ? { line: runtimeError.line } : {}),
+          ...(runtimeError.column ? { column: runtimeError.column } : {}),
           testCaseIndex: index,
         });
         continue;

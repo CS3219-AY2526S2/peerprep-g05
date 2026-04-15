@@ -38,6 +38,7 @@ ZeroDivisionError: division by zero
     expect(error).toEqual({
       type: "ZeroDivisionError",
       message: "division by zero",
+      line: 1,
     });
   });
 
