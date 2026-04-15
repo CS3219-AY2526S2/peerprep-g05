@@ -16,6 +16,8 @@ collaborationRouter.post("/", createCollaborationSession);
 
 collaborationRouter.get("/validate/:sessionId", isValidSessionId);
 
+collaborationRouter.get("/active-session", getActiveCollaborationSession);
+
 collaborationRouter.get(
   "/:sessionId",
   checkSessionIdExists,
@@ -26,5 +28,3 @@ collaborationRouter.delete(
   checkSessionIdExists,
   endCollaborationSession,
 );
-
-collaborationRouter.get("/active-session", getActiveCollaborationSession);

@@ -23,7 +23,7 @@ export async function getSessionInformation(
 }
 
 export async function getActiveSession(): Promise<
-  { ok: true; session: CollaborationSession } | { ok: false; error: string }
+  { ok: true; session: CollaborationSession[] } | { ok: false; error: string }
 > {
   const res = await fetch(
     `${SESSION_API_BASE_URL}/collaboration/active-session`,
@@ -39,8 +39,7 @@ export async function getActiveSession(): Promise<
         "Failed to fetch active session information",
     };
   }
-  const session = await res.json();
-  return { ok: true, session };
+  return await res.json();
 }
 
 export async function endSession(roomId: string): Promise<boolean> {

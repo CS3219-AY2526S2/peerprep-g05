@@ -1,19 +1,14 @@
-import { STATE } from "../utils/types";
-import { useMatchmakingContext } from "../hooks/MatchingContext";
-import { MatchFormCard } from "../components/MatchFormCard";
-import { QueuingCard } from "../components/QueuingCard";
-import { MatchProposedModal } from "../components/MatchProposedModal";
-import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { endSession, getActiveSession } from "../api/collaborationApi";
 import { MatchConfirmedCard } from "../components/MatchConfirmedCard";
 import { MatchFormCard } from "../components/MatchFormCard";
 import { MatchProposedModal } from "../components/MatchProposedModal";
 import { QueuingCard } from "../components/QueuingCard";
+import { useMatchmakingContext } from "../hooks/MatchingContext";
 import { CollaborationSession } from "../types/EditorSession";
 import { STATE } from "../utils/types";
-import toast from "react-hot-toast";
 
 export default function Matching() {
   const navigate = useNavigate();
@@ -42,8 +37,11 @@ export default function Matching() {
     // check for active editor session for user, if exists, check if user wants to terminate or resume the editor session
     getActiveSession().then((result) => {
       if (result.ok) {
-        if (result.session.id !== questionMatch?.sessionId) {
-          setActiveSession(result.session);
+        if (
+          result.session.length > 0 &&
+          result.session[0].id !== (questionMatch?.sessionId ?? "")
+        ) {
+          setActiveSession(result.session[0]);
         } else {
           setActiveSession(null);
           toast.error("Please refresh the page and try again.");
@@ -103,12 +101,16 @@ export default function Matching() {
       )}
     </div>
   ) : (
-    <div>
+    <div className="flex flex-col gap-2">
       You have an active session.
-      <button onClick={() => navigate(`/editor/${activeSession.id}`)}>
+      <button
+        className="bg-slate-400 hover:bg-slate-500 rounded-2xl "
+        onClick={() => navigate(`/editor/${activeSession.id}`)}
+      >
         Resume Session
       </button>
       <button
+        className="bg-red-400 hover:bg-red-500 rounded-2xl"
         onClick={() =>
           endSession(activeSession.id)
             .then((r) =>
