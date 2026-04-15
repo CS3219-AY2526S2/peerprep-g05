@@ -236,6 +236,16 @@ async function handleAiRequest(socket, userId, payload) {
     // ─── 2. Prepare request ──────────────────────────────────────
     const url = `${process.env.GATEWAY_URL}/api/v1/ai/chat`;
 
+    const userMsg = {
+        id: uuid(),
+        sender: userId,
+        content: prompt.trim(),
+        timestamp: new Date().toISOString(),
+    };
+
+    await appendMessage(roomId, userMsg);
+    broadcastToRoom(roomId, { type: "CHAT_MESSAGE", ...userMsg });
+
     const requestBody = {
         sessionId: roomId,
         prompt: prompt.trim(),
