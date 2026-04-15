@@ -30,6 +30,7 @@ export default function CollaborativeEditorPage() {
     descriptionContent: string;
     questionId: string;
     users: string[];
+    boilerplateCode: string;
     executionTestCases: PythonExecutionTestCase[];
     executionPayloadError: string | null;
   } | null>(null);
@@ -58,9 +59,11 @@ export default function CollaborativeEditorPage() {
 
       let executionTestCases: PythonExecutionTestCase[] = [];
       let executionPayloadError: string | null = null;
+      let boilerplateCode = "";
 
       const loadQuestionTestCases = async () => {
         const question = await getQuestionById(info.session.questionId);
+        boilerplateCode = question.data.boilerplate_code || boilerplateCode;
         return toPythonExecutionTestCases(question.data.test_cases);
       };
 
@@ -68,6 +71,7 @@ export default function CollaborativeEditorPage() {
         const payload = await getCollaborationQuestionPayload(
           info.session.questionId,
         );
+        boilerplateCode = payload.data.execution.boilerplate_code || "";
         executionTestCases = toPythonExecutionTestCases(
           payload.data.execution.test_cases,
         );
@@ -94,6 +98,7 @@ export default function CollaborativeEditorPage() {
           descriptionContent: info.session.descriptionContent,
           questionId: info.session.questionId,
           users: info.session.users,
+          boilerplateCode,
           executionTestCases,
           executionPayloadError,
         });
@@ -151,7 +156,9 @@ export default function CollaborativeEditorPage() {
         />
         <CollaborativeEditor
           roomId={roomId}
+          questionId={sessionInfo.questionId}
           sessionUsers={sessionInfo.users}
+          initialEditorContent={sessionInfo.boilerplateCode}
           executionTestCases={sessionInfo.executionTestCases}
           executionSetupError={sessionInfo.executionPayloadError}
           onSessionEnded={() => {
