@@ -89,6 +89,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     };
 
     const res = await fetch(`${QUESTION_BASE}${path}`, {
+        credentials: "include",
         ...options,
         headers: mergedHeaders,
     });
@@ -117,7 +118,6 @@ export interface QuestionFilters {
     limit?: number;
     complexity?: string;
     topic?: string;
-    category?: string;
     company?: string;
     search?: string;
 }
@@ -127,11 +127,7 @@ export function getAllQuestions(filters: QuestionFilters = {}) {
     if (filters.page) params.set("page", String(filters.page));
     if (filters.limit) params.set("limit", String(filters.limit));
     if (filters.complexity) params.set("complexity", filters.complexity);
-    const selectedTopic = filters.topic ?? filters.category;
-    if (selectedTopic) {
-        params.set("topic", selectedTopic);
-        params.set("category", selectedTopic);
-    }
+    if (filters.topic) params.set("topic", filters.topic);
     if (filters.company) params.set("company", filters.company);
     if (filters.search) params.set("search", filters.search);
     const qs = params.toString();
@@ -141,11 +137,8 @@ export function getAllQuestions(filters: QuestionFilters = {}) {
     }));
 }
 
-export function getQuestionById(id: number | string, token?: string) {
-    const headers: HeadersInit = token
-        ? { Authorization: `Bearer ${token}` }
-        : {};
-    return request<SingleResponse<RawQuestion>>(`/questions/${id}?include_private=true`, { headers }).then((res) => ({
+export function getQuestionById(id: number | string) {
+    return request<SingleResponse<RawQuestion>>(`/questions/${id}?include_private=true`).then((res) => ({
         ...res,
         data: normalizeQuestion(res.data),
     }));
@@ -173,10 +166,14 @@ export function createQuestion(body: QuestionBody) {
     }));
 }
 
-export function updateQuestion(id: number | string, body: Partial<QuestionBody>, lockHolder?: string) {
-    const headers: HeadersInit = lockHolder
-        ? { "x-lock-holder": lockHolder }
-        : {};
+export function updateQuestion(
+    id: number | string,
+    body: Partial<QuestionBody>,
+    lockHolder?: string
+) {
+    const headers: HeadersInit = {
+        ...(lockHolder ? { "x-lock-holder": lockHolder } : {}),
+    };
 
     return request<SingleResponse<RawQuestion>>(`/questions/${id}`, {
         method: "PUT",
@@ -200,9 +197,7 @@ export function deleteQuestion(id: number | string) {
 // ── Topics & Companies ────────────────────────────────
 
 export function getTopics() {
-    return request<SingleResponse<string[]>>("/questions/topics").catch(() =>
-        request<SingleResponse<string[]>>("/questions/categories")
-    );
+    return request<SingleResponse<string[]>>("/questions/topics");
 }
 
 export function getCompanies() {

@@ -28,7 +28,6 @@ export function QueuingCard({ matchInfo, onCancel, elapsedFmt }: Props) {
         </div>
 
         <div className="mb-6 divide-y divide-slate-100">
-          <MatchInfoRow label="User"       value={matchInfo.userId} />
           <MatchInfoRow label="Topic"      value={matchInfo.topic} />
           <MatchInfoRow label="Difficulty" value={<DifficultyBadge difficulty={matchInfo.difficulty} />} />
         </div>

@@ -75,9 +75,9 @@ async function fetchSingleQuestion(topic, difficulty) {
     let url;
     console.log(difficulty);
     if (difficulty === "Any") {
-        url = `${process.env.QUESTION_SERVICE_URL}/api/v1/questions?category=${encodeURIComponent(topic)}&limit=1`;
+        url = `${process.env.QUESTION_SERVICE_URL}/api/v1/questions?topic=${encodeURIComponent(topic)}&limit=1`;
     } else {
-        url = `${process.env.QUESTION_SERVICE_URL}/api/v1/questions?category=${encodeURIComponent(topic)}&complexity=${encodeURIComponent(difficulty)}&limit=1`;
+        url = `${process.env.QUESTION_SERVICE_URL}/api/v1/questions?topic=${encodeURIComponent(topic)}&complexity=${encodeURIComponent(difficulty)}&limit=1`;
     }
     console.log(url);
   

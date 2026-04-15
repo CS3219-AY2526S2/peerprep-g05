@@ -1,15 +1,19 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext.tsx";
 import { Link, useNavigate } from "react-router-dom";
 import { isAdminRole } from "../utils/roles.ts";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+    const [isDarkMode, setIsDarkMode] = useState(false);
 
-  async function handleLogout() {
-    await logout();
-    navigate("/");
-  }
+    useEffect(() => {
+        const savedTheme = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const useDarkMode = savedTheme ? savedTheme === "dark" : prefersDark;
+        setIsDarkMode(useDarkMode);
+    }, []);
 
   return (
     <nav className="flex items-center justify-between bg-slate-900 px-6 py-3 text-slate-200">

@@ -17,7 +17,7 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await fetch(`${GATEWAY_URL}/api/v1/questions/categories`);
+        const res = await fetch(`${GATEWAY_URL}/api/v1/questions/topics`);
         const json = await res.json();
 
         const categories = Array.isArray(json.data) ? json.data : [];
@@ -36,14 +36,18 @@ export function MatchFormCard({ onFindMatch, error, loading }: Props) {
 
   const handleSubmit = () => {
     if (!user || !topic) return;
-    onFindMatch({ userId: user.id, topic, difficulty });
+    onFindMatch({ topic, difficulty });
   };
 
   return (
     <div className="w-full max-w-md">
       <div className="mb-6 text-center">
-        <h1 className="text-3xl font-semibold text-slate-900">Find a Match</h1>
-        <p className="mt-1 text-slate-500">Get paired with a peer for a live coding session</p>
+        <h1 className="text-3xl font-semibold" style={{ color: "var(--app-text)" }}>
+          Find a Match
+        </h1>
+        <p className="mt-1" style={{ color: "var(--app-text-muted)" }}>
+          Get paired with a peer for a live coding session
+        </p>
       </div>
 
       <div className="rounded-xl bg-white px-8 py-7 shadow-sm border border-slate-200">

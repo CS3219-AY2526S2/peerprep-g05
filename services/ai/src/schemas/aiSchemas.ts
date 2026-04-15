@@ -6,7 +6,7 @@ const nonEmptyString = (fieldName: string) =>
 export const chatRequestSchema = z.object({
   sessionId: nonEmptyString("sessionId"),
   prompt: nonEmptyString("prompt"),
-  codeSnippet: nonEmptyString("codeSnippet"),
+  codeSnippet: z.string().trim().default(""),
   question: nonEmptyString("question"),
 });
 

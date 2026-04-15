@@ -15,7 +15,7 @@ const COMPLEXITY_COLORS: Record<string, string> = {
 export default function QuestionDetail() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { user, token } = useAuth();
+    const { user } = useAuth();
     const isAdmin = isAdminRole(user?.role);
 
     const [question, setQuestion] = useState<Question | null>(null);
@@ -35,7 +35,7 @@ export default function QuestionDetail() {
         setError("");
 
         Promise.all([
-            qApi.getQuestionById(id, token || undefined),
+            qApi.getQuestionById(id),
             qApi.getLockStatus(id),
         ])
             .then(([qRes, lockRes]) => {
@@ -46,7 +46,7 @@ export default function QuestionDetail() {
                 setError(err.data?.error || "Failed to load question");
             })
             .finally(() => setLoading(false));
-    }, [id, token]);
+    }, [id]);
 
     async function handleDelete() {
         if (!id) return;

@@ -9,7 +9,7 @@ const collaborationSessionSchema = z.object({
 });
 
 const buildSessionValidationUrl = (sessionId: string) =>
-  `${config.SESSION_VALIDATION_BASE_URL}/api/v1/collaboration/${encodeURIComponent(sessionId)}`;
+  `${config.SESSION_VALIDATION_BASE_URL}/api/v1/collaboration/validate/${encodeURIComponent(sessionId)}`;
 
 export const assertActiveSessionAccess = async (
   sessionId: string,
@@ -26,6 +26,7 @@ export const assertActiveSessionAccess = async (
       method: "GET",
       signal: controller.signal,
     });
+    console.log(response);
 
     if (response.status === 404) {
       throw new HttpError(403, "A valid active session is required.");

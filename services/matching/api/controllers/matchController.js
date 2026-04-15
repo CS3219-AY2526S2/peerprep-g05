@@ -18,7 +18,8 @@ import { insertOutboxEvent } from "../../domain/match/outboxRepository.js";
 
 export async function enterMatchmaking(req, res) {
     try {
-        const { user_id, topic, difficulty } = req.body;
+        const user_id = req.user.userId;
+        const { topic, difficulty } = req.body;
         const match_id = uuid();
 
         const client = await postgres.connect();
@@ -26,7 +27,6 @@ export async function enterMatchmaking(req, res) {
             await client.query("BEGIN");
 
             await createMatch(client, match_id, user_id, topic, difficulty);
-
             // Enqueue match.enter and notify user they are waiting — atomically
             await insertOutboxEvent(client, process.env.MATCH_EXCHANGE, "match.enter", {
                 event_id: uuid(),
@@ -59,7 +59,7 @@ export async function enterMatchmaking(req, res) {
 
 export async function acceptMatch(req, res) {
     const { match_id } = req.params;
-    const { user_id } = req.body;
+    const user_id = req.user.userId;
 
     try {
         const client = await postgres.connect();
@@ -83,6 +83,11 @@ export async function acceptMatch(req, res) {
             if (!proposed) {
                 await client.query("ROLLBACK");
                 return res.status(404).json({ error: "Proposed match not found" });
+            }
+
+            if (![proposed.user_id_a, proposed.user_id_b].includes(user_id)) {
+                await client.query("ROLLBACK");
+                return res.status(403).json({ error: "Not a participant" });
             }
 
             if (proposed.status !== "PROPOSED") {
@@ -150,7 +155,7 @@ export async function acceptMatch(req, res) {
 
 export async function declineMatch(req, res) {
     const { match_id } = req.params;
-    const { user_id } = req.body;
+    const user_id = req.user.userId;
 
     const client = await postgres.connect();
     try {
@@ -208,7 +213,8 @@ export async function declineMatch(req, res) {
 }
 
 export async function leaveMatch(req, res) {
-    const { user_id, topic, difficulty } = req.body;
+    const user_id = req.user.userId;
+    const { topic, difficulty } = req.body;
 
     if (!user_id || !topic || !difficulty) {
         return res.status(400).json({ error: "user_id, topic and difficulty are required" });
@@ -257,6 +263,7 @@ export async function leaveMatch(req, res) {
 
 export async function getMatchStatus(req, res) {
     const { match_id } = req.params;
+    const user_id = req.user.userId;
 
     try {
         const client = await postgres.connect();

@@ -13,9 +13,11 @@ import QuestionEditor from "./pages/QuestionEditor.tsx";
 import Questions from "./pages/Questions.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VerifyOtp from "./pages/VerifyOtp.tsx";
+import { MatchmakingProvider } from "./hooks/MatchingContext.tsx";
 
 export default function App() {
   return (
+    <MatchmakingProvider>
     <div className="flex flex-col h-full">
       <Navbar />
       <Routes>
@@ -65,5 +67,6 @@ export default function App() {
         </Route>
       </Routes>
     </div>
+    </MatchmakingProvider>
   );
 }

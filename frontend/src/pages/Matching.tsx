@@ -1,5 +1,5 @@
 import { STATE } from "../utils/types";
-import { useMatchmaking } from "../hooks/useMatchmaking";
+import { useMatchmakingContext } from "../hooks/MatchingContext";
 import { MatchFormCard } from "../components/MatchFormCard";
 import { QueuingCard } from "../components/QueuingCard";
 import { MatchProposedModal } from "../components/MatchProposedModal";
@@ -14,7 +14,7 @@ export default function Matching() {
     fsm, error, loading, elapsedFmt,
     matchInfo, proposedMatch, confirmedMatch, accepted, questionMatch,
     findMatch, cancel, accept, decline, reset, disconnectWs
-  } = useMatchmaking();
+  } = useMatchmakingContext();
 
   useEffect(() => {
     if (questionMatch?.sessionId) {
