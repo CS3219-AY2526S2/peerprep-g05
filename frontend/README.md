@@ -13,9 +13,7 @@ The React Compiler is not enabled on this template because of its impact on dev 
 
 ## Environment
 
-Create a local `.env` file in this frontend directory and define:
-
-`VITE_API_BASE_URL=http://localhost:3001/api/v1`
+Create a local `.env` file in this frontend directory and define the variables as per the secrets document.
 
 ## Expanding the ESLint configuration
 

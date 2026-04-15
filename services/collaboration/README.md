@@ -13,20 +13,6 @@
 - Node.js 24+
 - Redis instance (or use Docker Compose)
 
-### Environment Variables
-
-Copy `.env.example` to `.env` and fill in the values:
-
-```bash
-cp .env.example .env
-```
-
-| Variable       | Description                     | Example                                            |
-| -------------- | ------------------------------- | -------------------------------------------------- |
-| `REDIS_URL`    | Redis connection string         | `redis://localhost:6379`                           |
-| `QUESTION_API_BASE_URL` | Base URL for the Question API | `http://localhost:3002/api/v1`          |
-| `EXPRESS_PORT` | Port the HTTP server listens on | `51392`                                            |
-
 ### Running with Docker Compose
 
 ```bash
