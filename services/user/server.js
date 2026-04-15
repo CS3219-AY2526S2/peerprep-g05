@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 
 import authRoutes from "./api/routes/authRoutes.js";
 import userRoutes from "./api/routes/userRoutes.js";
@@ -18,15 +17,6 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ─── Rate limiting on auth endpoints ──────────────────
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 50, // limit each IP to 50 requests per window
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { error: "Too many requests, please try again later" },
-});
-
 async function init() {
     try {
         // Connect to PostgreSQL
@@ -39,7 +29,7 @@ async function init() {
         });
 
         // ─── Routes ──────────────────────────────────
-        app.use("/api/v1/auth", authLimiter, authRoutes);
+        app.use("/api/v1/auth", authRoutes);
         app.use("/api/v1/users", userRoutes);
         app.use("/api/v1/admin", adminRoutes);
 
