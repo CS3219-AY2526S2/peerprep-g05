@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 interface Message {
   id: string;
@@ -17,7 +20,7 @@ interface ChatProps {
 const BUTTON_SIZE = 52;
 const PANEL_WIDTH = 360;
 const PANEL_HEIGHT = 520;
-const PANEL_GAP = 12; // gap between button and panel
+const PANEL_GAP = 12;
 
 export function Chat({ roomId, username = "You" }: ChatProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,11 +28,13 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
   const [inputValue, setInputValue] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [isAiThinking, setIsAiThinking] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const { user } = useAuth();
   const userId = user?.id ?? "";
+  const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Button position (top-left corner), defaults to bottom-right
+  // Button position, defaults to bottom-right
   const [pos, setPos] = useState(() => ({
     x: window.innerWidth - BUTTON_SIZE - 20,
     y: window.innerHeight - BUTTON_SIZE - 20,
@@ -37,15 +42,18 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
 
   const isDragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
-  const dragMoved = useRef(false); // distinguish click vs drag
+  const dragMoved = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Clamp position within viewport
-  const clamp = useCallback((x: number, y: number) => ({
-    x: Math.max(0, Math.min(x, window.innerWidth - BUTTON_SIZE)),
-    y: Math.max(0, Math.min(y, window.innerHeight - BUTTON_SIZE)),
-  }), []);
+  const clamp = useCallback(
+    (x: number, y: number) => ({
+      x: Math.max(0, Math.min(x, window.innerWidth - BUTTON_SIZE)),
+      y: Math.max(0, Math.min(y, window.innerHeight - BUTTON_SIZE)),
+    }),
+    []
+  );
 
   // Re-clamp on window resize
   useEffect(() => {
@@ -62,8 +70,7 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
       const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
       const newX = clientX - dragOffset.current.x;
       const newY = clientY - dragOffset.current.y;
-      const moved =
-        Math.abs(newX - (pos.x)) > 4 || Math.abs(newY - (pos.y)) > 4;
+      const moved = Math.abs(newX - pos.x) > 4 || Math.abs(newY - pos.y) > 4;
       if (moved) dragMoved.current = true;
       setPos(clamp(newX, newY));
     };
@@ -139,7 +146,7 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen]);
 
-  // Focus input on open
+  // Focus input on open, clear unread
   useEffect(() => {
     if (isOpen) {
       setUnreadCount(0);
@@ -147,6 +154,19 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
     }
   }, [isOpen]);
 
+  // Helper: show error with auto-dismiss
+  const showError = useCallback((message: string) => {
+    setChatError(message);
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    errorTimerRef.current = setTimeout(() => setChatError(null), 5000);
+  }, []);
+
+  const dismissError = () => {
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    setChatError(null);
+  };
+
+  // WebSocket lifecycle
   useEffect(() => {
     const ws = new WebSocket(`${import.meta.env.VITE_CHAT_WS_URL}`);
     wsRef.current = ws;
@@ -158,31 +178,92 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
     };
 
     ws.onmessage = (event) => {
-      const payload = JSON.parse(event.data);
+      let payload: any;
+      try {
+        payload = JSON.parse(event.data);
+      } catch {
+        console.warn("[Chat WS] Received malformed JSON");
+        return;
+      }
 
-      if (payload.type === "CHAT_HISTORY") {
-        setMessages(payload.messages.map((m: any) => ({
-          ...m,
-          timestamp: new Date(m.timestamp),
-          isOwn: m.sender === userId,
-        })));
-      }
-      if (payload.type === "CHAT_MESSAGE") {
-        setMessages((prev) => [...prev, {
-          ...payload,
-          timestamp: new Date(payload.timestamp),
-          isOwn: payload.sender === userId,
-        }]);
-        if (!isOpen) setUnreadCount((prev) => prev + 1);
-      }
-      if (payload.type === "CHAT_ERROR") {
-        setChatError(payload.message || "An unknown error occurred in the chat.");
-        setTimeout(() => setChatError(null), 5000);
+      switch (payload.type) {
+        case "CHAT_HISTORY":
+          setMessages(
+            payload.messages.map((m: any) => ({
+              ...m,
+              timestamp: new Date(m.timestamp),
+              isOwn: m.sender === userId,
+            }))
+          );
+          break;
+
+        case "CHAT_MESSAGE":
+          setChatError(null); // clear any lingering error on success
+          setMessages((prev) => [
+            ...prev,
+            {
+              ...payload,
+              timestamp: new Date(payload.timestamp),
+              isOwn: payload.sender === userId,
+            },
+          ]);
+          if (!isOpen) setUnreadCount((prev) => prev + 1);
+          break;
+
+        case "CHAT_ERROR":
+          showError(payload.message ?? "An unknown error occurred.");
+          break;
+
+        case "CHAT_USER_LEFT":
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              sender: "system",
+              content: "The other user has disconnected from the session.",
+              timestamp: new Date(),
+              isOwn: false,
+            },
+          ]);
+          if (!isOpen) setUnreadCount((prev) => prev + 1);
+          break;
+        
+        case "CHAT_AI_REQUEST":
+          setIsAiThinking(true);
+          break;
+        
+        case "CHAT_AI_RESPONSE":
+          setIsAiThinking(false);
+          setMessages((prev) => [...prev, {
+              ...payload,
+              timestamp: new Date(payload.timestamp),
+              isOwn: false,
+          }]);
+          if (!isOpen) setUnreadCount((prev) => prev + 1);
+          break;
+        
+        case "CHAT_AI_ERROR":
+          setIsAiThinking(false);
+          showError(payload.message ?? "AI request failed.");
+          break;
+        
+        default:
+          console.warn("[Chat WS] Unknown payload type:", payload.type);
       }
     };
 
-    ws.onerror = (err) => console.error("[Chat WS] Error:", err);
-    ws.onclose = (e) => console.log("[Chat WS] Disconnected | code:", e.code);
+    ws.onerror = (err) => {
+      console.error("[Chat WS] Error:", err);
+      showError("Connection error. Messages may not be delivered.");
+    };
+
+    ws.onclose = (e) => {
+      console.log("[Chat WS] Disconnected | code:", e.code);
+      if (e.code !== 1000 && e.code !== 1001) {
+        // Abnormal closure — not a deliberate tab close
+        showError("Disconnected from chat. Please refresh to reconnect.");
+      }
+    };
 
     return () => {
       wsRef.current = null;
@@ -194,11 +275,24 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
     };
   }, [roomId, userId]);
 
+  // Cleanup error timer on unmount
+  useEffect(() => {
+    return () => {
+      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    };
+  }, []);
+
   const handleSend = () => {
     const trimmed = inputValue.trim();
-    if (!trimmed) return;
+    if (!trimmed || !wsRef.current) return;
+    if (wsRef.current.readyState !== WebSocket.OPEN) {
+      showError("Not connected. Please refresh to reconnect.");
+      return;
+    }
     setInputValue("");
-    wsRef.current?.send(JSON.stringify({ type: "CHAT_MESSAGE", roomId, content: trimmed }));
+    wsRef.current.send(
+      JSON.stringify({ type: "CHAT_MESSAGE", roomId, content: trimmed })
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -206,6 +300,22 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleAskAi = () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed || !wsRef.current) return;
+    if (wsRef.current.readyState !== WebSocket.OPEN) {
+        showError("Not connected.");
+        return;
+    }
+    setInputValue("");
+    wsRef.current.send(JSON.stringify({
+        type: "CHAT_AI_REQUEST",
+        roomId,
+        sessionId: roomId,
+        prompt: trimmed,
+    }));
   };
 
   const formatTime = (date: Date) =>
@@ -359,70 +469,175 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
               }}
             >
               <span style={{ fontSize: "32px" }}>👋</span>
-              <span style={{ fontSize: "12px", color: "#4b5563" }}>
-                No messages yet. Please be respectful and avoid sharing personal information.
+              <span style={{ fontSize: "12px", color: "#4b5563", textAlign: "center" }}>
+                No messages yet. Please be respectful and avoid sharing personal
+                information.
               </span>
             </div>
           )}
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: msg.isOwn ? "flex-end" : "flex-start",
-              }}
-            >
-              {!msg.isOwn && (
-                <span
-                  style={{
-                    fontSize: "10px",
-                    color: "#33347e",
-                    fontWeight: 600,
-                    marginBottom: "2px",
-                    paddingLeft: "4px",
-                  }}
-                >
-                  {msg.sender}
-                </span>
-              )}
+
+          {messages.map((msg) => {
+            const isSystem = msg.sender === "system";
+            const isAI = msg.sender === "ai";
+
+            return (
               <div
+                key={msg.id}
                 style={{
                   display: "flex",
-                  alignItems: "flex-end",
-                  gap: "6px",
-                  flexDirection: msg.isOwn ? "row-reverse" : "row",
+                  flexDirection: "column",
+                  alignItems: isSystem
+                    ? "center"
+                    : msg.isOwn
+                    ? "flex-end"
+                    : "flex-start",
                 }}
               >
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    maxWidth: "240px",
-                    wordBreak: "break-word",
-                    background: msg.isOwn
-                      ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
-                      : "#1f2937",
-                    color: msg.isOwn ? "#fff" : "#d1d5db",
-                    borderRadius: msg.isOwn
-                      ? "14px 14px 4px 14px"
-                      : "14px 14px 14px 4px",
-                    fontSize: "13px",
-                    lineHeight: "1.45",
-                    boxShadow: msg.isOwn
-                      ? "0 2px 8px rgba(99,102,241,0.3)"
-                      : "0 2px 4px rgba(0,0,0,0.2)",
-                  }}
-                >
-                  {msg.content}
-                </div>
-                <span style={{ fontSize: "10px", color: "#4b5563", whiteSpace: "nowrap" }}>
-                  {formatTime(msg.timestamp)}
-                </span>
+                {/* 🟡 System message */}
+                {isSystem ? (
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: "#fbbf24",
+                      fontStyle: "italic",
+                      padding: "3px 12px",
+                      background: "#2d1f0a",
+                      borderRadius: "999px",
+                      userSelect: "none",
+                    }}
+                  >
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </span>
+                ) : (
+                  <>
+                    {/* 👤 Sender label (hide for own + AI) */}
+                    {!msg.isOwn && !isAI && (
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "#4b5563",
+                          fontWeight: 600,
+                          marginBottom: "2px",
+                          paddingLeft: "4px",
+                        }}
+                      >
+                        <ReactMarkdown>{msg.sender}</ReactMarkdown>
+                      </span>
+                    )}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-end",
+                        gap: "6px",
+                        flexDirection: msg.isOwn ? "row-reverse" : "row",
+                      }}
+                    >
+                      {/* 💬 Message Bubble */}
+                      {isAI ? (
+                        <div
+                          style={{
+                            overflow: "hidden",
+                            padding: "8px 12px",
+                            maxWidth: "260px",
+                            wordBreak: "break-word",
+                            background: "linear-gradient(135deg, #064e3b, #065f46)",
+                            color: "#6ee7b7",
+                            borderRadius: "14px 14px 14px 4px",
+                            fontSize: "13px",
+                            lineHeight: "1.45",
+                            border: "1px solid #10b981",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "10px",
+                              color: "#34d399",
+                              fontWeight: 600,
+                              display: "block",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            ✨ AI Assistant
+                          </span>
+                          <ReactMarkdown   remarkPlugins={[remarkGfm, remarkBreaks]}
+                            components={{
+                              pre: ({ children }) => (
+                                <pre style={{
+                                  overflowX: "auto",
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                  background: "#022c22",
+                                  borderRadius: "6px",
+                                  padding: "8px",
+                                  fontSize: "11px",
+                                  margin: "4px 0",
+                                }}>
+                                  {children}
+                                </pre>
+                              ),
+                              code: ({ children }) => (
+                                <code style={{
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                  fontSize: "11px",
+                                }}>
+                                  {children}
+                                </code>
+                              ),
+                              p: ({ children }) => (
+                                <p style={{ margin: "2px 0" }}>{children}</p>
+                              ),
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            padding: "8px 12px",
+                            maxWidth: "240px",
+                            wordBreak: "break-word",
+                            background: msg.isOwn
+                              ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
+                              : "#1f2937",
+                            color: msg.isOwn ? "#fff" : "#d1d5db",
+                            borderRadius: msg.isOwn
+                              ? "14px 14px 4px 14px"
+                              : "14px 14px 14px 4px",
+                            fontSize: "13px",
+                            lineHeight: "1.45",
+                            boxShadow: msg.isOwn
+                              ? "0 2px 8px rgba(99,102,241,0.3)"
+                              : "0 2px 4px rgba(0,0,0,0.2)",
+                          }}
+                        >
+                          {msg.content}
+                        </div>
+                      )}
+
+                      {/* 🕒 Timestamp */}
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "#4b5563",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {formatTime(msg.timestamp)}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
+
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Error banner */}
         {chatError && (
           <div
             style={{
@@ -440,7 +655,7 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
             <span style={{ fontSize: "14px" }}>⚠️</span>
             <span style={{ flex: 1 }}>{chatError}</span>
             <button
-              onClick={() => setChatError(null)}
+              onClick={dismissError}
               style={{
                 background: "none",
                 border: "none",
@@ -508,7 +723,9 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
               border: "none",
               cursor: inputValue.trim() ? "pointer" : "default",
               opacity: inputValue.trim() ? 1 : 0.4,
-              boxShadow: inputValue.trim() ? "0 2px 8px rgba(99,102,241,0.4)" : "none",
+              boxShadow: inputValue.trim()
+                ? "0 2px 8px rgba(99,102,241,0.4)"
+                : "none",
               transition: "all 0.15s",
             }}
             aria-label="Send message"
@@ -526,6 +743,30 @@ export function Chat({ roomId, username = "You" }: ChatProps) {
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
+          </button>
+          <button
+            onClick={handleAskAi}
+            disabled={!inputValue.trim() || isAiThinking}
+            title="Ask AI"
+            style={{
+                flexShrink: 0,
+                width: "36px",
+                height: "36px",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: inputValue.trim() && !isAiThinking
+                    ? "linear-gradient(135deg, #059669, #10b981)"
+                    : "#1f2937",
+                border: "none",
+                cursor: inputValue.trim() && !isAiThinking ? "pointer" : "default",
+                opacity: inputValue.trim() && !isAiThinking ? 1 : 0.4,
+                fontSize: "16px",
+                transition: "all 0.15s",
+            }}
+            aria-label="Ask AI">
+            {isAiThinking ? "⏳" : "✨"}
           </button>
         </div>
       </div>

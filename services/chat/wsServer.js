@@ -75,7 +75,7 @@ async function authenticateRequest(req) {
     }
 
     console.log(`[Chat WS] [Auth] Authenticated userId: ${data.userId}`);
-    return { userId: data.userId };
+    return { userId: data.userId, token };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -92,6 +92,11 @@ function sendToUser(userId, payload) {
     }
     console.log(`[Chat WS] [Send] → ${userId} | type: ${payload.type}`);
     socket.send(JSON.stringify(payload));
+}
+
+function getQuestionDesc(session) {
+    console.log(session.descriptionContent);
+    return session.descriptionContent;
 }
 
 function broadcastToRoom(roomId, payload) {
@@ -179,6 +184,145 @@ async function handleMessage(socket, userId, payload) {
     broadcastToRoom(roomId, { type: "CHAT_MESSAGE", ...msg });
 }
 
+async function handleAiRequest(socket, userId, payload) {
+    const { roomId, prompt, question } = payload;
+
+    // ─── 1. Validate ─────────────────────────────────────────────
+    if (!roomId || !prompt?.trim()) {
+        sendToUser(userId, {
+            type: "CHAT_ERROR",
+            message: "Invalid request.",
+        });
+        return;
+    }
+
+    if (socket.roomId !== roomId || !rooms.get(roomId)?.has(userId)) {
+        sendToUser(userId, {
+            type: "CHAT_ERROR",
+            message: "You are not in this room.",
+        });
+        return;
+    }
+
+    let session;
+    try {
+        const res = await fetch(`${process.env.GATEWAY_URL}/api/v1/collaboration/validate/${encodeURIComponent(roomId)}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                ...(socket.authToken && {
+                    Authorization: `Bearer ${socket.authToken}`,
+                }),
+            },
+        });
+        if (!res.ok) {
+            console.warn(`[AI WS] Session validation failed with status ${res.status}`);
+            throw new Error("Session validation failed");
+        }
+        session = await res.json();
+        console.log(`[AI WS] Session validation successful: ${JSON.stringify(session)}`);
+    } catch (err) {
+        console.error(`[AI WS] Session validation error:`, err);
+        sendToUser(userId, {
+            type: "CHAT_ERROR",
+            message: "Failed to validate session. Please try again.",
+        });
+        return;
+    }
+
+    const questionDesc = getQuestionDesc(session);
+    console.log(`[AI WS] Extracted question description: "${questionDesc}"`);
+
+    // ─── 2. Prepare request ──────────────────────────────────────
+    const url = `${process.env.GATEWAY_URL}/api/v1/ai/chat`;
+
+    const requestBody = {
+        sessionId: roomId,
+        prompt: prompt.trim(),
+        codeSnippet: "",
+        question: questionDesc
+    };
+
+    console.log("[AI WS] ➡️ URL:", url);
+    console.log("[AI WS] ➡️ Body:", JSON.stringify(requestBody, null, 2));
+
+    // Notify UI that AI is thinking
+    broadcastToRoom(roomId, { type: "CHAT_AI_REQUEST" });
+
+    try {
+        // ─── 3. Call AI service ───────────────────────────────────
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(socket.authToken && {
+                    Authorization: `Bearer ${socket.authToken}`,
+                }),
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        const rawText = await res.text();
+
+        console.log("[AI WS] ⬅️ Status:", res.status);
+        console.log("[AI WS] ⬅️ Raw:", rawText);
+
+        // ─── 4. Handle non-OK response ────────────────────────────
+        if (!res.ok) {
+            let errorMessage = "AI service error";
+
+            try {
+                const err = JSON.parse(rawText);
+                errorMessage = err.error || errorMessage;
+            } catch {
+                errorMessage = rawText;
+            }
+
+            broadcastToRoom(roomId, {
+                type: "CHAT_AI_RESPONSE",
+                error: errorMessage,
+                timestamp: new Date().toISOString(),
+            });
+            return;
+        }
+
+        // ─── 5. Parse response ────────────────────────────────────
+        let data;
+        try {
+            data = JSON.parse(rawText);
+        } catch (err) {
+            throw new Error("Invalid JSON from AI service");
+        }
+
+        // ─── 6. Build message ─────────────────────────────────────
+        const msg = {
+            id: uuid(),
+            sender: "ai",
+            content: data.reply,
+            timestamp: new Date().toISOString(),
+        };
+
+        console.log("[AI WS] 📤 Broadcasting:", msg);
+
+        // Save + broadcast
+        await appendMessage(roomId, msg);
+
+        broadcastToRoom(roomId, {
+            type: "CHAT_AI_RESPONSE",
+            ...msg,
+        });
+
+    } catch (err) {
+        console.error("[AI WS] ❌ Error:", err);
+
+        broadcastToRoom(roomId, {
+            type: "CHAT_AI_RESPONSE",
+            error: "Failed to fetch AI response",
+            timestamp: new Date().toISOString(),
+        });
+    }
+}
+
 // ─── Server ───────────────────────────────────────────────────────────────────
 
 export function createWsServer(server) {
@@ -220,6 +364,10 @@ export function createWsServer(server) {
                     case "CHAT_MESSAGE":
                         await handleMessage(socket, userId, payload);
                         break;
+                    case "CHAT_AI_REQUEST":
+                        console.log(payload);
+                        await handleAiRequest(socket, userId, payload);
+                        break;
                     default:
                         console.warn(`[Chat WS] Unknown type from ${userId}: "${payload.type}"`);
                 }
@@ -231,6 +379,15 @@ export function createWsServer(server) {
         socket.on("close", (code, reason) => {
             console.log(`[Chat WS] User ${userId || 'unknown'} disconnected | code: ${code} | reason: ${reason?.toString()}`);
             if (userId) {
+                // Broadcast before leaving so the room still has the user
+                const roomId = socket.roomId;
+                if (roomId) {
+                    broadcastToRoom(roomId, {
+                        type: "CHAT_USER_LEFT",
+                        userId,
+                    });
+                }
+
                 leaveRoom(socket, userId);
                 clients.delete(userId);
                 console.log(`[Chat WS] Clients remaining: ${clients.size}`);
@@ -251,6 +408,7 @@ export function createWsServer(server) {
         }
 
         userId = user.userId;
+        socket.authToken = user.token;
         isAuthenticated = true;
 
         const existing = clients.get(userId);
