@@ -3,6 +3,7 @@ import {
   checkSessionIdExists,
   createCollaborationSession,
   endCollaborationSession,
+  getActiveCollaborationSession,
   getCollaborationSession,
   getCollaborationSessions,
   isValidSessionId,
@@ -25,3 +26,5 @@ collaborationRouter.delete(
   checkSessionIdExists,
   endCollaborationSession,
 );
+
+collaborationRouter.get("/active-session", getActiveCollaborationSession);

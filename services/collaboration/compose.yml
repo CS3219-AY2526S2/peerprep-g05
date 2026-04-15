@@ -11,7 +11,7 @@ services:
     depends_on:
       - collaboration-redis
     environment:
-      QUESTION_API_BASE_URL: http://question-service:3002 #share same network so can driectly call the service name
+      GATEWAY_URL: http://gateway:4000
       REDIS_URL: "redis://collaboration-redis:6379"
       GATEWAY_URL: http://gateway:4000
       EXPRESS_PORT: 3003
