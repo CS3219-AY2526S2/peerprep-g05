@@ -64,7 +64,6 @@ type CollaborationSessionType = NonNullable<
   Awaited<ReturnType<typeof getSessionById>>
 >;
 
-
 export const isValidSessionId: RequestHandler = async (req, res) => {
   const { sessionId } = req.params;
 
@@ -118,7 +117,7 @@ export const getActiveCollaborationSession: RequestHandler = async (
     return;
   }
   const session = await getActiveSessionsByUserId(user.userId);
-  if (!session) {
+  if (!session || session.length === 0) {
     res.status(404).json({ error: "No active session found for user" });
     return;
   } else {

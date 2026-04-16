@@ -16,7 +16,6 @@ export type ConnectionAuthResult =
       reason: string;
     };
 
-// TODO: change to use introspection afterwards
 /**
  * Parses the roomName from the incoming request, no auth is done.
  * @param req req object to give

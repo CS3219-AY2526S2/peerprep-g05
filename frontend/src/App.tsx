@@ -1,7 +1,9 @@
+import { Toaster } from "react-hot-toast";
 import { Route, Routes } from "react-router-dom";
 import AdminOnlyRoute from "./components/AdminOnlyRoute.tsx";
 import Navbar from "./components/Navbar.tsx";
 import ProtectedRoute from "./components/Protectedroute.tsx";
+import { MatchmakingProvider } from "./hooks/MatchingContext.tsx";
 import AdminUsers from "./pages/AdminUsers.tsx";
 import AttemptHistory from "./pages/AttemptHistory.tsx";
 import CollaborativeEditor from "./pages/CollaborativeEditor.tsx";
@@ -13,8 +15,6 @@ import QuestionEditor from "./pages/QuestionEditor.tsx";
 import Questions from "./pages/Questions.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import VerifyOtp from "./pages/VerifyOtp.tsx";
-import { Toaster } from "react-hot-toast";
-import { MatchmakingProvider } from "./hooks/MatchingContext.tsx";
 
 export default function App() {
   return (
@@ -33,6 +33,18 @@ export default function App() {
             <Route path="/matching" element={<Matching />} />
             <Route path="/editor" element={<CollaborativeEditor />} />
             <Route path="/editor/:roomId" element={<CollaborativeEditor />} />
+          </Route>
+
+          {/* Admin-only routes */}
+          <Route
+            path="/admin/users"
+            element={
+              <AdminOnlyRoute>
+                <AdminUsers />
+              </AdminOnlyRoute>
+            }
+          />
+          <Route element={<ProtectedRoute />}>
             <Route path="/questions" element={<Questions />} />
             <Route path="/attempt-history" element={<AttemptHistory />} />
             <Route path="/questions/:id" element={<QuestionDetail />} />
@@ -61,9 +73,8 @@ export default function App() {
               }
             />
           </Route>
-        </Route>
-      </Routes>
-    </div>
-  </MatchmakingProvider>
+        </Routes>
+      </div>
+    </MatchmakingProvider>
   );
 }

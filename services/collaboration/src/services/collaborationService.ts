@@ -35,16 +35,6 @@ const getSessionKey = (sessionId: string) =>
 const getUserActiveSessionKey = (userId: string) =>
   `${USER_ACTIVE_SESSION_KEY_PREFIX}${userId}`;
 
-const getActiveSessionIdsForUsers = async (userIds: string[]) => {
-  const sessionIds = await Promise.all(
-    userIds.map((userId) => redisClient.get(getUserActiveSessionKey(userId))),
-  );
-  return [
-    ...new Set(
-      sessionIds.filter((sessionId): sessionId is string => sessionId !== null),
-    ),
-  ];
-};
 
 /**
  * Atomically mark all users as active. Fails after 3 retries or if any user has an active session.
@@ -102,7 +92,13 @@ const markUserActiveSession = async (users: string[], sessionId: string) => {
 };
 
 const filterUserWithActiveSession = async (userIds: string[]) => {
-  const activeSessionIds = await getActiveSessionIdsForUsers(userIds);
+  const activeSessionIds = await Promise.all(
+    userIds.map((userId) => redisClient.get(getUserActiveSessionKey(userId))),
+  ).then((sessionIds) => [
+    ...new Set(
+      sessionIds.filter((sessionId): sessionId is string => sessionId !== null),
+    ),
+  ]);
   return activeSessionIds;
 };
 
@@ -170,7 +166,6 @@ export const getSessions = async (status?: SessionStatus) => {
     return [];
   }
 
-  // TODO: use redis to check and filter? or maybe redisClient.json.set/get?
   const sessions = (
     await Promise.all(sessionIds.map((sessionId) => _getSessionById(sessionId)))
   ).filter((session): session is CollaborationSession => session !== null);
@@ -195,19 +190,9 @@ export const createSession = async (users: string[], questionId: string) => {
   );
   // check if there are active session for any user, if yes, return conflict error
   if ((await filterUserWithActiveSession(users)).length > 0) {
-    // TODO: proper error message for the user session
-    // For now, just release all sessions.
-    const activeSessionIds = await filterUserWithActiveSession(users);
-    await Promise.all(
-      activeSessionIds.map(async (sessionId) => {
-        await releaseUsersFromSession(users, sessionId);
-      }),
-    );
     throw new Error("One or more users already have an active session");
   }
 
-  // console.log("All users are free, creating session...");
-  // // TODO: proper check for active session
   const newSessionId = randomUUID();
   if (!(await markUserActiveSession(users, newSessionId))) {
     throw new Error(
@@ -227,7 +212,6 @@ export const createSession = async (users: string[], questionId: string) => {
       return res.json();
     })) as { data: { title: string; description: string } };
 
-    // TODO: maybe move to an adapter to support more feature like test cases.
     const { data: questionData } = response;
 
     return _createSession(
