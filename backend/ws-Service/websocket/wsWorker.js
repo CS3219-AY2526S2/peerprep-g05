@@ -1,0 +1,139 @@
+import dotenv from "dotenv";
+import { createChannel } from "./rabbitmq/client.js";
+import { sendToUser } from "./wsServer.js";
+import { setUserMatchContext, clearUserMatchContext } from "./wsServer.js";
+
+dotenv.config();
+
+export async function startWsWorker() {
+    const channel = await createChannel();
+
+    // Assert separate exchange for WebSocket events
+    await channel.assertExchange(process.env.MATCH_EVENTS_EXCHANGE, "topic", { durable: true });
+
+    const queue = await channel.assertQueue("match.ws.queue", { durable: true });
+
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.waiting");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.redirected");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.proposed");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.accepted");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.declined");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.cancelled");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.timeout");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "match.confirmed");
+    await channel.bindQueue(queue.queue, process.env.MATCH_EVENTS_EXCHANGE, "question.assigned");
+
+    channel.consume(queue.queue, async (msg) => {
+        if (!msg) return;
+
+        const event = JSON.parse(msg.content.toString());
+        const routingKey = msg.fields.routingKey;
+        console.log(`WebSocket worker received: ${routingKey}`, event);
+
+        try {
+            switch (routingKey) {
+                //User joins queue or gets requeued
+                case "match.waiting":
+                    setUserMatchContext(event.user_id, {
+                        match_id: event.match_id,
+                        topic: event.topic,
+                        difficulty: event.difficulty,
+                    });
+                    sendToUser(event.user_id, { 
+                        type: "MATCH_WAITING", 
+                        match_id: event.match_id 
+                    });
+                    break;
+                //UserA gets proposed
+                case "match.proposed":
+                    sendToUser(event.user_id_a, { 
+                        type: "MATCH_PROPOSED", 
+                        match_id: event.match_id
+                    });
+                    break;
+                //UserB gets redirected
+                case "match.redirected":
+                    sendToUser(event.user_id_b, { 
+                        type: "MATCH_PROPOSED", 
+                        match_id: event.redirected_to
+                    });
+                    break;
+                //User Accepts
+                case "match.accepted":
+                    sendToUser(event.user_id, {
+                        type: "MATCH_ACCEPTED",
+                        match_id: event.match_id
+                    });
+                    break;
+                //User declines
+                case "match.declined":
+                    sendToUser(event.declined_by, {
+                        type: "MATCH_CANCELLED",
+                        match_id: event.match_id
+                    });
+                    break;
+                //User declines: Decliner gets cancelled, other user gets requeued
+                case "match.cancelled":
+                    sendToUser(event.declined_by, { 
+                        type: "MATCH_CANCELLED", 
+                        match_id: event.match_id 
+                    });
+                    break;
+                //Proposal Expired or waiting timeout
+                case "match.timeout":
+                    clearUserMatchContext(event.user_id);
+                    sendToUser(event.user_id, {
+                        type: "MATCH_TIMEOUT",
+                        match_id: event.match_id
+                    });
+                    break;
+                //Both users accepted
+                case "match.confirmed":
+                    clearUserMatchContext(event.user_id_a);
+                    clearUserMatchContext(event.user_id_b);
+                    sendToUser(event.user_id_a, { 
+                        type: "MATCH_CONFIRMED", 
+                        match_id: event.match_id,
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
+                        topic: event.topic,
+                        difficulty: event.difficulty 
+                    });
+                    sendToUser(event.user_id_b, { 
+                        type: "MATCH_CONFIRMED", 
+                        match_id: event.match_id,
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
+                        topic: event.topic,
+                        difficulty: event.difficulty
+                    });
+                    break;
+                case "question.assigned":
+                    sendToUser(event.user_id_a, {
+                        type: "QUESTION_ASSIGNED",
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
+                        match_id: event.match_id,
+                        session_id: event.session_id,
+                        question_id: event.question_id
+                    });
+                    sendToUser(event.user_id_b, {
+                        type: "QUESTION_ASSIGNED",
+                        user_id_a: event.user_id_a,
+                        user_id_b: event.user_id_b,
+                        match_id: event.match_id,
+                        session_id: event.session_id,
+                        question_id: event.question_id
+                    });
+                    break;
+            }
+
+            channel.ack(msg);
+        } catch (err) {
+            console.error("WebSocket worker error:", err);
+            channel.nack(msg, false, false);
+        }
+    });
+
+    console.log("WebSocket worker started");
+}

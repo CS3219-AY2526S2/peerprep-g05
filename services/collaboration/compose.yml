@@ -1,0 +1,28 @@
+name: collaboration-service
+
+services:
+  collaboration-server:
+    build:
+      context: .
+      args:
+        EXPRESS_PORT: 3003
+    ports:
+      - 3003:3003
+    depends_on:
+      - collaboration-redis
+    environment:
+      GATEWAY_URL: http://gateway:4000
+      REDIS_URL: "redis://collaboration-redis:6379"
+      EXPRESS_PORT: 3003
+      NODE_ENV: production
+    networks:
+      - peerprep-network
+    restart: always
+
+  collaboration-redis:
+    image: redis:8.2.1-alpine
+    ports:
+      - 6380:6379
+    restart: always
+    networks:
+      - peerprep-network

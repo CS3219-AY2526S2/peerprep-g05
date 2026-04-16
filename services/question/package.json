@@ -1,0 +1,26 @@
+{
+  "type": "module",
+  "name": "question",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server.js",
+    "seed:generate-bank": "node scripts/generate-liquidslr-bank.mjs",
+    "seed": "node scripts/seed.js --count 200",
+    "seed:loadtest": "node scripts/seed.js --load-test",
+    "seed:10000": "node tests/integration/seed-10000.js",
+    "test:load:200": "node tests/integration/loadtest-200-users.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles",
+    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles --coverage"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  }
+}

@@ -1,0 +1,24 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Logs
+logs/
+*.log
+
+# Build artifacts
+dist/
+.vite/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# RSA key pairs (auto-generated at runtime, must never be committed)
+**/infrastructure/security/keys/

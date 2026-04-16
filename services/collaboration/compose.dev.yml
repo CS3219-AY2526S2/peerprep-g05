@@ -1,0 +1,21 @@
+services:
+  collaboration-server:
+    environment:
+      NODE_ENV: development
+    restart: no
+    develop:
+      watch:
+        - path: ./src
+          action: sync
+          target: /server/src
+          ignore:
+            - node_modules
+        - path: package.json
+          action: rebuild
+        - path: Dockerfile
+          action: rebuild
+        - path: compose.yml
+          action: rebuild
+
+  collaboration-redis:
+    restart: no

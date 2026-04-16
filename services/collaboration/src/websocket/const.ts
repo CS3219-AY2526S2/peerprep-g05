@@ -1,0 +1,9 @@
+export const MESSAGE_SYNC = 0;
+export const MESSAGE_AWARENESS = 1;
+
+export const WS_CLOSE_CODES = {
+  SESSION_ENDED: 1000,
+  GOING_AWAY: 1001,
+  UNAUTHRORIZED: 4001,
+  INVALID_ENDPOINT: 4002,
+};

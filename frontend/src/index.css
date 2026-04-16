@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+	color-scheme: light;
+	--app-bg: #f8fafc;
+	--app-text: #0f172a;
+	--app-text-muted: #475569;
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--app-bg: #020617;
+	--app-text: #e2e8f0;
+	--app-text-muted: #94a3b8;
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	background-color: var(--app-bg);
+	color: var(--app-text);
+	transition: background-color 200ms ease, color 200ms ease;
+}
+
+.nav-button {
+  @apply rounded-md border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white no-underline transition hover:bg-white/20;
+}
+
+.button-class {
+  @apply rounded border border-white/30 bg-white/15 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/25;
+}
+
+.red-button-class {
+  @apply rounded border border-red-800 bg-red-400 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600;
+}
+
+.cm-peerprep-error-line {
+  background-color: #fee2e2;
+}
